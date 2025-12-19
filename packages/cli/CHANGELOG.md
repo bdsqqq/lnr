@@ -1,5 +1,11 @@
 # @bdsqqq/lnr-cli
 
+## 1.1.2
+
+### Patch Changes
+
+- 7adf23e: chore: gitignore dist folder
+
 ## 1.1.1
 
 ### Patch Changes
