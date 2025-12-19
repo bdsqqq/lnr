@@ -13,6 +13,7 @@
     "release": "changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.8",
     "@types/bun": "latest"
   },
   "peerDependencies": {
