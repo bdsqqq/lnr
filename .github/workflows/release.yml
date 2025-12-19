@@ -20,47 +20,16 @@ jobs:
 
       - run: bun install
 
-      # compute next CLI version from changesets status
-      - name: Compute next version
-        id: next_version
-        run: |
-          set -e
-
-          if ! npx changeset status --output=status.json; then
-            echo "found=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          VERSION=$(node -e "
-            const s = require('./status.json');
-            const rel = s.releases.find(r => r.name === '@bdsqqq/lnr-cli');
-            if (!rel) {
-              console.log('');
-              process.exit(0);
-            }
-            console.log(rel.newVersion);
-          ")
-
-          if [ -n "$VERSION" ]; then
-            echo "CLI_VERSION=$VERSION" >> "$GITHUB_ENV"
-            echo "found=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "found=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      # changesets handles version bumps and changelog generation
-      # creates a PR with version in title when changesets are detected
-      # merging that PR triggers the publish step
+      # changesets/action handles both cases:
+      # - pending changesets: creates release PR
+      # - no changesets but unpublished versions: publishes to npm
       - name: Create Release Pull Request or Publish
-        if: steps.next_version.outputs.found == 'true'
         id: changesets
         uses: changesets/action@v1
         with:
           publish: bun run release
-          title: "chore(release): v${{ env.CLI_VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # no NPM_TOKEN needed - uses OIDC trusted publishing
 
       # build binaries for all platforms after successful publish
       - name: Build binaries
@@ -74,5 +43,9 @@ jobs:
         with:
           tag_name: v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}
           files: dist/*
+          body: |
+            ## @bdsqqq/lnr-cli@${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}
+            
+            See [CHANGELOG](https://github.com/bdsqqq/lnr/blob/main/packages/cli/CHANGELOG.md) for details.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
