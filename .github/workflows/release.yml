@@ -24,6 +24,9 @@ jobs:
 
       - run: bun install
 
+      # ensure npm 11.5.1+ for OIDC support
+      - run: npm install -g npm@latest
+
       # compute version for PR title
       - name: Get next version
         id: version
@@ -44,12 +47,10 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          publish: bun run release
+          publish: npm run release
           title: "chore(release): v${{ steps.version.outputs.next }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
-          NODE_AUTH_TOKEN: ''
 
       # build binaries for all platforms after successful publish
       - name: Build binaries
