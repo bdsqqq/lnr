@@ -28,7 +28,7 @@ interface CreateProjectOptions {
 
 async function handleCreateProject(options: CreateProjectOptions): Promise<void> {
   if (!options.name) {
-    exitWithError("--name is required", "usage: li project new --name \"...\"");
+    exitWithError("--name is required", "usage: lnr project new --name \"...\"");
   }
 
   try {

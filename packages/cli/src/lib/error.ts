@@ -25,7 +25,7 @@ export function handleApiError(error: unknown): never {
     const msg = error.message.toLowerCase();
 
     if (msg.includes("unauthorized") || msg.includes("authentication")) {
-      exitWithError("not authenticated", "run: li auth <api-key>", EXIT_CODES.AUTH_ERROR);
+      exitWithError("not authenticated", "run: lnr auth <api-key>", EXIT_CODES.AUTH_ERROR);
     }
 
     if (msg.includes("not found")) {

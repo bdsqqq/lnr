@@ -11,19 +11,19 @@ let
 
   sources = {
     "x86_64-linux" = {
-      url = "https://github.com/bdsqqq/linear-cli/releases/download/v${version}/lnr-linux-x64";
+      url = "https://github.com/bdsqqq/lnr/releases/download/v${version}/lnr-linux-x64";
       hash = lib.fakeHash;
     };
     "aarch64-linux" = {
-      url = "https://github.com/bdsqqq/linear-cli/releases/download/v${version}/lnr-linux-arm64";
+      url = "https://github.com/bdsqqq/lnr/releases/download/v${version}/lnr-linux-arm64";
       hash = lib.fakeHash;
     };
     "x86_64-darwin" = {
-      url = "https://github.com/bdsqqq/linear-cli/releases/download/v${version}/lnr-darwin-x64";
+      url = "https://github.com/bdsqqq/lnr/releases/download/v${version}/lnr-darwin-x64";
       hash = lib.fakeHash;
     };
     "aarch64-darwin" = {
-      url = "https://github.com/bdsqqq/linear-cli/releases/download/v${version}/lnr-darwin-arm64";
+      url = "https://github.com/bdsqqq/lnr/releases/download/v${version}/lnr-darwin-arm64";
       hash = lib.fakeHash;
     };
   };
@@ -50,7 +50,7 @@ stdenvNoCC.mkDerivation {
 
   meta = {
     description = "CLI for Linear issue tracking";
-    homepage = "https://github.com/bdsqqq/linear-cli";
+    homepage = "https://github.com/bdsqqq/lnr";
     license = lib.licenses.mit;
     maintainers = [ ];
     platforms = builtins.attrNames sources;

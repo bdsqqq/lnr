@@ -1,7 +1,7 @@
 {
   "name": "@bdsqqq/lnr-core",
   "version": "1.0.0",
-  "description": "core business logic for linear-cli",
+  "description": "core business logic for lnr",
   "type": "module",
   "private": false,
   "main": "src/index.ts",

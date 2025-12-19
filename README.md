@@ -1,4 +1,4 @@
-# linear-cli
+# lnr
 
 a command-line interface for Linear. ships as a single binary via bun.
 
@@ -6,20 +6,20 @@ a command-line interface for Linear. ships as a single binary via bun.
 
 ### from github releases (recommended)
 
-download the latest binary from [releases](https://github.com/bdsqqq/linear-cli/releases) and add to your PATH.
+download the latest binary from [releases](https://github.com/bdsqqq/lnr/releases) and add to your PATH.
 
 ### via nix
 
 ```bash
 # run directly
-nix run github:bdsqqq/linear-cli
+nix run github:bdsqqq/lnr
 
 # install to profile
-nix profile install github:bdsqqq/linear-cli
+nix profile install github:bdsqqq/lnr
 
 # in a flake (add to inputs)
-inputs.linear-cli.url = "github:bdsqqq/linear-cli";
-# then use: inputs.linear-cli.packages.${system}.default
+inputs.lnr.url = "github:bdsqqq/lnr";
+# then use: inputs.lnr.packages.${system}.default
 ```
 
 once published to nixpkgs:

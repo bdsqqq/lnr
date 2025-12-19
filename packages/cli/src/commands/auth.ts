@@ -24,7 +24,7 @@ export function registerAuthCommand(program: Command): void {
       if (options.whoami) {
         const storedKey = getApiKey();
         if (!storedKey) {
-          exitWithError("not authenticated", "run: li auth <api-key>", EXIT_CODES.AUTH_ERROR);
+          exitWithError("not authenticated", "run: lnr auth <api-key>", EXIT_CODES.AUTH_ERROR);
         }
 
         try {
@@ -32,13 +32,13 @@ export function registerAuthCommand(program: Command): void {
           const viewer = await getViewer(client);
           console.log(`${viewer.name} <${viewer.email}>`);
         } catch {
-          exitWithError("invalid api key", "run: li auth <api-key>", EXIT_CODES.AUTH_ERROR);
+          exitWithError("invalid api key", "run: lnr auth <api-key>", EXIT_CODES.AUTH_ERROR);
         }
         return;
       }
 
       if (!apiKey) {
-        exitWithError("api key required", "usage: li auth <api-key>");
+        exitWithError("api key required", "usage: lnr auth <api-key>");
       }
 
       try {

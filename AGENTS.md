@@ -1,4 +1,4 @@
-# linear-cli
+# lnr
 
 ## commands
 
@@ -51,7 +51,7 @@ packages/
 - error messages: lowercase, direct, include fix suggestion
 - no emojis, minimal colors (red for errors, dim for secondary info)
 - all commands async/await, handle errors at command level
-- config stored in ~/.linear-cli/config.json
+- config stored in ~/.lnr/config.json
 - business logic in @bdsqqq/lnr-core, CLI wrappers in @bdsqqq/lnr-cli
 - tests colocated with source files (*.test.ts)
 

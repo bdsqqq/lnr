@@ -250,11 +250,11 @@ async function handleUpdateIssue(identifier: string, options: UpdateOptions): Pr
 
 async function handleCreateIssue(options: CreateOptions): Promise<void> {
   if (!options.team) {
-    exitWithError("--team is required", "usage: li issue new --team ENG --title \"...\"");
+    exitWithError("--team is required", "usage: lnr issue new --team ENG --title \"...\"");
   }
 
   if (!options.title) {
-    exitWithError("--title is required", "usage: li issue new --team ENG --title \"...\"");
+    exitWithError("--title is required", "usage: lnr issue new --team ENG --title \"...\"");
   }
 
   try {

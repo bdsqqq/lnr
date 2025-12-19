@@ -1,4 +1,4 @@
-# linear-cli spec
+# lnr spec
 
 a command-line interface for Linear. ships as a single binary via bun.
 
@@ -21,7 +21,7 @@ Linear terminology preserved: issues, projects, teams, cycles, labels, milestone
 ## authentication
 
 ```bash
-# store api key (saved to ~/.linear-cli/config.json)
+# store api key (saved to ~/.lnr/config.json)
 lnr auth <api-key>
 
 # verify current auth
@@ -176,7 +176,7 @@ lnr ENG-123     # lnr issue ENG-123 (if matches issue pattern)
 
 ## configuration
 
-stored in `~/.linear-cli/config.json`:
+stored in `~/.lnr/config.json`:
 
 ```json
 {

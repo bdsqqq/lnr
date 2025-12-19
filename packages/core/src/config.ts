@@ -8,7 +8,7 @@ export interface Config {
   output_format?: "table" | "json" | "quiet";
 }
 
-const CONFIG_DIR = join(homedir(), ".linear-cli");
+const CONFIG_DIR = join(homedir(), ".lnr");
 const CONFIG_PATH = join(CONFIG_DIR, "config.json");
 
 export function ensureConfigDir(): void {

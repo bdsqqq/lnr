@@ -4,4 +4,4 @@
 
 ### Major Changes
 
-- Initial release of linear-cli with core functionality and CLI interface.
+- Initial release of lnr with core functionality and CLI interface.
