@@ -19,15 +19,39 @@ jobs:
 
       - run: bun install
 
+      # compute next CLI version from changesets status
+      - name: Compute next version
+        id: next_version
+        run: |
+          npx changeset status --output=json > status.json
+
+          VERSION=$(node -e "
+            const s = require('./status.json');
+            const rel = s.releases.find(r => r.name === '@bdsqqq/lnr-cli');
+            if (!rel) {
+              console.log('');
+              process.exit(0);
+            }
+            console.log(rel.newVersion);
+          ")
+
+          if [ -n "$VERSION" ]; then
+            echo "CLI_VERSION=$VERSION" >> "$GITHUB_ENV"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
       # changesets handles version bumps and changelog generation
-      # creates a "Version Packages" PR when changesets are detected
+      # creates a PR with version in title when changesets are detected
       # merging that PR triggers the publish step
       - name: Create Release Pull Request or Publish
+        if: steps.next_version.outputs.found == 'true'
         id: changesets
         uses: changesets/action@v1
         with:
           publish: bun run release
-          title: "chore(release): prepare packages"
+          title: "chore(release): v${{ env.CLI_VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # no NPM_TOKEN needed - uses OIDC trusted publishing
