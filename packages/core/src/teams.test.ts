@@ -11,7 +11,9 @@ function getTestClient(): LinearClient {
   return new LinearClient({ apiKey });
 }
 
-describe("teams core", () => {
+const hasApiKey = !!getApiKey();
+
+describe("teams core", { skip: !hasApiKey }, () => {
   let client: LinearClient;
   let teamKey: string;
 

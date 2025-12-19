@@ -12,7 +12,9 @@ function getTestClient(): LinearClient {
   return new LinearClient({ apiKey });
 }
 
-describe("cycles core", () => {
+const hasApiKey = !!getApiKey();
+
+describe("cycles core", { skip: !hasApiKey }, () => {
   let client: LinearClient;
   let teamKey: string;
 

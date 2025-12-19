@@ -23,7 +23,9 @@ async function getFirstTeamKey(): Promise<string> {
   return first.key;
 }
 
-describe("issues core", () => {
+const hasApiKey = !!getApiKey();
+
+describe("issues core", { skip: !hasApiKey }, () => {
   let client: LinearClient;
   let teamKey: string;
 

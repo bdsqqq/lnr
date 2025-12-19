@@ -13,7 +13,9 @@ function getTestClient(): LinearClient {
   return new LinearClient({ apiKey });
 }
 
-describe("projects core", () => {
+const hasApiKey = !!getApiKey();
+
+describe("projects core", { skip: !hasApiKey }, () => {
   let client: LinearClient;
 
   beforeAll(() => {
