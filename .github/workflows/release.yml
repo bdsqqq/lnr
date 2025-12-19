@@ -27,6 +27,7 @@ jobs:
         uses: changesets/action@v1
         with:
           publish: bun run release
+          title: "chore(release): prepare packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # no NPM_TOKEN needed - uses OIDC trusted publishing
