@@ -75,7 +75,7 @@ see SPEC.md for full command reference.
 
 ```bash
 # run in dev
-bun run src/cli.ts
+bun run dev
 
 # typecheck
 bun run check

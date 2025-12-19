@@ -230,7 +230,7 @@ error: rate limited, retry in 30s
 
 ```bash
 # build single binary
-bun build ./src/cli.ts --compile --outfile lnr
+bun build ./packages/cli/src/cli.ts --compile --outfile lnr
 
 # install globally
 cp lnr /usr/local/bin/lnr
