@@ -49,6 +49,7 @@ jobs:
         with:
           publish: npm run release
           title: "chore(release): v${{ steps.version.outputs.next }}"
+          createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
