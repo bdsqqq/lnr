@@ -30,6 +30,7 @@ jobs:
           publish: bun run release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
 
       # build binaries for all platforms after successful publish
       - name: Build binaries
