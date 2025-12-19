@@ -13,7 +13,7 @@ function getTestClient(): LinearClient {
 
 const hasApiKey = !!getApiKey();
 
-describe("search core", { skip: !hasApiKey }, () => {
+describe.skipIf(!hasApiKey)("search core", () => {
   let client: LinearClient;
 
   beforeAll(() => {

@@ -25,7 +25,7 @@ async function getFirstTeamKey(): Promise<string> {
 
 const hasApiKey = !!getApiKey();
 
-describe("issues core", { skip: !hasApiKey }, () => {
+describe.skipIf(!hasApiKey)("issues core", () => {
   let client: LinearClient;
   let teamKey: string;
 

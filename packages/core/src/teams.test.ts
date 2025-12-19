@@ -13,7 +13,7 @@ function getTestClient(): LinearClient {
 
 const hasApiKey = !!getApiKey();
 
-describe("teams core", { skip: !hasApiKey }, () => {
+describe.skipIf(!hasApiKey)("teams core", () => {
   let client: LinearClient;
   let teamKey: string;
 

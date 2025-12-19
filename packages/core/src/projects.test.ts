@@ -15,7 +15,7 @@ function getTestClient(): LinearClient {
 
 const hasApiKey = !!getApiKey();
 
-describe("projects core", { skip: !hasApiKey }, () => {
+describe.skipIf(!hasApiKey)("projects core", () => {
   let client: LinearClient;
 
   beforeAll(() => {
