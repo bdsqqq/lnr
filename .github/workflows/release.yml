@@ -24,6 +24,19 @@ jobs:
 
       - run: bun install
 
+      # compute version for PR title
+      - name: Get next version
+        id: version
+        run: |
+          if npx changeset status --output=status.json 2>/dev/null; then
+            VERSION=$(node -e "
+              const s = require('./status.json');
+              const rel = s.releases.find(r => r.name === '@bdsqqq/lnr-cli');
+              console.log(rel ? rel.newVersion : '');
+            ")
+            echo "next=$VERSION" >> "$GITHUB_OUTPUT"
+          fi
+
       # changesets/action handles both cases:
       # - pending changesets: creates release PR
       # - no changesets but unpublished versions: publishes to npm
@@ -32,6 +45,7 @@ jobs:
         uses: changesets/action@v1
         with:
           publish: bun run release
+          title: "chore(release): v${{ steps.version.outputs.next }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
