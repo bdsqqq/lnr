@@ -19,10 +19,6 @@ jobs:
 
       - run: bun install
 
-      # ensure npm 11.5.1+ for OIDC support
-      - name: Update npm for OIDC
-        run: npm install -g npm@latest
-
       # changesets handles version bumps and changelog generation
       # creates a "Version Packages" PR when changesets are detected
       # merging that PR triggers the publish step
