@@ -1,5 +1,13 @@
 # @bdsqqq/lnr-cli
 
+## 1.1.1
+
+### Patch Changes
+
+- 13547bd: docs: tighten tagline
+- Updated dependencies [13547bd]
+  - @bdsqqq/lnr-core@1.1.1
+
 ## 1.1.0
 
 ### Minor Changes
