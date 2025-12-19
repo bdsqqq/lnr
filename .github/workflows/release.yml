@@ -23,7 +23,12 @@ jobs:
       - name: Compute next version
         id: next_version
         run: |
-          npx changeset status --output=json > status.json
+          set -e
+
+          if ! npx changeset status --output=status.json; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
           VERSION=$(node -e "
             const s = require('./status.json');
