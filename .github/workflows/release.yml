@@ -61,13 +61,11 @@ jobs:
       # create github release with binaries
       - name: Create GitHub Release
         if: steps.changesets.outputs.published == 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}
-          files: dist/*
-          body: |
-            ## @bdsqqq/lnr-cli@${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}
-            
-            See [CHANGELOG](https://github.com/bdsqqq/lnr/blob/main/packages/cli/CHANGELOG.md) for details.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}"
+          gh release delete "v$VERSION" --yes 2>/dev/null || true
+          gh release create "v$VERSION" dist/* \
+            --title "v$VERSION" \
+            --notes "See [CHANGELOG](https://github.com/bdsqqq/lnr/blob/main/packages/cli/CHANGELOG.md) for details."
