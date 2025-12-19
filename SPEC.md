@@ -1,6 +1,6 @@
 # lnr spec
 
-a command-line interface for Linear. ships as a single binary via bun.
+command-line interface for Linear. ships as a single binary via bun.
 
 ---
 
