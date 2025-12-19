@@ -3,38 +3,46 @@
 ## commands
 
 ```bash
-# typecheck
+# typecheck all packages
 bun run check
 
-# run dev
-bun run src/cli.ts
+# run tests in all packages
+bun run test
+
+# run cli in dev mode
+bun run dev
 
 # build binary
-bun build ./src/cli.ts --compile --outfile li
+bun run build
 
-# test (once tests exist)
-bun test
+# run cli directly
+bun run --cwd packages/cli src/cli.ts
 ```
 
 ## project structure
 
 ```
-src/
-  cli.ts          # entry point, commander setup
-  commands/       # one file per command group
-    auth.ts
-    issues.ts
-    teams.ts
-    projects.ts
-    cycles.ts
-    me.ts
-    search.ts
-    config.ts
-  lib/
-    client.ts     # Linear SDK wrapper
-    config.ts     # config file management
-    output.ts     # formatting (table, json, quiet)
-    error.ts      # error handling
+packages/
+  core/                 # @bdsqqq/lnr-core - business logic
+    src/
+      index.ts          # exports all operations
+      client.ts         # LinearClient wrapper
+      config.ts         # config file management
+      types.ts          # shared types
+      issues.ts         # issue operations
+      projects.ts       # project operations
+      teams.ts          # team operations
+      cycles.ts         # cycle operations
+      me.ts             # user operations
+      search.ts         # search operations
+      *.test.ts         # colocated tests
+  cli/                  # @bdsqqq/lnr-cli - presentation layer
+    src/
+      cli.ts            # entry point, commander setup
+      commands/         # one file per command group
+      lib/
+        output.ts       # formatting (table, json, quiet)
+        error.ts        # error handling
 ```
 
 ## conventions
@@ -44,6 +52,8 @@ src/
 - no emojis, minimal colors (red for errors, dim for secondary info)
 - all commands async/await, handle errors at command level
 - config stored in ~/.linear-cli/config.json
+- business logic in @bdsqqq/lnr-core, CLI wrappers in @bdsqqq/lnr-cli
+- tests colocated with source files (*.test.ts)
 
 ## spec
 

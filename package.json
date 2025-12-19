@@ -1,26 +1,21 @@
 {
   "name": "linear-cli",
   "version": "0.1.0",
-  "module": "src/cli.ts",
   "type": "module",
   "private": true,
-  "bin": {
-    "li": "./src/cli.ts"
-  },
+  "workspaces": ["packages/*"],
   "scripts": {
-    "dev": "bun run src/cli.ts",
-    "check": "tsc --noEmit",
-    "build": "bun build ./src/cli.ts --compile --outfile li"
+    "dev": "bun run --cwd packages/cli src/cli.ts",
+    "check": "bun run --filter '*' check",
+    "test": "bun run --filter '*' test",
+    "build": "bun build ./packages/cli/src/cli.ts --compile --outfile lnr",
+    "build:all": "bun build ./packages/cli/src/cli.ts --compile --target=bun-linux-x64 --outfile dist/lnr-linux-x64 && bun build ./packages/cli/src/cli.ts --compile --target=bun-linux-arm64 --outfile dist/lnr-linux-arm64 && bun build ./packages/cli/src/cli.ts --compile --target=bun-darwin-x64 --outfile dist/lnr-darwin-x64 && bun build ./packages/cli/src/cli.ts --compile --target=bun-darwin-arm64 --outfile dist/lnr-darwin-arm64 && bun build ./packages/cli/src/cli.ts --compile --target=bun-windows-x64 --outfile dist/lnr-windows-x64.exe",
+    "release": "changeset publish"
   },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"
-  },
-  "dependencies": {
-    "@linear/sdk": "^68.0.0",
-    "chalk": "^5.6.2",
-    "commander": "^14.0.2"
   }
 }

@@ -22,13 +22,13 @@ Linear terminology preserved: issues, projects, teams, cycles, labels, milestone
 
 ```bash
 # store api key (saved to ~/.linear-cli/config.json)
-li auth <api-key>
+lnr auth <api-key>
 
 # verify current auth
-li auth --whoami
+lnr auth --whoami
 
 # clear stored credentials
-li auth --logout
+lnr auth --logout
 ```
 
 api key obtained from: https://linear.app/settings/account/security
@@ -41,84 +41,84 @@ api key obtained from: https://linear.app/settings/account/security
 
 ```bash
 # list issues (defaults to assigned to me, open states)
-li issues
-li issues --team ENG
-li issues --state "in progress"
-li issues --assignee @me
-li issues --label bug
-li issues --project "q1 launch"
+lnr issues
+lnr issues --team ENG
+lnr issues --state "in progress"
+lnr issues --assignee @me
+lnr issues --label bug
+lnr issues --project "q1 launch"
 
 # show single issue
-li issue ENG-123
-li issue ENG-123 --json
+lnr issue ENG-123
+lnr issue ENG-123 --json
 
 # create issue
-li issue new --team ENG --title "fix auth flow"
-li issue new --team ENG --title "fix auth flow" --description "the thing is broken"
-li issue new --team ENG --title "fix auth flow" --assignee @me --label bug --priority urgent
+lnr issue new --team ENG --title "fix auth flow"
+lnr issue new --team ENG --title "fix auth flow" --description "the thing is broken"
+lnr issue new --team ENG --title "fix auth flow" --assignee @me --label bug --priority urgent
 
 # interactive create (prompts for required fields)
-li issue new -i
+lnr issue new -i
 
 # update issue
-li issue ENG-123 --state "done"
-li issue ENG-123 --assignee alice@company.com
-li issue ENG-123 --priority high
-li issue ENG-123 --label +bug          # add label
-li issue ENG-123 --label -wontfix      # remove label
+lnr issue ENG-123 --state "done"
+lnr issue ENG-123 --assignee alice@company.com
+lnr issue ENG-123 --priority high
+lnr issue ENG-123 --label +bug          # add label
+lnr issue ENG-123 --label -wontfix      # remove label
 
 # comment on issue
-li issue ENG-123 --comment "looking into this now"
+lnr issue ENG-123 --comment "looking into this now"
 
 # open in browser
-li issue ENG-123 --open
+lnr issue ENG-123 --open
 ```
 
 ### teams
 
 ```bash
 # list teams
-li teams
+lnr teams
 
 # show team details
-li team ENG
-li team ENG --members
+lnr team ENG
+lnr team ENG --members
 ```
 
 ### projects
 
 ```bash
 # list projects
-li projects
-li projects --team ENG
-li projects --status active
+lnr projects
+lnr projects --team ENG
+lnr projects --status active
 
 # show project
-li project "q1 launch"
-li project "q1 launch" --issues
+lnr project "q1 launch"
+lnr project "q1 launch" --issues
 ```
 
 ### cycles
 
 ```bash
 # list cycles
-li cycles --team ENG
+lnr cycles --team ENG
 
 # current cycle
-li cycle --current --team ENG
-li cycle --current --team ENG --issues
+lnr cycle --current --team ENG
+lnr cycle --current --team ENG --issues
 ```
 
 ### me
 
 ```bash
 # my assigned issues
-li me
-li me --issues
-li me --created
+lnr me
+lnr me --issues
+lnr me --created
 
 # my activity
-li me --activity
+lnr me --activity
 ```
 
 ---
@@ -127,16 +127,16 @@ li me --activity
 
 ```bash
 # default: compact table
-li issues
+lnr issues
 
 # detailed: full info per item
-li issues --verbose
+lnr issues --verbose
 
 # json: machine-readable
-li issues --json
+lnr issues --json
 
 # quiet: ids only
-li issues --quiet
+lnr issues --quiet
 ```
 
 ---
@@ -145,15 +145,15 @@ li issues --quiet
 
 ```bash
 # text search
-li search "auth bug"
-li search "auth bug" --team ENG
+lnr search "auth bug"
+lnr search "auth bug" --team ENG
 
 # filter combinations (AND logic)
-li issues --team ENG --state "in progress" --assignee @me
+lnr issues --team ENG --state "in progress" --assignee @me
 
 # date filters
-li issues --created-after 2024-01-01
-li issues --updated-after 7d    # relative: 7 days ago
+lnr issues --created-after 2024-01-01
+lnr issues --updated-after 7d    # relative: 7 days ago
 ```
 
 ---
@@ -162,14 +162,14 @@ li issues --updated-after 7d    # relative: 7 days ago
 
 ```bash
 # aliases
-li i           # li issues
-li i new       # li issue new
-li t           # li teams
-li p           # li projects
-li c           # li cycles
+lnr i           # lnr issues
+lnr i new       # lnr issue new
+lnr t           # lnr teams
+lnr p           # lnr projects
+lnr c           # lnr cycles
 
 # quick access
-li ENG-123     # li issue ENG-123 (if matches issue pattern)
+lnr ENG-123     # lnr issue ENG-123 (if matches issue pattern)
 ```
 
 ---
@@ -188,12 +188,12 @@ stored in `~/.linear-cli/config.json`:
 
 ```bash
 # set defaults
-li config set default_team ENG
-li config set output_format json
+lnr config set default_team ENG
+lnr config set output_format json
 
 # view config
-li config
-li config get default_team
+lnr config
+lnr config get default_team
 ```
 
 ---
@@ -204,7 +204,7 @@ errors are direct and actionable:
 
 ```
 error: not authenticated
-  run: li auth <api-key>
+  run: lnr auth <api-key>
 
 error: team "XYZ" not found
   available teams: ENG, DESIGN, OPS
@@ -230,10 +230,10 @@ error: rate limited, retry in 30s
 
 ```bash
 # build single binary
-bun build ./src/cli.ts --compile --outfile li
+bun build ./src/cli.ts --compile --outfile lnr
 
 # install globally
-cp li /usr/local/bin/li
+cp lnr /usr/local/bin/lnr
 ```
 
 ---

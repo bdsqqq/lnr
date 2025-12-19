@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+
+      - run: bun install
+
+      # changesets handles version bumps and changelog generation
+      # creates a "Version Packages" PR when changesets are detected
+      # merging that PR triggers the publish step
+      - name: Create Release Pull Request or Publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: bun run release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # TODO: Add NPM_TOKEN secret in GitHub repo settings:
+          # Settings > Secrets and variables > Actions > New repository secret
+          # Name: NPM_TOKEN
+          # Value: npm access token with publish permissions
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # build binaries for all platforms after successful publish
+      - name: Build binaries
+        if: steps.changesets.outputs.published == 'true'
+        run: bun run build:all
+
+      # create github release with binaries
+      - name: Create GitHub Release
+        if: steps.changesets.outputs.published == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

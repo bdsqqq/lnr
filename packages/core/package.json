@@ -1,0 +1,32 @@
+{
+  "name": "@bdsqqq/lnr-core",
+  "version": "0.1.0",
+  "description": "core business logic for linear-cli",
+  "type": "module",
+  "private": false,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "src"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bdsqqq/lnr.git",
+    "directory": "packages/core"
+  },
+  "license": "MIT",
+  "author": "bdsqqq",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@linear/sdk": "^68.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
