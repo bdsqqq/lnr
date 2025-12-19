@@ -9,13 +9,14 @@ import { registerCyclesCommand } from "./commands/cycles";
 import { registerMeCommand } from "./commands/me";
 import { registerSearchCommand } from "./commands/search";
 import { registerConfigCommand } from "./commands/config";
+import pkg from "../package.json";
 
 const program = new Command();
 
 program
   .name("lnr")
   .description("command-line interface for Linear")
-  .version("0.1.0");
+  .version(pkg.version);
 
 registerAuthCommand(program);
 registerIssuesCommand(program);
