@@ -73,3 +73,6 @@ export { getViewer, getMyIssues, getMyCreatedIssues } from "./me";
 
 // search
 export { searchIssues } from "./search";
+
+// relations
+export { createIssueRelation } from "./relations";
