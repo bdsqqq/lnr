@@ -22,13 +22,6 @@ inputs.lnr.url = "github:bdsqqq/lnr";
 # then use: inputs.lnr.packages.${system}.default
 ```
 
-once published to nixpkgs:
-```bash
-nix-env -iA nixpkgs.lnr
-# or in configuration.nix
-environment.systemPackages = [ pkgs.lnr ];
-```
-
 ### from source
 
 ```bash
@@ -36,6 +29,16 @@ bun install
 bun run build
 cp lnr /usr/local/bin/lnr
 ```
+
+### agent skill
+
+lnr includes an [Amp](https://ampcode.com) agent skill for AI-assisted issue management.
+
+```bash
+amp skill add bdsqqq/lnr/linear
+```
+
+then load with `linear` in any Amp session.
 
 ## usage
 
