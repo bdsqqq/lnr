@@ -11,6 +11,7 @@ import {
   getTeamLabels,
   findTeamByKeyOrName,
   getAvailableTeamKeys,
+  createIssueRelation,
   type Issue,
   type ListIssuesFilter,
 } from "@bdsqqq/lnr-core";
@@ -50,6 +51,9 @@ interface UpdateOptions {
   label?: string;
   comment?: string;
   open?: boolean;
+  blocksIssue?: string;
+  blockedByIssue?: string;
+  relatesToIssue?: string;
 }
 
 interface CreateOptions {
@@ -243,6 +247,21 @@ async function handleUpdateIssue(identifier: string, options: UpdateOptions): Pr
       await updateIssue(client, issue.id, updatePayload);
       console.log(`updated ${identifier}`);
     }
+
+    if (options.blocksIssue) {
+      await createIssueRelation(client, issue.id, options.blocksIssue, "blocks");
+      console.log(`${identifier} now blocks ${options.blocksIssue}`);
+    }
+
+    if (options.blockedByIssue) {
+      await createIssueRelation(client, options.blockedByIssue, issue.id, "blocks");
+      console.log(`${identifier} now blocked by ${options.blockedByIssue}`);
+    }
+
+    if (options.relatesToIssue) {
+      await createIssueRelation(client, issue.id, options.relatesToIssue, "related");
+      console.log(`${identifier} now relates to ${options.relatesToIssue}`);
+    }
   } catch (error) {
     handleApiError(error);
   }
@@ -349,6 +368,9 @@ export function registerIssuesCommand(program: Command): void {
     .option("--priority <priority>", "update priority (urgent, high, medium, low)")
     .option("--label <label>", "add (+label) or remove (-label) a label")
     .option("--comment <text>", "add a comment")
+    .option("--blocks <issue>", "mark this issue as blocking another issue")
+    .option("--blocked-by <issue>", "mark this issue as blocked by another issue")
+    .option("--relates-to <issue>", "link this issue as related to another issue")
     .option("--team <key>", "team for new issue")
     .option("--title <title>", "title for new issue")
     .option("--description <description>", "description for new issue")
@@ -359,7 +381,8 @@ export function registerIssuesCommand(program: Command): void {
       }
 
       const hasUpdate =
-        options.state || options.assignee || options.priority || options.label || options.comment;
+        options.state || options.assignee || options.priority || options.label || options.comment ||
+        options.blocksIssue || options.blockedByIssue || options.relatesToIssue;
 
       if (hasUpdate) {
         await handleUpdateIssue(id, options);
