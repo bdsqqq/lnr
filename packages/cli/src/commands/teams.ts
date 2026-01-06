@@ -1,11 +1,11 @@
 import type { Command } from "commander";
 import {
-  getClient,
   listTeams,
   getTeam,
   getTeamMembers,
   getAvailableTeamKeys,
 } from "@bdsqqq/lnr-core";
+import { getClient } from "../lib/client";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
 import {
   getOutputFormat,

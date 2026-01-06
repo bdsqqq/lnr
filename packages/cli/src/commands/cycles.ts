@@ -1,10 +1,10 @@
 import type { Command } from "commander";
 import {
-  getClient,
   listCycles,
   getCurrentCycle,
   getCycleIssues,
 } from "@bdsqqq/lnr-core";
+import { getClient } from "../lib/client";
 import { handleApiError, exitWithError } from "../lib/error";
 import {
   outputJson,
