@@ -11,7 +11,16 @@ import {
   getTeamLabels,
   findTeamByKeyOrName,
   getAvailableTeamKeys,
+  createIssueRelation,
+  getIssueComments,
+  updateComment,
+  replyToComment,
+  deleteComment,
+  archiveIssue,
+  createReaction,
+  deleteReaction,
   type Issue,
+  type Comment,
   type ListIssuesFilter,
 } from "@bdsqqq/lnr-core";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
@@ -50,6 +59,18 @@ interface UpdateOptions {
   label?: string;
   comment?: string;
   open?: boolean;
+  blocksIssue?: string;
+  blockedByIssue?: string;
+  relatesToIssue?: string;
+  comments?: boolean;
+  editComment?: string;
+  replyTo?: string;
+  text?: string;
+  deleteComment?: string;
+  archive?: boolean;
+  react?: string;
+  emoji?: string;
+  unreact?: string;
 }
 
 interface CreateOptions {
@@ -67,6 +88,13 @@ const issueColumns: TableColumn<Issue>[] = [
   { header: "TITLE", value: (i) => truncate(i.title, 50), width: 50 },
   { header: "ASSIGNEE", value: (i) => i.assignee ?? "-", width: 15 },
   { header: "PRIORITY", value: (i) => formatPriority(i.priority), width: 8 },
+];
+
+const commentColumns: TableColumn<Comment>[] = [
+  { header: "ID", value: (c) => c.id.slice(0, 8), width: 10 },
+  { header: "USER", value: (c) => c.user ?? "-", width: 15 },
+  { header: "BODY", value: (c) => truncate(c.body.replace(/\n/g, " "), 50), width: 50 },
+  { header: "CREATED", value: (c) => formatDate(c.createdAt), width: 12 },
 ];
 
 async function handleListIssues(options: ListOptions): Promise<void> {
@@ -167,6 +195,81 @@ async function handleUpdateIssue(identifier: string, options: UpdateOptions): Pr
       return;
     }
 
+    if (options.comments) {
+      const comments = await getIssueComments(client, issue.id);
+      outputTable(comments, commentColumns, { verbose: true });
+      return;
+    }
+
+    if (options.editComment) {
+      if (!options.text) {
+        exitWithError("--edit-comment requires --text");
+      }
+      const success = await updateComment(client, options.editComment, options.text);
+      if (success) {
+        console.log(`updated comment ${options.editComment.slice(0, 8)}`);
+      } else {
+        exitWithError("failed to update comment");
+      }
+      return;
+    }
+
+    if (options.replyTo) {
+      if (!options.text) {
+        exitWithError("--reply-to requires --text");
+      }
+      const success = await replyToComment(client, options.replyTo, issue.id, options.text);
+      if (success) {
+        console.log(`replied to comment ${options.replyTo.slice(0, 8)}`);
+      } else {
+        exitWithError("failed to reply to comment");
+      }
+      return;
+    }
+
+    if (options.deleteComment) {
+      const success = await deleteComment(client, options.deleteComment);
+      if (success) {
+        console.log(`deleted comment ${options.deleteComment.slice(0, 8)}`);
+      } else {
+        exitWithError("failed to delete comment");
+      }
+      return;
+    }
+
+    if (options.archive) {
+      const success = await archiveIssue(client, issue.id);
+      if (success) {
+        console.log(`archived ${identifier}`);
+      } else {
+        exitWithError("failed to archive issue");
+      }
+      return;
+    }
+
+    if (options.react && options.emoji) {
+      const reaction = await createReaction(client, {
+        commentId: options.react,
+        emoji: options.emoji,
+      });
+      if (reaction) {
+        console.log(`added ${reaction.emoji} to comment ${options.react.slice(0, 8)}`);
+      } else {
+        exitWithError("failed to add reaction");
+      }
+      return;
+    }
+
+    if (options.unreact) {
+      const success = await deleteReaction(client, options.unreact);
+      if (success) {
+        console.log(`removed reaction ${options.unreact.slice(0, 8)}`);
+      } else {
+        exitWithError("failed to remove reaction");
+      }
+      return;
+    }
+
     const updatePayload: Record<string, unknown> = {};
 
     if (options.state) {
@@ -242,6 +345,21 @@ async function handleUpdateIssue(identifier: string, options: UpdateOptions): Pr
     if (Object.keys(updatePayload).length > 0) {
       await updateIssue(client, issue.id, updatePayload);
       console.log(`updated ${identifier}`);
+    }
+
+    if (options.blocksIssue) {
+      await createIssueRelation(client, issue.id, options.blocksIssue, "blocks");
+      console.log(`${identifier} now blocks ${options.blocksIssue}`);
+    }
+
+    if (options.blockedByIssue) {
+      await createIssueRelation(client, options.blockedByIssue, issue.id, "blocks");
+      console.log(`${identifier} now blocked by ${options.blockedByIssue}`);
+    }
+
+    if (options.relatesToIssue) {
+      await createIssueRelation(client, issue.id, options.relatesToIssue, "related");
+      console.log(`${identifier} now relates to ${options.relatesToIssue}`);
     }
   } catch (error) {
     handleApiError(error);
@@ -349,6 +467,18 @@ export function registerIssuesCommand(program: Command): void {
     .option("--priority <priority>", "update priority (urgent, high, medium, low)")
     .option("--label <label>", "add (+label) or remove (-label) a label")
     .option("--comment <text>", "add a comment")
+    .option("--comments", "list comments on this issue")
+    .option("--edit-comment <id>", "edit a comment (use with --text)")
+    .option("--reply-to <commentId>", "reply to a comment (use with --text)")
+    .option("--text <text>", "text for --edit-comment or --reply-to")
+    .option("--delete-comment <id>", "delete a comment")
+    .option("--archive", "archive this issue")
+    .option("--react <commentId>", "add reaction to a comment (use with --emoji)")
+    .option("--emoji <emoji>", "emoji for --react")
+    .option("--unreact <reactionId>", "remove a reaction")
+    .option("--blocks <issue>", "mark this issue as blocking another issue")
+    .option("--blocked-by <issue>", "mark this issue as blocked by another issue")
+    .option("--relates-to <issue>", "link this issue as related to another issue")
     .option("--team <key>", "team for new issue")
     .option("--title <title>", "title for new issue")
     .option("--description <description>", "description for new issue")
@@ -359,7 +489,10 @@ export function registerIssuesCommand(program: Command): void {
       }
 
       const hasUpdate =
-        options.state || options.assignee || options.priority || options.label || options.comment;
+        options.state || options.assignee || options.priority || options.label || options.comment ||
+        options.blocksIssue || options.blockedByIssue || options.relatesToIssue ||
+        options.comments || options.editComment || options.replyTo || options.deleteComment ||
+        options.archive || (options.react && options.emoji) || options.unreact;
 
       if (hasUpdate) {
         await handleUpdateIssue(id, options);

@@ -85,3 +85,56 @@ export interface CreateProjectInput {
   description?: string;
   teamIds?: string[];
 }
+
+export interface Comment {
+  id: string;
+  body: string;
+  createdAt: Date;
+  updatedAt: Date;
+  user: string | null;
+  parentId: string | null;
+}
+
+export interface Label {
+  id: string;
+  name: string;
+  color: string;
+  description?: string | null;
+  isGroup: boolean;
+  parentId?: string | null;
+  teamId?: string | null;
+}
+
+export interface CreateLabelInput {
+  name: string;
+  color?: string;
+  description?: string;
+  teamId?: string;
+  parentId?: string;
+}
+
+export interface UpdateLabelInput {
+  name?: string;
+  color?: string;
+  description?: string;
+}
+
+export interface Document {
+  id: string;
+  title: string;
+  content?: string | null;
+  slugId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateDocumentInput {
+  title: string;
+  content?: string;
+  projectId?: string;
+}
+
+export interface UpdateDocumentInput {
+  title?: string;
+  content?: string;
+}

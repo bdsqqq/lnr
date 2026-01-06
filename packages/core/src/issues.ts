@@ -180,3 +180,11 @@ export async function getTeamLabels(
   const labels = await team.labels();
   return labels.nodes.map((l) => ({ id: l.id, name: l.name }));
 }
+
+export async function archiveIssue(
+  client: LinearClient,
+  issueId: string
+): Promise<boolean> {
+  const result = await client.archiveIssue(issueId);
+  return result.success;
+}
