@@ -35,7 +35,7 @@ cp lnr /usr/local/bin/lnr
 lnr includes an [Amp](https://ampcode.com) agent skill for AI-assisted issue management.
 
 ```bash
-amp skill add bdsqqq/lnr/linear
+amp skill add bdsqqq/lnr
 ```
 
 then load with `linear` in any Amp session.
