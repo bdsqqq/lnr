@@ -10,6 +10,13 @@ export type {
   CreateIssueInput,
   UpdateIssueInput,
   CreateProjectInput,
+  Comment,
+  Document,
+  CreateDocumentInput,
+  UpdateDocumentInput,
+  Label,
+  CreateLabelInput,
+  UpdateLabelInput,
 } from "./types";
 
 // client
@@ -43,6 +50,7 @@ export {
   priorityFromString,
   getTeamStates,
   getTeamLabels,
+  archiveIssue,
 } from "./issues";
 
 // projects
@@ -74,3 +82,38 @@ export { searchIssues } from "./search";
 
 // relations
 export { createIssueRelation } from "./relations";
+
+// reactions
+export {
+  createReaction,
+  deleteReaction,
+  type Reaction,
+  type CreateReactionInput,
+} from "./reactions";
+
+// comments
+export {
+  getIssueComments,
+  updateComment,
+  replyToComment,
+  deleteComment,
+} from "./comments";
+
+// documents
+export {
+  listDocuments,
+  getDocument,
+  createDocument,
+  updateDocument,
+  deleteDocument,
+} from "./documents";
+
+// labels
+export {
+  listLabels,
+  getLabel,
+  createLabel,
+  updateLabel,
+  deleteLabel,
+  type ListLabelsOptions,
+} from "./labels";

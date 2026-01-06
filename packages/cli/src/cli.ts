@@ -9,6 +9,8 @@ import { registerCyclesCommand } from "./commands/cycles";
 import { registerMeCommand } from "./commands/me";
 import { registerSearchCommand } from "./commands/search";
 import { registerConfigCommand } from "./commands/config";
+import { registerDocumentsCommand } from "./commands/documents";
+import { registerLabelsCommand } from "./commands/labels";
 import pkg from "../package.json";
 
 const program = new Command();
@@ -26,5 +28,7 @@ registerCyclesCommand(program);
 registerMeCommand(program);
 registerSearchCommand(program);
 registerConfigCommand(program);
+registerDocumentsCommand(program);
+registerLabelsCommand(program);
 
 program.parse();
