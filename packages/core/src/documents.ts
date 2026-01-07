@@ -30,7 +30,7 @@ export async function listDocuments(
         createdAt: d.createdAt,
         updatedAt: d.updatedAt,
         url: d.url,
-        project: (await d.project)?.id ?? null,
+        project: (await d.project)?.name ?? null,
       }))
     );
   } catch {
@@ -55,7 +55,7 @@ export async function getDocument(
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
       url: doc.url,
-      project: (await doc.project)?.id ?? null,
+      project: (await doc.project)?.name ?? null,
     };
   } catch {
     return null;
@@ -88,7 +88,7 @@ export async function createDocument(
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
     url: doc.url,
-    project: (await doc.project)?.id ?? null,
+    project: (await doc.project)?.name ?? null,
   };
 }
 
