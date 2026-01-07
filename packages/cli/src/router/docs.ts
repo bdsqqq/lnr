@@ -81,14 +81,14 @@ export const docsRouter = router({
     })
     .input(docInput)
     .query(async ({ input }) => {
-      const client = getClient();
+      try {
+        const client = getClient();
 
-      if (input.id === "new") {
-        if (!input.title) {
-          exitWithError("--title is required", "usage: lnr doc new --title \"...\"");
-        }
+        if (input.id === "new") {
+          if (!input.title) {
+            exitWithError("--title is required", "usage: lnr doc new --title \"...\"");
+          }
 
-        try {
           const doc = await createDocument(client, {
             title: input.title,
             content: input.content,
@@ -98,16 +98,12 @@ export const docsRouter = router({
           if (doc) {
             console.log(`created document: ${doc.title}`);
           } else {
-            console.log("created document");
+            exitWithError("failed to create document");
           }
-        } catch (error) {
-          handleApiError(error);
+          return;
         }
-        return;
-      }
 
-      if (input.delete) {
-        try {
+        if (input.delete) {
           const success = await deleteDocument(client, input.id);
 
           if (!success) {
@@ -115,31 +111,23 @@ export const docsRouter = router({
           }
 
           console.log(`deleted document: ${input.id}`);
-        } catch (error) {
-          handleApiError(error);
+          return;
         }
-        return;
-      }
 
-      if (input.title || input.content) {
-        try {
+        if (input.title || input.content) {
           const success = await updateDocument(client, input.id, {
             title: input.title,
             content: input.content,
           });
 
-          if (success) {
-            console.log(`updated document: ${input.id}`);
-          } else {
-            exitWithError(`failed to update document "${input.id}"`);
+          if (!success) {
+            exitWithError(`document "${input.id}" not found`, undefined, EXIT_CODES.NOT_FOUND);
           }
-        } catch (error) {
-          handleApiError(error);
-        }
-        return;
-      }
 
-      try {
+          console.log(`updated document: ${input.id}`);
+          return;
+        }
+
         const format = input.json ? "json" : undefined;
 
         const doc = await getDocument(client, input.id);

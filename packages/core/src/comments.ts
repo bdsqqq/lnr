@@ -13,20 +13,24 @@ export async function getIssueComments(
   client: LinearClient,
   issueId: string
 ): Promise<Comment[]> {
-  const issue = await client.issue(issueId);
-  if (!issue) return [];
+  try {
+    const issue = await client.issue(issueId);
+    if (!issue) return [];
 
-  const comments = await issue.comments();
-  return Promise.all(
-    comments.nodes.map(async (c) => ({
-      id: c.id,
-      body: c.body,
-      createdAt: c.createdAt,
-      updatedAt: c.updatedAt,
-      user: (await c.user)?.name ?? null,
-      parentId: c.parentId ?? null,
-    }))
-  );
+    const comments = await issue.comments();
+    return Promise.all(
+      comments.nodes.map(async (c) => ({
+        id: c.id,
+        body: c.body,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+        user: (await c.user)?.name ?? null,
+        parentId: c.parentId ?? null,
+      }))
+    );
+  } catch {
+    return [];
+  }
 }
 
 export async function updateComment(
