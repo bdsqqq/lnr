@@ -18,6 +18,7 @@ import {
   archiveIssue,
   createReaction,
   deleteReaction,
+  getSubIssues,
   type Issue,
   type Comment,
   type ListIssuesFilter,
@@ -50,6 +51,7 @@ interface ListOptions extends OutputOptions {
 interface ShowOptions extends OutputOptions {
   json?: boolean;
   open?: boolean;
+  subIssues?: boolean;
 }
 
 interface UpdateOptions {
@@ -59,9 +61,9 @@ interface UpdateOptions {
   label?: string;
   comment?: string;
   open?: boolean;
-  blocksIssue?: string;
-  blockedByIssue?: string;
-  relatesToIssue?: string;
+  blocks?: string;
+  blockedBy?: string;
+  relatesTo?: string;
   comments?: boolean;
   editComment?: string;
   replyTo?: string;
@@ -71,6 +73,8 @@ interface UpdateOptions {
   react?: string;
   emoji?: string;
   unreact?: string;
+  json?: boolean;
+  parent?: string;
 }
 
 interface CreateOptions {
@@ -80,6 +84,7 @@ interface CreateOptions {
   assignee?: string;
   label?: string;
   priority?: string;
+  parent?: string;
 }
 
 const issueColumns: TableColumn<Issue>[] = [
@@ -143,6 +148,21 @@ async function handleShowIssue(identifier: string, options: ShowOptions): Promis
       return;
     }
 
+    if (options.subIssues) {
+      const subIssues = await getSubIssues(client, issue.id);
+      const format = options.json ? "json" : getOutputFormat(options);
+      if (format === "json") {
+        outputJson(subIssues);
+        return;
+      }
+      if (subIssues.length === 0) {
+        console.log(`${identifier} has no sub-issues`);
+        return;
+      }
+      outputTable(subIssues, issueColumns);
+      return;
+    }
+
     const format = options.json ? "json" : getOutputFormat(options);
 
     if (format === "json") {
@@ -160,6 +180,9 @@ async function handleShowIssue(identifier: string, options: ShowOptions): Promis
     console.log(`state:    ${issue.state ?? "-"}`);
     console.log(`assignee: ${issue.assignee ?? "-"}`);
     console.log(`priority: ${formatPriority(issue.priority)}`);
+    if (issue.parent) {
+      console.log(`parent:   ${issue.parent}`);
+    }
     console.log(`created:  ${formatDate(issue.createdAt)}`);
     console.log(`updated:  ${formatDate(issue.updatedAt)}`);
     console.log(`url:      ${issue.url}`);
@@ -197,6 +220,10 @@ async function handleUpdateIssue(identifier: string, options: UpdateOptions): Pr
 
     if (options.comments) {
       const comments = await getIssueComments(client, issue.id);
+      if (options.json) {
+        outputJson(comments);
+        return;
+      }
       outputTable(comments, commentColumns, { verbose: true });
       return;
     }
@@ -342,24 +369,32 @@ async function handleUpdateIssue(identifier: string, options: UpdateOptions): Pr
       }
     }
 
+    if (options.parent) {
+      const parentIssue = await getIssue(client, options.parent);
+      if (!parentIssue) {
+        exitWithError(`parent issue "${options.parent}" not found`);
+      }
+      updatePayload.parentId = parentIssue.id;
+    }
+
     if (Object.keys(updatePayload).length > 0) {
       await updateIssue(client, issue.id, updatePayload);
       console.log(`updated ${identifier}`);
     }
 
-    if (options.blocksIssue) {
-      await createIssueRelation(client, issue.id, options.blocksIssue, "blocks");
-      console.log(`${identifier} now blocks ${options.blocksIssue}`);
+    if (options.blocks) {
+      await createIssueRelation(client, issue.id, options.blocks, "blocks");
+      console.log(`${identifier} now blocks ${options.blocks}`);
     }
 
-    if (options.blockedByIssue) {
-      await createIssueRelation(client, options.blockedByIssue, issue.id, "blocks");
-      console.log(`${identifier} now blocked by ${options.blockedByIssue}`);
+    if (options.blockedBy) {
+      await createIssueRelation(client, options.blockedBy, issue.id, "blocks");
+      console.log(`${identifier} now blocked by ${options.blockedBy}`);
     }
 
-    if (options.relatesToIssue) {
-      await createIssueRelation(client, issue.id, options.relatesToIssue, "related");
-      console.log(`${identifier} now relates to ${options.relatesToIssue}`);
+    if (options.relatesTo) {
+      await createIssueRelation(client, issue.id, options.relatesTo, "related");
+      console.log(`${identifier} now relates to ${options.relatesTo}`);
     }
   } catch (error) {
     handleApiError(error);
@@ -391,6 +426,7 @@ async function handleCreateIssue(options: CreateOptions): Promise<void> {
       assigneeId?: string;
       priority?: number;
       labelIds?: string[];
+      parentId?: string;
     } = {
       teamId: team.id,
       title: options.title,
@@ -428,6 +464,14 @@ async function handleCreateIssue(options: CreateOptions): Promise<void> {
         exitWithError(`label "${options.label}" not found`, `available labels: ${available}`);
       }
       createPayload.labelIds = [targetLabel.id];
+    }
+
+    if (options.parent) {
+      const parentIssue = await getIssue(client, options.parent);
+      if (!parentIssue) {
+        exitWithError(`parent issue "${options.parent}" not found`);
+      }
+      createPayload.parentId = parentIssue.id;
     }
 
     const issue = await createIssue(client, createPayload);
@@ -479,6 +523,8 @@ export function registerIssuesCommand(program: Command): void {
     .option("--blocks <issue>", "mark this issue as blocking another issue")
     .option("--blocked-by <issue>", "mark this issue as blocked by another issue")
     .option("--relates-to <issue>", "link this issue as related to another issue")
+    .option("--parent <issue>", "set parent issue (make this a sub-issue)")
+    .option("--sub-issues", "list sub-issues of this issue")
     .option("--team <key>", "team for new issue")
     .option("--title <title>", "title for new issue")
     .option("--description <description>", "description for new issue")
@@ -490,7 +536,7 @@ export function registerIssuesCommand(program: Command): void {
 
       const hasUpdate =
         options.state || options.assignee || options.priority || options.label || options.comment ||
-        options.blocksIssue || options.blockedByIssue || options.relatesToIssue ||
+        options.blocks || options.blockedBy || options.relatesTo || options.parent ||
         options.comments || options.editComment || options.replyTo || options.deleteComment ||
         options.archive || (options.react && options.emoji) || options.unreact;
 
