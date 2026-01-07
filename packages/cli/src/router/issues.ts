@@ -136,8 +136,9 @@ async function handleShowIssue(
     }
 
     if (input.open) {
-      const { exec } = await import("child_process");
-      exec(`open "${issue.url}"`);
+      const { spawn } = await import("child_process");
+      const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
+      spawn(cmd, [issue.url], { detached: true, stdio: "ignore" }).unref();
       console.log(`opened ${issue.url}`);
       return;
     }
