@@ -5,12 +5,13 @@ export async function createIssueRelation(
   issueId: string,
   relatedIssueId: string,
   type: "blocks" | "related"
-) {
+): Promise<boolean> {
   const relationType =
     type === "blocks" ? IssueRelationType.Blocks : IssueRelationType.Related;
-  return client.createIssueRelation({
+  const result = await client.createIssueRelation({
     issueId,
     relatedIssueId,
     type: relationType,
   });
+  return result.success;
 }

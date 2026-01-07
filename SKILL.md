@@ -31,7 +31,7 @@ lnr search "query" --team AXM          # scoped search
 lnr projects                           # list all
 lnr project "Project Name"             # show details
 lnr project "Project Name" --issues    # list project issues
-lnr project new --name "name" --team AXM --description "desc"
+lnr project new --projectName "name" --team AXM --description "desc"
 lnr project "Project Name" --delete    # archive project
 ```
 

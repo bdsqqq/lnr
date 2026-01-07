@@ -11,8 +11,18 @@ import {
   getTeamLabels,
   findTeamByKeyOrName,
   getAvailableTeamKeys,
+  getIssueComments,
+  updateComment,
+  replyToComment,
+  deleteComment,
+  archiveIssue,
+  getSubIssues,
+  createReaction,
+  deleteReaction,
+  createIssueRelation,
   type Issue,
   type ListIssuesFilter,
+  type Comment,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "./trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
@@ -28,31 +38,42 @@ import {
 } from "../lib/output";
 
 const listIssuesInput = z.object({
-  team: z.string().optional(),
-  state: z.string().optional(),
-  assignee: z.string().optional(),
-  label: z.string().optional(),
-  project: z.string().optional(),
-  json: z.boolean().optional(),
-  quiet: z.boolean().optional(),
-  verbose: z.boolean().optional(),
+  team: z.string().optional().describe("filter by team key"),
+  state: z.string().optional().describe("filter by workflow state name"),
+  assignee: z.string().optional().describe("filter by assignee email or @me"),
+  label: z.string().optional().describe("filter by label name"),
+  project: z.string().optional().describe("filter by project name"),
+  json: z.boolean().optional().describe("output as json"),
+  quiet: z.boolean().optional().describe("output ids only"),
+  verbose: z.boolean().optional().describe("show all columns"),
 });
 
 const issueInput = z.object({
-  idOrNew: z.string().meta({ positional: true }),
-  json: z.boolean().optional(),
-  open: z.boolean().optional(),
-  state: z.string().optional(),
-  assignee: z.string().optional(),
-  priority: z.string().optional(),
-  label: z.string().optional(),
-  comment: z.string().optional(),
-  blocks: z.string().optional(),
-  blockedBy: z.string().optional(),
-  relatesTo: z.string().optional(),
-  team: z.string().optional(),
-  title: z.string().optional(),
-  description: z.string().optional(),
+  idOrNew: z.string().meta({ positional: true }).describe("issue identifier (e.g. ENG-123) or 'new'"),
+  json: z.boolean().optional().describe("output as json"),
+  open: z.boolean().optional().describe("open issue in browser"),
+  state: z.string().optional().describe("set workflow state"),
+  assignee: z.string().optional().describe("set assignee by email or @me"),
+  priority: z.string().optional().describe("set priority (urgent, high, medium, low, none)"),
+  label: z.string().optional().describe("set label (+name to add, -name to remove)"),
+  comment: z.string().optional().describe("add comment to issue"),
+  blocks: z.string().optional().describe("add blocks relation to issue"),
+  blockedBy: z.string().optional().describe("add blocked-by relation to issue"),
+  relatesTo: z.string().optional().describe("add relates-to relation to issue"),
+  team: z.string().optional().describe("team key (required for new)"),
+  title: z.string().optional().describe("issue title (required for new)"),
+  description: z.string().optional().describe("issue description"),
+  comments: z.boolean().optional().describe("list comments on issue"),
+  editComment: z.string().optional().describe("comment id to edit (requires --text)"),
+  text: z.string().optional().describe("text for --edit-comment or --reply-to"),
+  replyTo: z.string().optional().describe("comment id to reply to (requires --text)"),
+  deleteComment: z.string().optional().describe("comment id to delete"),
+  archive: z.boolean().optional().describe("archive the issue"),
+  react: z.string().optional().describe("comment id to add reaction (requires --emoji)"),
+  emoji: z.string().optional().describe("emoji for --react"),
+  unreact: z.string().optional().describe("reaction id to remove"),
+  parent: z.string().optional().describe("set parent issue identifier"),
+  subIssues: z.boolean().optional().describe("list sub-issues"),
 });
 
 type IssueInput = z.infer<typeof issueInput>;
@@ -63,6 +84,13 @@ const issueColumns: TableColumn<Issue>[] = [
   { header: "TITLE", value: (i) => truncate(i.title, 50), width: 50 },
   { header: "ASSIGNEE", value: (i) => i.assignee ?? "-", width: 15 },
   { header: "PRIORITY", value: (i) => formatPriority(i.priority), width: 8 },
+];
+
+const commentColumns: TableColumn<Comment>[] = [
+  { header: "ID", value: (c) => c.id.slice(0, 8), width: 10 },
+  { header: "USER", value: (c) => c.user ?? "-", width: 15 },
+  { header: "BODY", value: (c) => truncate(c.body, 50), width: 50 },
+  { header: "CREATED", value: (c) => formatDate(c.createdAt), width: 12 },
 ];
 
 async function handleListIssues(input: z.infer<typeof listIssuesInput>): Promise<void> {
@@ -108,9 +136,32 @@ async function handleShowIssue(
     }
 
     if (input.open) {
-      const { exec } = await import("child_process");
-      exec(`open "${issue.url}"`);
+      const { spawn } = await import("child_process");
+      const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
+      spawn(cmd, [issue.url], { detached: true, stdio: "ignore" }).unref();
       console.log(`opened ${issue.url}`);
+      return;
+    }
+
+    if (input.comments) {
+      const comments = await getIssueComments(client, issue.id);
+      const format = input.json ? "json" : getOutputFormat({});
+      if (format === "json") {
+        outputJson(comments);
+      } else {
+        outputTable(comments, commentColumns);
+      }
+      return;
+    }
+
+    if (input.subIssues) {
+      const subIssues = await getSubIssues(client, issue.id);
+      const format = input.json ? "json" : getOutputFormat({});
+      if (format === "json") {
+        outputJson(subIssues);
+      } else {
+        outputTable(subIssues, issueColumns);
+      }
       return;
     }
 
@@ -131,6 +182,9 @@ async function handleShowIssue(
     console.log(`state:    ${issue.state ?? "-"}`);
     console.log(`assignee: ${issue.assignee ?? "-"}`);
     console.log(`priority: ${formatPriority(issue.priority)}`);
+    if (issue.parentId) {
+      console.log(`parent:   ${issue.parentId}`);
+    }
     console.log(`created:  ${formatDate(issue.createdAt)}`);
     console.log(`updated:  ${formatDate(issue.updatedAt)}`);
     console.log(`url:      ${issue.url}`);
@@ -156,16 +210,60 @@ async function handleUpdateIssue(
       exitWithError(`issue ${identifier} not found`, undefined, EXIT_CODES.NOT_FOUND);
     }
 
-    if (input.open) {
-      const { exec } = await import("child_process");
-      exec(`open "${issue.url}"`);
-      console.log(`opened ${issue.url}`);
-      return;
-    }
-
     if (input.comment) {
       await addComment(client, issue.id, input.comment);
       console.log(`commented on ${identifier}`);
+      return;
+    }
+
+    if (input.editComment) {
+      if (!input.text) {
+        exitWithError("--text is required with --edit-comment");
+      }
+      await updateComment(client, input.editComment, input.text);
+      console.log(`updated comment ${input.editComment.slice(0, 8)}`);
+      return;
+    }
+
+    if (input.replyTo) {
+      if (!input.text) {
+        exitWithError("--text is required with --reply-to");
+      }
+      await replyToComment(client, issue.id, input.replyTo, input.text);
+      console.log(`replied to comment ${input.replyTo.slice(0, 8)}`);
+      return;
+    }
+
+    if (input.deleteComment) {
+      await deleteComment(client, input.deleteComment);
+      console.log(`deleted comment ${input.deleteComment.slice(0, 8)}`);
+      return;
+    }
+
+    if (input.archive) {
+      await archiveIssue(client, issue.id);
+      console.log(`archived ${identifier}`);
+      return;
+    }
+
+    if (input.react) {
+      if (!input.emoji) {
+        exitWithError("--emoji is required with --react");
+      }
+      const success = await createReaction(client, input.react, input.emoji);
+      if (!success) {
+        exitWithError(`failed to add reaction to comment ${input.react.slice(0, 8)}`);
+      }
+      console.log(`added reaction ${input.emoji} to comment ${input.react.slice(0, 8)}`);
+      return;
+    }
+
+    if (input.unreact) {
+      const success = await deleteReaction(client, input.unreact);
+      if (!success) {
+        exitWithError(`reaction ${input.unreact.slice(0, 8)} not found`, undefined, EXIT_CODES.NOT_FOUND);
+      }
+      console.log(`removed reaction ${input.unreact.slice(0, 8)}`);
       return;
     }
 
@@ -257,9 +355,53 @@ async function handleUpdateIssue(
       }
     }
 
+    if (input.parent) {
+      const parentIssue = await getIssue(client, input.parent);
+      if (!parentIssue) {
+        exitWithError(`parent issue "${input.parent}" not found`);
+      }
+      updatePayload.parentId = parentIssue.id;
+    }
+
     if (Object.keys(updatePayload).length > 0) {
       await updateIssue(client, issue.id, updatePayload);
       console.log(`updated ${identifier}`);
+    }
+
+    if (input.blocks) {
+      const blockedIssue = await getIssue(client, input.blocks);
+      if (!blockedIssue) {
+        exitWithError(`issue "${input.blocks}" not found`);
+      }
+      const success = await createIssueRelation(client, issue.id, blockedIssue.id, "blocks");
+      if (!success) {
+        exitWithError(`failed to create blocks relation`);
+      }
+      console.log(`${identifier} now blocks ${input.blocks}`);
+    }
+
+    if (input.blockedBy) {
+      const blockerIssue = await getIssue(client, input.blockedBy);
+      if (!blockerIssue) {
+        exitWithError(`issue "${input.blockedBy}" not found`);
+      }
+      const success = await createIssueRelation(client, blockerIssue.id, issue.id, "blocks");
+      if (!success) {
+        exitWithError(`failed to create blocked-by relation`);
+      }
+      console.log(`${identifier} is now blocked by ${input.blockedBy}`);
+    }
+
+    if (input.relatesTo) {
+      const relatedIssue = await getIssue(client, input.relatesTo);
+      if (!relatedIssue) {
+        exitWithError(`issue "${input.relatesTo}" not found`);
+      }
+      const success = await createIssueRelation(client, issue.id, relatedIssue.id, "related");
+      if (!success) {
+        exitWithError(`failed to create relates-to relation`);
+      }
+      console.log(`${identifier} now relates to ${input.relatesTo}`);
     }
   } catch (error) {
     handleApiError(error);
@@ -291,6 +433,7 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
       assigneeId?: string;
       priority?: number;
       labelIds?: string[];
+      parentId?: string;
     } = {
       teamId: team.id,
       title: input.title,
@@ -328,6 +471,14 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
         exitWithError(`label "${input.label}" not found`, `available labels: ${available}`);
       }
       createPayload.labelIds = [targetLabel.id];
+    }
+
+    if (input.parent) {
+      const parentIssue = await getIssue(client, input.parent);
+      if (!parentIssue) {
+        exitWithError(`parent issue "${input.parent}" not found`);
+      }
+      createPayload.parentId = parentIssue.id;
     }
 
     const issue = await createIssue(client, createPayload);
@@ -368,7 +519,17 @@ export const issuesRouter = router({
         input.assignee ||
         input.priority ||
         input.label ||
-        input.comment;
+        input.comment ||
+        input.editComment ||
+        input.replyTo ||
+        input.deleteComment ||
+        input.archive ||
+        input.react ||
+        input.unreact ||
+        input.parent ||
+        input.blocks ||
+        input.blockedBy ||
+        input.relatesTo;
 
       if (hasUpdate) {
         await handleUpdateIssue(input.idOrNew, input);
