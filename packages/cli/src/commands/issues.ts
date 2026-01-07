@@ -10,6 +10,7 @@ import {
   getTeamLabels,
   findTeamByKeyOrName,
   getAvailableTeamKeys,
+  createIssueRelation,
   type Issue,
   type ListIssuesFilter,
 } from "@bdsqqq/lnr-core";
@@ -50,6 +51,9 @@ interface UpdateOptions {
   label?: string;
   comment?: string;
   open?: boolean;
+  blocks?: string;
+  blockedBy?: string;
+  relatesTo?: string;
 }
 
 interface CreateOptions {
@@ -243,6 +247,21 @@ async function handleUpdateIssue(identifier: string, options: UpdateOptions): Pr
       await updateIssue(client, issue.id, updatePayload);
       console.log(`updated ${identifier}`);
     }
+
+    if (options.blocks) {
+      await createIssueRelation(client, issue.id, options.blocks, "blocks");
+      console.log(`${identifier} now blocks ${options.blocks}`);
+    }
+
+    if (options.blockedBy) {
+      await createIssueRelation(client, options.blockedBy, issue.id, "blocks");
+      console.log(`${identifier} now blocked by ${options.blockedBy}`);
+    }
+
+    if (options.relatesTo) {
+      await createIssueRelation(client, issue.id, options.relatesTo, "related");
+      console.log(`${identifier} now relates to ${options.relatesTo}`);
+    }
   } catch (error) {
     handleApiError(error);
   }
@@ -349,6 +368,9 @@ export function registerIssuesCommand(program: Command): void {
     .option("--priority <priority>", "update priority (urgent, high, medium, low)")
     .option("--label <label>", "add (+label) or remove (-label) a label")
     .option("--comment <text>", "add a comment")
+    .option("--blocks <issue>", "mark this issue as blocking another issue")
+    .option("--blocked-by <issue>", "mark this issue as blocked by another issue")
+    .option("--relates-to <issue>", "link this issue as related to another issue")
     .option("--team <key>", "team for new issue")
     .option("--title <title>", "title for new issue")
     .option("--description <description>", "description for new issue")
@@ -359,7 +381,8 @@ export function registerIssuesCommand(program: Command): void {
       }
 
       const hasUpdate =
-        options.state || options.assignee || options.priority || options.label || options.comment;
+        options.state || options.assignee || options.priority || options.label || options.comment ||
+        options.blocks || options.blockedBy || options.relatesTo;
 
       if (hasUpdate) {
         await handleUpdateIssue(id, options);
