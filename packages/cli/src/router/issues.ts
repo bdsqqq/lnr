@@ -70,8 +70,8 @@ const issueInput = z.object({
   deleteComment: z.string().optional().describe("comment id to delete"),
   archive: z.boolean().optional().describe("archive the issue"),
   react: z.string().optional().describe("comment id to add reaction (requires --emoji)"),
-  emoji: z.string().optional().describe("emoji for --react or --unreact"),
-  unreact: z.string().optional().describe("comment id to remove reaction (requires --emoji)"),
+  emoji: z.string().optional().describe("emoji for --react"),
+  unreact: z.string().optional().describe("reaction id to remove"),
   parent: z.string().optional().describe("set parent issue identifier"),
   subIssues: z.boolean().optional().describe("list sub-issues"),
 });

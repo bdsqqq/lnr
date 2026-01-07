@@ -88,3 +88,12 @@ export interface CreateProjectInput {
   description?: string;
   teamIds?: string[];
 }
+
+export interface Activity {
+  id: string;
+  identifier: string;
+  title: string;
+  state?: string | null;
+  updatedAt: Date;
+  url: string;
+}

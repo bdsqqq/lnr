@@ -53,7 +53,21 @@ export const labelsRouter = router({
         };
         const format = getOutputFormat(outputOpts);
 
-        const labels = await listLabels(client, input.team);
+        let teamId: string | undefined;
+        if (input.team) {
+          const team = await findTeamByKeyOrName(client, input.team);
+          if (!team) {
+            const available = await getAvailableTeamKeys(client);
+            exitWithError(
+              `team not found: ${input.team}`,
+              `available teams: ${available.join(", ")}`,
+              EXIT_CODES.NOT_FOUND
+            );
+          }
+          teamId = team.id;
+        }
+
+        const labels = await listLabels(client, teamId);
 
         if (format === "json") {
           outputJson(labels);

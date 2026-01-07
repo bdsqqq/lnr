@@ -71,7 +71,8 @@ export {
 export { listCycles, getCurrentCycle, getCycleIssues } from "./cycles";
 
 // me
-export { getViewer, getMyIssues, getMyCreatedIssues } from "./me";
+export { getViewer, getMyIssues, getMyCreatedIssues, getMyActivity } from "./me";
+export type { Activity } from "./types";
 
 // search
 export { searchIssues } from "./search";

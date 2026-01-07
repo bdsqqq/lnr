@@ -212,6 +212,7 @@ export async function getSubIssues(
       createdAt: n.createdAt,
       updatedAt: n.updatedAt,
       url: n.url,
+      parentId: parent.id,
     }))
   );
 }
