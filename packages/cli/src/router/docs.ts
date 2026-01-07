@@ -19,19 +19,19 @@ import {
 } from "../lib/output";
 
 const listDocsInput = z.object({
-  project: z.string().optional(),
-  json: z.boolean().optional(),
-  quiet: z.boolean().optional(),
-  verbose: z.boolean().optional(),
+  project: z.string().optional().describe("filter by project id"),
+  json: z.boolean().optional().describe("output as json"),
+  quiet: z.boolean().optional().describe("output ids only"),
+  verbose: z.boolean().optional().describe("show all columns"),
 });
 
 const docInput = z.object({
-  id: z.string().meta({ positional: true }),
-  title: z.string().optional(),
-  content: z.string().optional(),
-  project: z.string().optional(),
-  delete: z.boolean().optional(),
-  json: z.boolean().optional(),
+  id: z.string().meta({ positional: true }).describe("document id or 'new'"),
+  title: z.string().optional().describe("document title (required for new)"),
+  content: z.string().optional().describe("document content"),
+  project: z.string().optional().describe("project id to attach document to"),
+  delete: z.boolean().optional().describe("delete the document"),
+  json: z.boolean().optional().describe("output as json"),
 });
 
 export const docsRouter = router({

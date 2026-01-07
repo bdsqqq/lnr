@@ -10,9 +10,9 @@ import { router, procedure } from "./trpc";
 import { exitWithError, EXIT_CODES } from "../lib/error";
 
 const authInput = z.object({
-  apiKey: z.string().optional().meta({ positional: true }),
-  whoami: z.boolean().optional(),
-  logout: z.boolean().optional(),
+  apiKey: z.string().optional().meta({ positional: true }).describe("Linear API key"),
+  whoami: z.boolean().optional().describe("show current authenticated user"),
+  logout: z.boolean().optional().describe("clear stored credentials"),
 });
 
 export const authRouter = router({

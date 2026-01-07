@@ -17,19 +17,19 @@ import {
 } from "../lib/output";
 
 const outputOptions = z.object({
-  json: z.boolean().optional(),
-  quiet: z.boolean().optional(),
-  verbose: z.boolean().optional(),
+  json: z.boolean().optional().describe("output as json"),
+  quiet: z.boolean().optional().describe("output ids only"),
+  verbose: z.boolean().optional().describe("show all columns"),
 });
 
 const cyclesInput = z.object({
-  team: z.string(),
+  team: z.string().describe("team key"),
 }).merge(outputOptions);
 
 const cycleInput = z.object({
-  team: z.string(),
-  current: z.boolean().optional(),
-  issues: z.boolean().optional(),
+  team: z.string().describe("team key"),
+  current: z.boolean().optional().describe("show current active cycle"),
+  issues: z.boolean().optional().describe("list issues in cycle"),
 }).merge(outputOptions);
 
 export const cyclesRouter = router({

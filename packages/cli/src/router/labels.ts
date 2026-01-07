@@ -21,20 +21,20 @@ import {
 } from "../lib/output";
 
 const listLabelsInput = z.object({
-  team: z.string().optional(),
-  json: z.boolean().optional(),
-  quiet: z.boolean().optional(),
-  verbose: z.boolean().optional(),
+  team: z.string().optional().describe("filter by team key"),
+  json: z.boolean().optional().describe("output as json"),
+  quiet: z.boolean().optional().describe("output ids only"),
+  verbose: z.boolean().optional().describe("show all columns"),
 });
 
 const labelInput = z.object({
-  id: z.string().meta({ positional: true }),
-  name: z.string().optional(),
-  color: z.string().optional(),
-  description: z.string().optional(),
-  team: z.string().optional(),
-  delete: z.boolean().optional(),
-  json: z.boolean().optional(),
+  id: z.string().meta({ positional: true }).describe("label id or 'new'"),
+  name: z.string().optional().describe("label name (required for new)"),
+  color: z.string().optional().describe("hex color code"),
+  description: z.string().optional().describe("label description"),
+  team: z.string().optional().describe("team key (required for new)"),
+  delete: z.boolean().optional().describe("delete the label"),
+  json: z.boolean().optional().describe("output as json"),
 });
 
 export const labelsRouter = router({

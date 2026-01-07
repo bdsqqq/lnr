@@ -15,10 +15,10 @@ import {
 } from "../lib/output";
 
 const meInput = z.object({
-  issues: z.boolean().optional(),
-  created: z.boolean().optional(),
-  json: z.boolean().optional(),
-  quiet: z.boolean().optional(),
+  issues: z.boolean().optional().describe("list issues assigned to me"),
+  created: z.boolean().optional().describe("list issues created by me"),
+  json: z.boolean().optional().describe("output as json"),
+  quiet: z.boolean().optional().describe("output ids only"),
 });
 
 export const meRouter = router({

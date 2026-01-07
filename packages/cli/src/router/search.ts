@@ -11,10 +11,10 @@ import {
 } from "../lib/output";
 
 const searchInput = z.object({
-  query: z.string().meta({ positional: true }),
-  team: z.string().optional(),
-  json: z.boolean().optional(),
-  quiet: z.boolean().optional(),
+  query: z.string().meta({ positional: true }).describe("search query"),
+  team: z.string().optional().describe("filter by team key"),
+  json: z.boolean().optional().describe("output as json"),
+  quiet: z.boolean().optional().describe("output ids only"),
 });
 
 export const searchRouter = router({
