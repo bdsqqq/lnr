@@ -84,16 +84,46 @@ export function registerLabelsCommand(program: Command): void {
 
   program
     .command("label <id>")
-    .description("show, update, or delete a label")
-    .option("--name <name>", "update label name")
-    .option("--color <color>", "update label color")
+    .description("show, update, delete, or create (with 'new') a label")
+    .option("--name <name>", "label name (required for new, optional for update)")
+    .option("--color <color>", "label color (hex)")
+    .option("--team <key>", "team key (for new)")
     .option("--delete", "delete the label")
     .option("--json", "output as json")
-    .action(async (id: string, options: LabelShowOptions) => {
+    .action(async (id: string, options: LabelShowOptions & LabelNewOptions) => {
       const format = options.json ? "json" : getOutputFormat(options);
 
       try {
         const client = getClient();
+
+        if (id === "new") {
+          if (!options.name) {
+            exitWithError("--name is required", "usage: lnr label new --name \"...\"");
+          }
+
+          let teamId: string | undefined;
+          if (options.team) {
+            const team = await findTeamByKeyOrName(client, options.team);
+            if (!team) {
+              exitWithError(`team "${options.team}" not found`, undefined, EXIT_CODES.NOT_FOUND);
+            }
+            teamId = team.id;
+          }
+
+          const label = await createLabel(client, {
+            name: options.name,
+            color: options.color,
+            teamId,
+          });
+
+          if (format === "json") {
+            outputJson(label);
+            return;
+          }
+
+          console.log(`created: ${label.name} (${label.id})`);
+          return;
+        }
 
         if (options.delete) {
           const success = await deleteLabel(client, id);
@@ -137,46 +167,6 @@ export function registerLabelsCommand(program: Command): void {
           console.log(`description: ${label.description}`);
         }
         console.log(`group: ${label.isGroup ? "yes" : "no"}`);
-      } catch (error) {
-        handleApiError(error);
-      }
-    });
-
-  program
-    .command("label")
-    .command("new")
-    .description("create a new label")
-    .requiredOption("--name <name>", "label name")
-    .option("--team <key>", "team key")
-    .option("--color <color>", "label color (hex)")
-    .option("--json", "output as json")
-    .action(async (options: LabelNewOptions) => {
-      const format = options.json ? "json" : getOutputFormat(options);
-
-      try {
-        const client = getClient();
-
-        let teamId: string | undefined;
-        if (options.team) {
-          const team = await findTeamByKeyOrName(client, options.team);
-          if (!team) {
-            exitWithError(`team "${options.team}" not found`, undefined, EXIT_CODES.NOT_FOUND);
-          }
-          teamId = team.id;
-        }
-
-        const label = await createLabel(client, {
-          name: options.name,
-          color: options.color,
-          teamId,
-        });
-
-        if (format === "json") {
-          outputJson(label);
-          return;
-        }
-
-        console.log(`created: ${label.name} (${label.id})`);
       } catch (error) {
         handleApiError(error);
       }

@@ -82,6 +82,8 @@ export async function getIssue(
     const state = await issue.state;
     const assignee = await issue.assignee;
 
+    const parent = await issue.parent;
+
     return {
       id: issue.id,
       identifier: issue.identifier,
@@ -93,6 +95,8 @@ export async function getIssue(
       createdAt: issue.createdAt,
       updatedAt: issue.updatedAt,
       url: issue.url,
+      parentId: parent?.id ?? null,
+      parent: parent?.identifier ?? null,
     };
   } catch {
     return null;
@@ -187,4 +191,30 @@ export async function archiveIssue(
 ): Promise<boolean> {
   const result = await client.archiveIssue(issueId);
   return result.success;
+}
+
+export async function getSubIssues(
+  client: LinearClient,
+  issueId: string
+): Promise<Issue[]> {
+  const issue = await client.issue(issueId);
+  if (!issue) return [];
+
+  const children = await issue.children();
+  return Promise.all(
+    children.nodes.map(async (n) => ({
+      id: n.id,
+      identifier: n.identifier,
+      title: n.title,
+      description: n.description,
+      state: (await n.state)?.name ?? null,
+      assignee: (await n.assignee)?.name ?? null,
+      priority: n.priority,
+      createdAt: n.createdAt,
+      updatedAt: n.updatedAt,
+      url: n.url,
+      parentId: issueId,
+      parent: issue.identifier,
+    }))
+  );
 }

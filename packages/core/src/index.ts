@@ -53,6 +53,7 @@ export {
   getTeamStates,
   getTeamLabels,
   archiveIssue,
+  getSubIssues,
 } from "./issues";
 
 // projects
