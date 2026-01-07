@@ -209,26 +209,25 @@ async function handleUpdateIssue(
       exitWithError(`issue ${identifier} not found`, undefined, EXIT_CODES.NOT_FOUND);
     }
 
-    if (input.open) {
-      const { exec } = await import("child_process");
-      exec(`open "${issue.url}"`);
-      console.log(`opened ${issue.url}`);
-      return;
-    }
-
     if (input.comment) {
       await addComment(client, issue.id, input.comment);
       console.log(`commented on ${identifier}`);
       return;
     }
 
-    if (input.editComment && input.text) {
+    if (input.editComment) {
+      if (!input.text) {
+        exitWithError("--text is required with --edit-comment");
+      }
       await updateComment(client, input.editComment, input.text);
       console.log(`updated comment ${input.editComment.slice(0, 8)}`);
       return;
     }
 
-    if (input.replyTo && input.text) {
+    if (input.replyTo) {
+      if (!input.text) {
+        exitWithError("--text is required with --reply-to");
+      }
       await replyToComment(client, issue.id, input.replyTo, input.text);
       console.log(`replied to comment ${input.replyTo.slice(0, 8)}`);
       return;
@@ -246,7 +245,10 @@ async function handleUpdateIssue(
       return;
     }
 
-    if (input.react && input.emoji) {
+    if (input.react) {
+      if (!input.emoji) {
+        exitWithError("--emoji is required with --react");
+      }
       await createReaction(client, input.react, input.emoji);
       console.log(`added reaction ${input.emoji} to comment ${input.react.slice(0, 8)}`);
       return;

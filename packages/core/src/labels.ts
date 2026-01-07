@@ -13,6 +13,9 @@ export async function listLabels(
 ): Promise<Label[]> {
   if (teamId) {
     const team = await client.team(teamId);
+    if (!team) {
+      return [];
+    }
     const labelsConnection = await team.labels();
     return labelsConnection.nodes.map((l) => ({
       id: l.id,
