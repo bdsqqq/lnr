@@ -1,6 +1,5 @@
 import type { Command } from "commander";
 import {
-  getClient,
   listProjects,
   getProject,
   getProjectIssues,
@@ -9,6 +8,7 @@ import {
   findTeamByKeyOrName,
   getAvailableTeamKeys,
 } from "@bdsqqq/lnr-core";
+import { getClient } from "../lib/client";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
 import {
   outputJson,

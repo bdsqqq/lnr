@@ -10,14 +10,18 @@ export class NotAuthenticatedError extends Error {
   }
 }
 
-export function getClient(): LinearClient {
-  if (clientInstance) {
-    return clientInstance;
-  }
-
-  const apiKey = getApiKey();
+export function getClient(apiKeyOverride?: string): LinearClient {
+  const apiKey = apiKeyOverride ?? getApiKey();
   if (!apiKey) {
     throw new NotAuthenticatedError();
+  }
+
+  if (apiKeyOverride) {
+    return new LinearClient({ apiKey });
+  }
+
+  if (clientInstance) {
+    return clientInstance;
   }
 
   clientInstance = new LinearClient({ apiKey });

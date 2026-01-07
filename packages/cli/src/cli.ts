@@ -11,12 +11,13 @@ import { registerSearchCommand } from "./commands/search";
 import { registerConfigCommand } from "./commands/config";
 import pkg from "../package.json";
 
-const program = new Command();
+export const program = new Command();
 
 program
   .name("lnr")
   .description("command-line interface for Linear")
-  .version(pkg.version);
+  .version(pkg.version)
+  .option("--api-key <key>", "Linear API key (overrides config and env)");
 
 registerAuthCommand(program);
 registerIssuesCommand(program);

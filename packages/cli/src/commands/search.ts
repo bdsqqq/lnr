@@ -1,5 +1,6 @@
 import type { Command } from "commander";
-import { getClient, searchIssues } from "@bdsqqq/lnr-core";
+import { searchIssues } from "@bdsqqq/lnr-core";
+import { getClient } from "../lib/client";
 import { handleApiError } from "../lib/error";
 import {
   getOutputFormat,

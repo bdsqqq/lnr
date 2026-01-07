@@ -1,10 +1,10 @@
 import type { Command } from "commander";
 import {
-  getClient,
   getViewer,
   getMyIssues,
   getMyCreatedIssues,
 } from "@bdsqqq/lnr-core";
+import { getClient } from "../lib/client";
 import { handleApiError } from "../lib/error";
 import {
   getOutputFormat,
