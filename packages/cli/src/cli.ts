@@ -1,31 +1,14 @@
 #!/usr/bin/env bun
 
-import { Command } from "commander";
-import { registerAuthCommand } from "./commands/auth";
-import { registerIssuesCommand } from "./commands/issues";
-import { registerTeamsCommand } from "./commands/teams";
-import { registerProjectsCommand } from "./commands/projects";
-import { registerCyclesCommand } from "./commands/cycles";
-import { registerMeCommand } from "./commands/me";
-import { registerSearchCommand } from "./commands/search";
-import { registerConfigCommand } from "./commands/config";
+import { createCli } from "trpc-cli";
+import { appRouter } from "./router";
 import pkg from "../package.json";
 
-export const program = new Command();
+const cli = createCli({
+  router: appRouter,
+  name: "lnr",
+  version: pkg.version,
+  description: "command-line interface for Linear",
+});
 
-program
-  .name("lnr")
-  .description("command-line interface for Linear")
-  .version(pkg.version)
-  .option("--api-key <key>", "Linear API key (overrides config and env)");
-
-registerAuthCommand(program);
-registerIssuesCommand(program);
-registerTeamsCommand(program);
-registerProjectsCommand(program);
-registerCyclesCommand(program);
-registerMeCommand(program);
-registerSearchCommand(program);
-registerConfigCommand(program);
-
-program.parse();
+void cli.run();
