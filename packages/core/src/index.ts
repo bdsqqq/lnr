@@ -45,6 +45,8 @@ export {
   priorityFromString,
   getTeamStates,
   getTeamLabels,
+  archiveIssue,
+  getSubIssues,
 } from "./issues";
 
 // projects
@@ -76,3 +78,35 @@ export { searchIssues } from "./search";
 
 // relations
 export { createIssueRelation } from "./relations";
+
+// documents
+export type { Document } from "./documents";
+export {
+  listDocuments,
+  getDocument,
+  createDocument,
+  updateDocument,
+  deleteDocument,
+} from "./documents";
+
+// labels
+export type { Label } from "./labels";
+export {
+  listLabels,
+  getLabel,
+  createLabel,
+  updateLabel,
+  deleteLabel,
+} from "./labels";
+
+// comments
+export type { Comment } from "./comments";
+export {
+  getIssueComments,
+  updateComment,
+  replyToComment,
+  deleteComment,
+} from "./comments";
+
+// reactions
+export { createReaction, deleteReaction } from "./reactions";

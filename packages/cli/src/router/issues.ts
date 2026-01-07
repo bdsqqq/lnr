@@ -11,8 +11,18 @@ import {
   getTeamLabels,
   findTeamByKeyOrName,
   getAvailableTeamKeys,
+  getIssueComments,
+  updateComment,
+  replyToComment,
+  deleteComment,
+  archiveIssue,
+  getSubIssues,
+  createReaction,
+  deleteReaction,
+  createIssueRelation,
   type Issue,
   type ListIssuesFilter,
+  type Comment,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "./trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
@@ -53,6 +63,17 @@ const issueInput = z.object({
   team: z.string().optional(),
   title: z.string().optional(),
   description: z.string().optional(),
+  comments: z.boolean().optional(),
+  editComment: z.string().optional(),
+  text: z.string().optional(),
+  replyTo: z.string().optional(),
+  deleteComment: z.string().optional(),
+  archive: z.boolean().optional(),
+  react: z.string().optional(),
+  emoji: z.string().optional(),
+  unreact: z.string().optional(),
+  parent: z.string().optional(),
+  subIssues: z.boolean().optional(),
 });
 
 type IssueInput = z.infer<typeof issueInput>;
@@ -63,6 +84,13 @@ const issueColumns: TableColumn<Issue>[] = [
   { header: "TITLE", value: (i) => truncate(i.title, 50), width: 50 },
   { header: "ASSIGNEE", value: (i) => i.assignee ?? "-", width: 15 },
   { header: "PRIORITY", value: (i) => formatPriority(i.priority), width: 8 },
+];
+
+const commentColumns: TableColumn<Comment>[] = [
+  { header: "ID", value: (c) => c.id.slice(0, 8), width: 10 },
+  { header: "USER", value: (c) => c.user ?? "-", width: 15 },
+  { header: "BODY", value: (c) => truncate(c.body, 50), width: 50 },
+  { header: "CREATED", value: (c) => formatDate(c.createdAt), width: 12 },
 ];
 
 async function handleListIssues(input: z.infer<typeof listIssuesInput>): Promise<void> {
@@ -114,6 +142,28 @@ async function handleShowIssue(
       return;
     }
 
+    if (input.comments) {
+      const comments = await getIssueComments(client, issue.id);
+      const format = input.json ? "json" : getOutputFormat({});
+      if (format === "json") {
+        outputJson(comments);
+      } else {
+        outputTable(comments, commentColumns);
+      }
+      return;
+    }
+
+    if (input.subIssues) {
+      const subIssues = await getSubIssues(client, issue.id);
+      const format = input.json ? "json" : getOutputFormat({});
+      if (format === "json") {
+        outputJson(subIssues);
+      } else {
+        outputTable(subIssues, issueColumns);
+      }
+      return;
+    }
+
     const format = input.json ? "json" : getOutputFormat({});
 
     if (format === "json") {
@@ -131,6 +181,9 @@ async function handleShowIssue(
     console.log(`state:    ${issue.state ?? "-"}`);
     console.log(`assignee: ${issue.assignee ?? "-"}`);
     console.log(`priority: ${formatPriority(issue.priority)}`);
+    if (issue.parentId) {
+      console.log(`parent:   ${issue.parentId}`);
+    }
     console.log(`created:  ${formatDate(issue.createdAt)}`);
     console.log(`updated:  ${formatDate(issue.updatedAt)}`);
     console.log(`url:      ${issue.url}`);
@@ -166,6 +219,42 @@ async function handleUpdateIssue(
     if (input.comment) {
       await addComment(client, issue.id, input.comment);
       console.log(`commented on ${identifier}`);
+      return;
+    }
+
+    if (input.editComment && input.text) {
+      await updateComment(client, input.editComment, input.text);
+      console.log(`updated comment ${input.editComment.slice(0, 8)}`);
+      return;
+    }
+
+    if (input.replyTo && input.text) {
+      await replyToComment(client, issue.id, input.replyTo, input.text);
+      console.log(`replied to comment ${input.replyTo.slice(0, 8)}`);
+      return;
+    }
+
+    if (input.deleteComment) {
+      await deleteComment(client, input.deleteComment);
+      console.log(`deleted comment ${input.deleteComment.slice(0, 8)}`);
+      return;
+    }
+
+    if (input.archive) {
+      await archiveIssue(client, issue.id);
+      console.log(`archived ${identifier}`);
+      return;
+    }
+
+    if (input.react && input.emoji) {
+      await createReaction(client, input.react, input.emoji);
+      console.log(`added reaction ${input.emoji} to comment ${input.react.slice(0, 8)}`);
+      return;
+    }
+
+    if (input.unreact) {
+      await deleteReaction(client, input.unreact);
+      console.log(`removed reaction ${input.unreact.slice(0, 8)}`);
       return;
     }
 
@@ -257,9 +346,44 @@ async function handleUpdateIssue(
       }
     }
 
+    if (input.parent) {
+      const parentIssue = await getIssue(client, input.parent);
+      if (!parentIssue) {
+        exitWithError(`parent issue "${input.parent}" not found`);
+      }
+      updatePayload.parentId = parentIssue.id;
+    }
+
     if (Object.keys(updatePayload).length > 0) {
       await updateIssue(client, issue.id, updatePayload);
       console.log(`updated ${identifier}`);
+    }
+
+    if (input.blocks) {
+      const blockedIssue = await getIssue(client, input.blocks);
+      if (!blockedIssue) {
+        exitWithError(`issue "${input.blocks}" not found`);
+      }
+      await createIssueRelation(client, issue.id, blockedIssue.id, "blocks");
+      console.log(`${identifier} now blocks ${input.blocks}`);
+    }
+
+    if (input.blockedBy) {
+      const blockerIssue = await getIssue(client, input.blockedBy);
+      if (!blockerIssue) {
+        exitWithError(`issue "${input.blockedBy}" not found`);
+      }
+      await createIssueRelation(client, blockerIssue.id, issue.id, "blocks");
+      console.log(`${identifier} is now blocked by ${input.blockedBy}`);
+    }
+
+    if (input.relatesTo) {
+      const relatedIssue = await getIssue(client, input.relatesTo);
+      if (!relatedIssue) {
+        exitWithError(`issue "${input.relatesTo}" not found`);
+      }
+      await createIssueRelation(client, issue.id, relatedIssue.id, "related");
+      console.log(`${identifier} now relates to ${input.relatesTo}`);
     }
   } catch (error) {
     handleApiError(error);
@@ -291,6 +415,7 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
       assigneeId?: string;
       priority?: number;
       labelIds?: string[];
+      parentId?: string;
     } = {
       teamId: team.id,
       title: input.title,
@@ -328,6 +453,14 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
         exitWithError(`label "${input.label}" not found`, `available labels: ${available}`);
       }
       createPayload.labelIds = [targetLabel.id];
+    }
+
+    if (input.parent) {
+      const parentIssue = await getIssue(client, input.parent);
+      if (!parentIssue) {
+        exitWithError(`parent issue "${input.parent}" not found`);
+      }
+      createPayload.parentId = parentIssue.id;
     }
 
     const issue = await createIssue(client, createPayload);
@@ -368,7 +501,17 @@ export const issuesRouter = router({
         input.assignee ||
         input.priority ||
         input.label ||
-        input.comment;
+        input.comment ||
+        input.editComment ||
+        input.replyTo ||
+        input.deleteComment ||
+        input.archive ||
+        input.react ||
+        input.unreact ||
+        input.parent ||
+        input.blocks ||
+        input.blockedBy ||
+        input.relatesTo;
 
       if (hasUpdate) {
         await handleUpdateIssue(input.idOrNew, input);
