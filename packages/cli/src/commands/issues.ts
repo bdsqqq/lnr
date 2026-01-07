@@ -51,9 +51,9 @@ interface UpdateOptions {
   label?: string;
   comment?: string;
   open?: boolean;
-  blocksIssue?: string;
-  blockedByIssue?: string;
-  relatesToIssue?: string;
+  blocks?: string;
+  blockedBy?: string;
+  relatesTo?: string;
 }
 
 interface CreateOptions {
@@ -248,19 +248,19 @@ async function handleUpdateIssue(identifier: string, options: UpdateOptions): Pr
       console.log(`updated ${identifier}`);
     }
 
-    if (options.blocksIssue) {
-      await createIssueRelation(client, issue.id, options.blocksIssue, "blocks");
-      console.log(`${identifier} now blocks ${options.blocksIssue}`);
+    if (options.blocks) {
+      await createIssueRelation(client, issue.id, options.blocks, "blocks");
+      console.log(`${identifier} now blocks ${options.blocks}`);
     }
 
-    if (options.blockedByIssue) {
-      await createIssueRelation(client, options.blockedByIssue, issue.id, "blocks");
-      console.log(`${identifier} now blocked by ${options.blockedByIssue}`);
+    if (options.blockedBy) {
+      await createIssueRelation(client, options.blockedBy, issue.id, "blocks");
+      console.log(`${identifier} now blocked by ${options.blockedBy}`);
     }
 
-    if (options.relatesToIssue) {
-      await createIssueRelation(client, issue.id, options.relatesToIssue, "related");
-      console.log(`${identifier} now relates to ${options.relatesToIssue}`);
+    if (options.relatesTo) {
+      await createIssueRelation(client, issue.id, options.relatesTo, "related");
+      console.log(`${identifier} now relates to ${options.relatesTo}`);
     }
   } catch (error) {
     handleApiError(error);
@@ -382,7 +382,7 @@ export function registerIssuesCommand(program: Command): void {
 
       const hasUpdate =
         options.state || options.assignee || options.priority || options.label || options.comment ||
-        options.blocksIssue || options.blockedByIssue || options.relatesToIssue;
+        options.blocks || options.blockedBy || options.relatesTo;
 
       if (hasUpdate) {
         await handleUpdateIssue(id, options);
