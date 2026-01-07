@@ -1,6 +1,5 @@
 import type { Command } from "commander";
 import {
-  getClient,
   listIssues,
   getIssue,
   createIssue,
@@ -23,6 +22,7 @@ import {
   type Comment,
   type ListIssuesFilter,
 } from "@bdsqqq/lnr-core";
+import { getClient } from "../lib/client";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
 import {
   outputJson,

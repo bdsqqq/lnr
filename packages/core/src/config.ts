@@ -36,7 +36,15 @@ export function saveConfig(config: Config): void {
 }
 
 export function getApiKey(): string | undefined {
-  return loadConfig().api_key;
+  return process.env.LINEAR_API_KEY ?? loadConfig().api_key;
+}
+
+export function listConfig(): Config {
+  return loadConfig();
+}
+
+export function getConfigPath(): string {
+  return CONFIG_PATH;
 }
 
 export function setApiKey(key: string): void {

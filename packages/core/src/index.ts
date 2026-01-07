@@ -37,6 +37,8 @@ export {
   getConfigValue,
   setConfigValue,
   ensureConfigDir,
+  listConfig,
+  getConfigPath,
   type Config,
 } from "./config";
 

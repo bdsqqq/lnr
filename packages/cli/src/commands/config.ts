@@ -1,8 +1,10 @@
 import type { Command } from "commander";
+import { spawn } from "child_process";
 import {
   loadConfig,
   getConfigValue,
   setConfigValue,
+  getConfigPath,
   type Config,
 } from "@bdsqqq/lnr-core";
 import { exitWithError } from "../lib/error";
@@ -12,7 +14,8 @@ const VALID_KEYS: (keyof Config)[] = ["api_key", "default_team", "output_format"
 export function registerConfigCommand(program: Command): void {
   const configCmd = program
     .command("config")
-    .description("view and manage configuration");
+    .description("view and manage configuration")
+    .option("--edit", "open config file in $EDITOR");
 
   configCmd
     .command("get <key>")
@@ -46,19 +49,31 @@ export function registerConfigCommand(program: Command): void {
       console.log(`${key} = ${value}`);
     });
 
-  configCmd.action(() => {
+  configCmd.action((options: { edit?: boolean }) => {
+    if (options.edit) {
+      const editor = process.env.EDITOR || "vi";
+      const configPath = getConfigPath();
+      spawn(editor, [configPath], { stdio: "inherit" });
+      return;
+    }
+
     const config = loadConfig();
-    if (Object.keys(config).length === 0) {
+    const envApiKey = process.env.LINEAR_API_KEY;
+
+    if (Object.keys(config).length === 0 && !envApiKey) {
       console.log("(no configuration set)");
       return;
     }
 
+    if (envApiKey) {
+      console.log(`api_key=${envApiKey.slice(0, 10)}... (from env)`);
+    } else if (config.api_key) {
+      console.log(`api_key=${config.api_key.slice(0, 10)}...`);
+    }
+
     for (const [key, value] of Object.entries(config)) {
-      if (key === "api_key" && value) {
-        console.log(`${key} = ${(value as string).slice(0, 10)}...`);
-      } else {
-        console.log(`${key} = ${value}`);
-      }
+      if (key === "api_key") continue;
+      console.log(`${key}=${value}`);
     }
   });
 }
