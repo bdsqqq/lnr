@@ -1,50 +1,41 @@
-import type { Command } from "commander";
+import { z } from "zod";
 import {
+  getClient,
   listTeams,
   getTeam,
   getTeamMembers,
   getAvailableTeamKeys,
 } from "@bdsqqq/lnr-core";
-import { getClient } from "../lib/client";
-import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
-import {
-  getOutputFormat,
-  outputJson,
-  outputQuiet,
-  outputTable,
-  type OutputOptions,
-} from "../lib/output";
+import { router, procedure } from "./trpc";
+import { exitWithError, handleApiError, EXIT_CODES } from "../lib/error";
+import { outputJson, outputQuiet, outputTable } from "../lib/output";
 
-interface TeamListOptions extends OutputOptions {
-  json?: boolean;
-  quiet?: boolean;
-}
+const teamsInput = z.object({
+  json: z.boolean().optional(),
+  quiet: z.boolean().optional(),
+});
 
-interface TeamShowOptions extends OutputOptions {
-  members?: boolean;
-  json?: boolean;
-}
+const teamInput = z.object({
+  key: z.string().meta({ positional: true }),
+  members: z.boolean().optional(),
+  json: z.boolean().optional(),
+});
 
-export function registerTeamsCommand(program: Command): void {
-  program
-    .command("teams")
-    .alias("t")
-    .description("list teams")
-    .option("--json", "output as json")
-    .option("--quiet", "output ids only")
-    .action(async (options: TeamListOptions) => {
-      const format = options.json ? "json" : options.quiet ? "quiet" : getOutputFormat(options);
-
+export const teamsRouter = router({
+  teams: procedure
+    .meta({ aliases: { command: ["t"] }, description: "list teams" })
+    .input(teamsInput)
+    .query(async ({ input }) => {
       try {
         const client = getClient();
         const teams = await listTeams(client);
 
-        if (format === "json") {
+        if (input.json) {
           outputJson(teams);
           return;
         }
 
-        if (format === "quiet") {
+        if (input.quiet) {
           outputQuiet(teams.map((t) => t.key));
           return;
         }
@@ -57,33 +48,29 @@ export function registerTeamsCommand(program: Command): void {
       } catch (error) {
         handleApiError(error);
       }
-    });
+    }),
 
-  program
-    .command("team <key>")
-    .description("show team details")
-    .option("--members", "show team members")
-    .option("--json", "output as json")
-    .action(async (key: string, options: TeamShowOptions) => {
-      const format = options.json ? "json" : getOutputFormat(options);
-
+  team: procedure
+    .meta({ description: "show team details" })
+    .input(teamInput)
+    .query(async ({ input }) => {
       try {
         const client = getClient();
-        const team = await getTeam(client, key);
+        const team = await getTeam(client, input.key);
 
         if (!team) {
           const availableKeys = (await getAvailableTeamKeys(client)).join(", ");
           exitWithError(
-            `team "${key}" not found`,
+            `team "${input.key}" not found`,
             `available teams: ${availableKeys}`,
             EXIT_CODES.NOT_FOUND
           );
         }
 
-        if (options.members) {
-          const members = await getTeamMembers(client, key);
+        if (input.members) {
+          const members = await getTeamMembers(client, input.key);
 
-          if (format === "json") {
+          if (input.json) {
             outputJson(members);
             return;
           }
@@ -97,7 +84,7 @@ export function registerTeamsCommand(program: Command): void {
           return;
         }
 
-        if (format === "json") {
+        if (input.json) {
           outputJson(team);
           return;
         }
@@ -111,5 +98,5 @@ export function registerTeamsCommand(program: Command): void {
       } catch (error) {
         handleApiError(error);
       }
-    });
-}
+    }),
+});
