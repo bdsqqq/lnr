@@ -68,6 +68,7 @@ export const labelsRouter = router({
         outputTable(
           labels,
           [
+            { header: "ID", value: (l) => l.id.slice(0, 8), width: 10 },
             { header: "NAME", value: (l) => truncate(l.name, 30), width: 30 },
             { header: "COLOR", value: (l) => l.color ?? "-", width: 10 },
             { header: "DESCRIPTION", value: (l) => truncate(l.description ?? "-", 40), width: 40 },
@@ -85,16 +86,16 @@ export const labelsRouter = router({
     })
     .input(labelInput)
     .query(async ({ input }) => {
-      if (input.id === "new") {
-        if (!input.name) {
-          exitWithError("--name is required", "usage: lnr label new --name \"...\" --team <key>");
-        }
-        if (!input.team) {
-          exitWithError("--team is required", "usage: lnr label new --name \"...\" --team <key>");
-        }
+      try {
+        const client = getClient();
 
-        try {
-          const client = getClient();
+        if (input.id === "new") {
+          if (!input.name) {
+            exitWithError("--name is required", "usage: lnr label new --name \"...\" --team <key>");
+          }
+          if (!input.team) {
+            exitWithError("--team is required", "usage: lnr label new --name \"...\" --team <key>");
+          }
 
           const team = await findTeamByKeyOrName(client, input.team);
           if (!team) {
@@ -116,17 +117,12 @@ export const labelsRouter = router({
           if (label) {
             console.log(`created label: ${label.name}`);
           } else {
-            console.log("created label");
+            exitWithError("failed to create label");
           }
-        } catch (error) {
-          handleApiError(error);
+          return;
         }
-        return;
-      }
 
-      if (input.delete) {
-        try {
-          const client = getClient();
+        if (input.delete) {
           const success = await deleteLabel(client, input.id);
 
           if (!success) {
@@ -134,15 +130,10 @@ export const labelsRouter = router({
           }
 
           console.log(`deleted label: ${input.id}`);
-        } catch (error) {
-          handleApiError(error);
+          return;
         }
-        return;
-      }
 
-      if (input.name || input.color || input.description) {
-        try {
-          const client = getClient();
+        if (input.name || input.color || input.description) {
           const success = await updateLabel(client, input.id, {
             name: input.name,
             color: input.color,
@@ -154,14 +145,8 @@ export const labelsRouter = router({
           }
 
           console.log(`updated label: ${input.id}`);
-        } catch (error) {
-          handleApiError(error);
+          return;
         }
-        return;
-      }
-
-      try {
-        const client = getClient();
 
         const outputOpts: OutputOptions = {
           format: input.json ? "json" : undefined,

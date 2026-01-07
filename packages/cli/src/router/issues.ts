@@ -249,13 +249,19 @@ async function handleUpdateIssue(
       if (!input.emoji) {
         exitWithError("--emoji is required with --react");
       }
-      await createReaction(client, input.react, input.emoji);
+      const success = await createReaction(client, input.react, input.emoji);
+      if (!success) {
+        exitWithError(`failed to add reaction to comment ${input.react.slice(0, 8)}`);
+      }
       console.log(`added reaction ${input.emoji} to comment ${input.react.slice(0, 8)}`);
       return;
     }
 
     if (input.unreact) {
-      await deleteReaction(client, input.unreact);
+      const success = await deleteReaction(client, input.unreact);
+      if (!success) {
+        exitWithError(`reaction ${input.unreact.slice(0, 8)} not found`, undefined, EXIT_CODES.NOT_FOUND);
+      }
       console.log(`removed reaction ${input.unreact.slice(0, 8)}`);
       return;
     }
@@ -366,7 +372,10 @@ async function handleUpdateIssue(
       if (!blockedIssue) {
         exitWithError(`issue "${input.blocks}" not found`);
       }
-      await createIssueRelation(client, issue.id, blockedIssue.id, "blocks");
+      const success = await createIssueRelation(client, issue.id, blockedIssue.id, "blocks");
+      if (!success) {
+        exitWithError(`failed to create blocks relation`);
+      }
       console.log(`${identifier} now blocks ${input.blocks}`);
     }
 
@@ -375,7 +384,10 @@ async function handleUpdateIssue(
       if (!blockerIssue) {
         exitWithError(`issue "${input.blockedBy}" not found`);
       }
-      await createIssueRelation(client, blockerIssue.id, issue.id, "blocks");
+      const success = await createIssueRelation(client, blockerIssue.id, issue.id, "blocks");
+      if (!success) {
+        exitWithError(`failed to create blocked-by relation`);
+      }
       console.log(`${identifier} is now blocked by ${input.blockedBy}`);
     }
 
@@ -384,7 +396,10 @@ async function handleUpdateIssue(
       if (!relatedIssue) {
         exitWithError(`issue "${input.relatesTo}" not found`);
       }
-      await createIssueRelation(client, issue.id, relatedIssue.id, "related");
+      const success = await createIssueRelation(client, issue.id, relatedIssue.id, "related");
+      if (!success) {
+        exitWithError(`failed to create relates-to relation`);
+      }
       console.log(`${identifier} now relates to ${input.relatesTo}`);
     }
   } catch (error) {
