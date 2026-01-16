@@ -7,6 +7,13 @@ on:
     branches: [main]
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: validate SKILL.md frontmatter
+        run: ./scripts/validate-frontmatter.sh
+
   check:
     runs-on: ubuntu-latest
     steps:
