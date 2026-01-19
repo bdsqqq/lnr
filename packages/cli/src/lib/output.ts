@@ -117,31 +117,21 @@ export function formatRelativeTime(date: Date): string {
   return `${diffYears}y ago`;
 }
 
-export interface CommentThread {
-  root: Comment;
-  replies: Comment[];
-}
-
-function buildCommentThreads(comments: Comment[]): CommentThread[] {
-  const rootComments = comments.filter((c) => !c.parentId);
-  const childMap = new Map<string, Comment[]>();
+export function buildChildMap(comments: Comment[]): Map<string | null, Comment[]> {
+  const childMap = new Map<string | null, Comment[]>();
 
   for (const c of comments) {
-    if (c.parentId) {
-      const existing = childMap.get(c.parentId) ?? [];
-      existing.push(c);
-      childMap.set(c.parentId, existing);
-    }
+    const parentKey = c.parentId ?? null;
+    const existing = childMap.get(parentKey) ?? [];
+    existing.push(c);
+    childMap.set(parentKey, existing);
   }
 
-  return rootComments
-    .map((root) => ({
-      root,
-      replies: (childMap.get(root.id) ?? []).sort(
-        (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
-      ),
-    }))
-    .sort((a, b) => a.root.createdAt.getTime() - b.root.createdAt.getTime());
+  for (const children of Array.from(childMap.values())) {
+    children.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+
+  return childMap;
 }
 
 const EMOJI_MAP: Record<string, string> = {
@@ -265,11 +255,11 @@ const EMOJI_MAP: Record<string, string> = {
   five: "5️⃣", six: "6️⃣", seven: "7️⃣", eight: "8️⃣", nine: "9️⃣", keycap_ten: "🔟",
 };
 
-function shortcodeToEmoji(shortcode: string): string {
+export function shortcodeToEmoji(shortcode: string): string {
   return EMOJI_MAP[shortcode] ?? `:${shortcode}:`;
 }
 
-function formatReactions(reactions: { emoji: string; count: number }[]): string {
+export function formatReactions(reactions: { emoji: string; count: number }[]): string {
   if (reactions.length === 0) return "";
   return reactions.map((r) => {
     const emoji = shortcodeToEmoji(r.emoji);
@@ -277,7 +267,7 @@ function formatReactions(reactions: { emoji: string; count: number }[]): string 
   }).join(" ");
 }
 
-function wrapText(text: string, width: number, indent: string): string[] {
+export function wrapText(text: string, width: number, indent: string): string[] {
   const lines: string[] = [];
   const paragraphs = text.split(/\n/);
 
@@ -323,7 +313,7 @@ function getSyncChannelName(comment: Comment): string | undefined {
     return sync.meta.channelName;
   }
   if (sync.meta.type === "github" && sync.meta.repo) {
-    return `${sync.meta.owner ?? ""}/${sync.meta.repo}`;
+    return sync.meta.owner ? `${sync.meta.owner}/${sync.meta.repo}` : sync.meta.repo;
   }
   if (sync.meta.type === "jira" && sync.meta.issueKey) {
     return sync.meta.issueKey;
@@ -369,37 +359,56 @@ function outputSingleComment(comment: Comment, indent: string): void {
   }
 }
 
+function renderCommentRecursive(
+  comment: Comment,
+  childMap: Map<string | null, Comment[]>,
+  depth: number,
+  maxRepliesPerLevel: number
+): void {
+  const indent = "  ".repeat(depth);
+  const header = formatCommentHeader(comment, false);
+  console.log(`${indent}└ ${header}`);
+  outputSingleComment(comment, indent + "  ");
+
+  const children = childMap.get(comment.id) ?? [];
+  const recentChildren = children.slice(-maxRepliesPerLevel);
+
+  for (const child of recentChildren) {
+    renderCommentRecursive(child, childMap, depth + 1, maxRepliesPerLevel);
+  }
+}
+
 export function outputCommentThreads(comments: Comment[], maxThreads = 3): void {
   if (comments.length === 0) {
     console.log(chalk.dim("no comments"));
     return;
   }
 
-  const threads = buildCommentThreads(comments);
-  const recentThreads = threads.slice(-maxThreads);
+  const childMap = buildChildMap(comments);
+  const rootComments = childMap.get(null) ?? [];
+  const recentRoots = rootComments.slice(-maxThreads);
 
-  for (let i = 0; i < recentThreads.length; i++) {
-    const thread = recentThreads[i];
-    if (!thread) continue;
+  for (let i = 0; i < recentRoots.length; i++) {
+    const root = recentRoots[i];
+    if (!root) continue;
 
-    const totalReplies = thread.replies.length;
-    const last3Replies = thread.replies.slice(-3);
-    const threadUrl = thread.root.url;
-    const hasSync = thread.root.syncedWith.length > 0;
+    const children = childMap.get(root.id) ?? [];
+    const totalReplies = children.length;
+    const threadUrl = root.url;
+    const hasSync = root.syncedWith.length > 0;
 
-    console.log(formatCommentHeader(thread.root, true, totalReplies, threadUrl));
+    console.log(formatCommentHeader(root, true, totalReplies, threadUrl));
 
     if (!hasSync) {
-      outputSingleComment(thread.root, "");
+      outputSingleComment(root, "");
     }
 
-    for (const reply of last3Replies) {
-      const header = formatCommentHeader(reply, false);
-      console.log(`└ ${header}`);
-      outputSingleComment(reply, "  ");
+    const recentChildren = children.slice(-3);
+    for (const child of recentChildren) {
+      renderCommentRecursive(child, childMap, 0, 3);
     }
 
-    if (i < recentThreads.length - 1) {
+    if (i < recentRoots.length - 1) {
       console.log();
     }
   }

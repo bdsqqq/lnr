@@ -1,4 +1,4 @@
-import type { LinearClient, ExternalEntityInfo, Reaction } from "@linear/sdk";
+import type { LinearClient, ExternalEntityInfo } from "@linear/sdk";
 
 /** aggregated reaction count for display (e.g., 👍 x 3) */
 export interface CommentReaction {
@@ -41,6 +41,11 @@ export interface CommentSyncInfo {
   meta: SyncMeta;
 }
 
+export interface CommentsResult {
+  comments: Comment[];
+  error?: string;
+}
+
 export interface Comment {
   id: string;
   body: string;
@@ -60,7 +65,7 @@ export interface Comment {
   externalUser?: string | null;
 }
 
-function aggregateReactions(reactions: Reaction[]): CommentReaction[] {
+export function aggregateReactions(reactions: readonly { emoji: string }[]): CommentReaction[] {
   const counts = new Map<string, number>();
   for (const r of reactions) {
     counts.set(r.emoji, (counts.get(r.emoji) ?? 0) + 1);
@@ -68,25 +73,51 @@ function aggregateReactions(reactions: Reaction[]): CommentReaction[] {
   return Array.from(counts.entries()).map(([emoji, count]) => ({ emoji, count }));
 }
 
-function extractSyncMeta(service: string, metadata: unknown): SyncMeta {
+export function extractSyncMeta(service: string, metadata: unknown): SyncMeta {
   const svc = service.toLowerCase();
-  
+  const isObject = typeof metadata === "object" && metadata !== null;
+
   if (svc === "slack") {
-    const m = metadata as { channelName?: string; messageUrl?: string } | undefined;
-    return { type: "slack", channelName: m?.channelName, messageUrl: m?.messageUrl };
+    const channelName =
+      isObject && "channelName" in metadata && typeof metadata.channelName === "string"
+        ? metadata.channelName
+        : undefined;
+    const messageUrl =
+      isObject && "messageUrl" in metadata && typeof metadata.messageUrl === "string"
+        ? metadata.messageUrl
+        : undefined;
+    return { type: "slack", channelName, messageUrl } satisfies SyncMeta;
   }
-  
+
   if (svc === "github") {
-    const m = metadata as { owner?: string; repo?: string; number?: number } | undefined;
-    return { type: "github", owner: m?.owner, repo: m?.repo, number: m?.number };
+    const owner =
+      isObject && "owner" in metadata && typeof metadata.owner === "string"
+        ? metadata.owner
+        : undefined;
+    const repo =
+      isObject && "repo" in metadata && typeof metadata.repo === "string"
+        ? metadata.repo
+        : undefined;
+    const number =
+      isObject && "number" in metadata && typeof metadata.number === "number"
+        ? metadata.number
+        : undefined;
+    return { type: "github", owner, repo, number } satisfies SyncMeta;
   }
-  
+
   if (svc === "jira") {
-    const m = metadata as { issueKey?: string; projectId?: string } | undefined;
-    return { type: "jira", issueKey: m?.issueKey, projectId: m?.projectId };
+    const issueKey =
+      isObject && "issueKey" in metadata && typeof metadata.issueKey === "string"
+        ? metadata.issueKey
+        : undefined;
+    const projectId =
+      isObject && "projectId" in metadata && typeof metadata.projectId === "string"
+        ? metadata.projectId
+        : undefined;
+    return { type: "jira", issueKey, projectId } satisfies SyncMeta;
   }
-  
-  return { type: "unknown" };
+
+  return { type: "unknown" } satisfies SyncMeta;
 }
 
 function extractSyncInfo(syncedWith?: ExternalEntityInfo[]): CommentSyncInfo[] {
@@ -100,14 +131,14 @@ function extractSyncInfo(syncedWith?: ExternalEntityInfo[]): CommentSyncInfo[] {
 export async function getIssueComments(
   client: LinearClient,
   issueId: string
-): Promise<Comment[]> {
+): Promise<CommentsResult> {
   try {
     const issue = await client.issue(issueId);
-    if (!issue) return [];
+    if (!issue) return { comments: [] };
 
-    const comments = await issue.comments();
-    return Promise.all(
-      comments.nodes.map(async (c) => {
+    const commentsData = await issue.comments();
+    const comments = await Promise.all(
+      commentsData.nodes.map(async (c) => {
         const user = await c.user;
         const externalUser = c.externalUserId ? await c.externalUser : null;
         const botActor = c.botActor;
@@ -127,8 +158,10 @@ export async function getIssueComments(
         };
       })
     );
-  } catch {
-    return [];
+    return { comments };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { comments: [], error: message };
   }
 }
 

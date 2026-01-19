@@ -1,4 +1,5 @@
 import { z } from "zod";
+import chalk from "chalk";
 import {
   getClient,
   listIssues,
@@ -145,7 +146,11 @@ async function handleShowIssue(
     }
 
     if (input.comments) {
-      const comments = await getIssueComments(client, issue.id);
+      const { comments, error } = await getIssueComments(client, issue.id);
+      if (error) {
+        console.error(`failed to fetch comments: ${error}`);
+        return;
+      }
       const format = input.json ? "json" : getOutputFormat({});
       if (format === "json") {
         outputJson(comments);
@@ -167,7 +172,7 @@ async function handleShowIssue(
     }
 
     const format = input.json ? "json" : getOutputFormat({});
-    const comments = await getIssueComments(client, issue.id);
+    const { comments, error: commentsError } = await getIssueComments(client, issue.id);
 
     if (format === "json") {
       outputJson({
@@ -197,7 +202,10 @@ async function handleShowIssue(
       console.log(issue.description);
     }
 
-    if (comments.length > 0) {
+    if (commentsError) {
+      console.log();
+      console.log(chalk.dim(`comments: failed to load (${commentsError})`));
+    } else if (comments.length > 0) {
       console.log();
       console.log("─".repeat(40));
       console.log();

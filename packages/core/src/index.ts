@@ -105,6 +105,7 @@ export type {
   Comment,
   CommentReaction,
   CommentSyncInfo,
+  CommentsResult,
   SyncMeta,
   SlackSyncMeta,
   GithubSyncMeta,
