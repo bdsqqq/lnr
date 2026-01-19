@@ -101,7 +101,17 @@ export {
 } from "./labels";
 
 // comments
-export type { Comment } from "./comments";
+export type {
+  Comment,
+  CommentReaction,
+  CommentSyncInfo,
+  CommentsResult,
+  SyncMeta,
+  SlackSyncMeta,
+  GithubSyncMeta,
+  JiraSyncMeta,
+  GenericSyncMeta,
+} from "./comments";
 export {
   getIssueComments,
   updateComment,

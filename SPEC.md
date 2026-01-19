@@ -48,7 +48,7 @@ lnr issues --assignee @me
 lnr issues --label bug
 lnr issues --project "q1 launch"
 
-# show single issue
+# show single issue (includes recent comments)
 lnr issue ENG-123
 lnr issue ENG-123 --json
 

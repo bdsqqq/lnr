@@ -1,4 +1,5 @@
 import { z } from "zod";
+import chalk from "chalk";
 import {
   getClient,
   listIssues,
@@ -34,6 +35,7 @@ import {
   formatDate,
   formatPriority,
   truncate,
+  outputCommentThreads,
   type TableColumn,
 } from "../lib/output";
 
@@ -144,7 +146,11 @@ async function handleShowIssue(
     }
 
     if (input.comments) {
-      const comments = await getIssueComments(client, issue.id);
+      const { comments, error } = await getIssueComments(client, issue.id);
+      if (error) {
+        console.error(`failed to fetch comments: ${error}`);
+        return;
+      }
       const format = input.json ? "json" : getOutputFormat({});
       if (format === "json") {
         outputJson(comments);
@@ -166,6 +172,7 @@ async function handleShowIssue(
     }
 
     const format = input.json ? "json" : getOutputFormat({});
+    const { comments, error: commentsError } = await getIssueComments(client, issue.id);
 
     if (format === "json") {
       outputJson({
@@ -173,6 +180,7 @@ async function handleShowIssue(
         priority: formatPriority(issue.priority),
         createdAt: formatDate(issue.createdAt),
         updatedAt: formatDate(issue.updatedAt),
+        comments,
       });
       return;
     }
@@ -192,6 +200,16 @@ async function handleShowIssue(
     if (issue.description) {
       console.log();
       console.log(issue.description);
+    }
+
+    if (commentsError) {
+      console.log();
+      console.log(chalk.dim(`comments: failed to load (${commentsError})`));
+    } else if (comments.length > 0) {
+      console.log();
+      console.log("─".repeat(40));
+      console.log();
+      outputCommentThreads(comments);
     }
   } catch (error) {
     handleApiError(error);
