@@ -21,6 +21,7 @@ export const searchRouter = router({
   search: procedure
     .meta({
       description: "search issues",
+      aliases: { command: ["s"] },
     })
     .input(searchInput)
     .query(async ({ input }) => {
