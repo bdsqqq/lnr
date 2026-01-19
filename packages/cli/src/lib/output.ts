@@ -144,9 +144,58 @@ function buildCommentThreads(comments: Comment[]): CommentThread[] {
     .sort((a, b) => a.root.createdAt.getTime() - b.root.createdAt.getTime());
 }
 
+const EMOJI_MAP: Record<string, string> = {
+  "+1": "👍",
+  "-1": "👎",
+  laugh: "😄",
+  laughing: "😆",
+  confused: "😕",
+  heart: "❤️",
+  tada: "🎉",
+  eyes: "👀",
+  fire: "🔥",
+  rocket: "🚀",
+  thinking_face: "🤔",
+  thinking: "🤔",
+  clap: "👏",
+  ok_hand: "👌",
+  raised_hands: "🙌",
+  pray: "🙏",
+  100: "💯",
+  sparkles: "✨",
+  star: "⭐",
+  check: "✅",
+  white_check_mark: "✅",
+  x: "❌",
+  warning: "⚠️",
+  bulb: "💡",
+  memo: "📝",
+  zap: "⚡",
+  wave: "👋",
+  muscle: "💪",
+  thumbsup: "👍",
+  thumbsdown: "👎",
+  smile: "😊",
+  sob: "😭",
+  joy: "😂",
+  sunglasses: "😎",
+  skull: "💀",
+  ghost: "👻",
+  see_no_evil: "🙈",
+  hear_no_evil: "🙉",
+  speak_no_evil: "🙊",
+};
+
+function shortcodeToEmoji(shortcode: string): string {
+  return EMOJI_MAP[shortcode] ?? `:${shortcode}:`;
+}
+
 function formatReactions(reactions: { emoji: string; count: number }[]): string {
   if (reactions.length === 0) return "";
-  return reactions.map((r) => `${r.emoji}${r.count > 1 ? r.count : ""}`).join(" ");
+  return reactions.map((r) => {
+    const emoji = shortcodeToEmoji(r.emoji);
+    return `${emoji}${r.count > 1 ? r.count : ""}`;
+  }).join(" ");
 }
 
 function wrapText(text: string, width: number, indent: string): string[] {
@@ -183,7 +232,24 @@ function getActorName(comment: Comment): string {
 function getSourceLabel(comment: Comment): string {
   const sync = comment.syncedWith[0];
   if (!sync) return "";
-  return ` via ${sync.service.charAt(0).toUpperCase() + sync.service.slice(1)}`;
+  const serviceName = sync.service.charAt(0).toUpperCase() + sync.service.slice(1).toLowerCase();
+  return ` via ${serviceName}`;
+}
+
+function getSyncChannelName(comment: Comment): string | undefined {
+  const sync = comment.syncedWith[0];
+  if (!sync) return undefined;
+  
+  if (sync.meta.type === "slack") {
+    return sync.meta.channelName;
+  }
+  if (sync.meta.type === "github" && sync.meta.repo) {
+    return `${sync.meta.owner ?? ""}/${sync.meta.repo}`;
+  }
+  if (sync.meta.type === "jira" && sync.meta.issueKey) {
+    return sync.meta.issueKey;
+  }
+  return undefined;
 }
 
 function formatCommentHeader(
@@ -196,8 +262,9 @@ function formatCommentHeader(
   const time = formatRelativeTime(comment.createdAt);
 
   if (isThreadRoot && sync) {
-    const channelPart = sync.channelName ? ` in #${chalk.white(sync.channelName)}` : "";
-    const serviceName = sync.service.charAt(0).toUpperCase() + sync.service.slice(1);
+    const channelName = getSyncChannelName(comment);
+    const channelPart = channelName ? ` in #${chalk.white(channelName)}` : "";
+    const serviceName = sync.service.charAt(0).toUpperCase() + sync.service.slice(1).toLowerCase();
     let header = `${chalk.white(serviceName)} thread connected${channelPart} ${chalk.dim(time)}`;
 
     if (replyCount && replyCount > 3 && threadUrl) {

@@ -17,8 +17,8 @@ describe("comments", () => {
       user: "alice",
       parentId: null,
       url: "https://linear.app/test/issue/TEST-1#comment-123",
-      reactions: [{ emoji: "👍", count: 2 }],
-      syncedWith: [],
+      reactions: [{ emoji: "+1", count: 2 }],
+      syncedWith: [{ service: "Slack", meta: { type: "slack", channelName: "frontend" } }],
     };
 
     expect(comment.id).toBe("comment-123");
@@ -27,7 +27,8 @@ describe("comments", () => {
     expect(comment.parentId).toBeNull();
     expect(comment.url).toContain("linear.app");
     expect(comment.reactions).toHaveLength(1);
-    expect(comment.syncedWith).toHaveLength(0);
+    expect(comment.syncedWith).toHaveLength(1);
+    expect(comment.syncedWith[0]?.meta.type).toBe("slack");
   });
 
   test("exports API functions", () => {
