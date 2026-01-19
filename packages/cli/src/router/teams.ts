@@ -11,14 +11,14 @@ import { exitWithError, handleApiError, EXIT_CODES } from "../lib/error";
 import { outputJson, outputQuiet, outputTable } from "../lib/output";
 
 const teamsInput = z.object({
-  json: z.boolean().optional(),
-  quiet: z.boolean().optional(),
+  json: z.boolean().optional().describe("output as json"),
+  quiet: z.boolean().optional().describe("output keys only"),
 });
 
 const teamInput = z.object({
-  key: z.string().meta({ positional: true }),
-  members: z.boolean().optional(),
-  json: z.boolean().optional(),
+  key: z.string().meta({ positional: true }).describe("team key"),
+  members: z.boolean().optional().describe("list team members"),
+  json: z.boolean().optional().describe("output as json"),
 });
 
 export const teamsRouter = router({

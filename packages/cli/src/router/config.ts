@@ -9,12 +9,12 @@ import { router, procedure } from "./trpc";
 import { exitWithError } from "../lib/error";
 
 const getInput = z.object({
-  key: z.enum(["api_key", "default_team", "output_format"]).meta({ positional: true }),
+  key: z.enum(["api_key", "default_team", "output_format"]).meta({ positional: true }).describe("config key to get"),
 });
 
 const setInput = z.object({
-  key: z.enum(["api_key", "default_team", "output_format"]).meta({ positional: true }),
-  value: z.string().meta({ positional: true }),
+  key: z.enum(["api_key", "default_team", "output_format"]).meta({ positional: true }).describe("config key to set"),
+  value: z.string().meta({ positional: true }).describe("value to set"),
 });
 
 export const configRouter = router({

@@ -57,9 +57,6 @@ lnr issue new --team ENG --title "fix auth flow"
 lnr issue new --team ENG --title "fix auth flow" --description "the thing is broken"
 lnr issue new --team ENG --title "fix auth flow" --assignee @me --label bug --priority urgent
 
-# interactive create (prompts for required fields)
-lnr issue new -i
-
 # update issue
 lnr issue ENG-123 --state "done"
 lnr issue ENG-123 --assignee alice@company.com
@@ -69,6 +66,34 @@ lnr issue ENG-123 --label -wontfix      # remove label
 
 # comment on issue
 lnr issue ENG-123 --comment "looking into this now"
+
+# list comments
+lnr issue ENG-123 --comments
+
+# reply to comment
+lnr issue ENG-123 --reply-to <comment-id> --text "response"
+
+# edit comment
+lnr issue ENG-123 --edit-comment <comment-id> --text "updated"
+
+# delete comment
+lnr issue ENG-123 --delete-comment <comment-id>
+
+# reactions
+lnr issue ENG-123 --react <comment-id> --emoji "👍"
+lnr issue ENG-123 --unreact <comment-id> --emoji "👍"
+
+# relations
+lnr issue ENG-123 --blocks ENG-456
+lnr issue ENG-123 --blocked-by ENG-456
+lnr issue ENG-123 --relates-to ENG-456
+
+# sub-issues
+lnr issue ENG-123 --sub-issues
+lnr issue ENG-123 --parent ENG-100
+
+# archive
+lnr issue ENG-123 --archive
 
 # open in browser
 lnr issue ENG-123 --open
@@ -121,6 +146,47 @@ lnr me --created
 lnr me --activity
 ```
 
+### labels
+
+```bash
+# list labels
+lnr labels
+lnr labels --team ENG
+
+# show label
+lnr label <id>
+
+# create label
+lnr label new --team ENG --name "bug" --color "#ff0000"
+
+# update label
+lnr label <id> --name "critical bug" --color "#ff0000"
+
+# delete label
+lnr label <id> --delete
+```
+
+### documents
+
+```bash
+# list documents
+lnr docs
+lnr docs --project <project-id>
+
+# show document
+lnr doc <id>
+
+# create document
+lnr doc new --title "design spec" --content "..."
+lnr doc new --title "design spec" --project <project-id>
+
+# update document
+lnr doc <id> --title "updated title" --content "..."
+
+# delete document
+lnr doc <id> --delete
+```
+
 ---
 
 ## output formats
@@ -151,9 +217,6 @@ lnr search "auth bug" --team ENG
 # filter combinations (AND logic)
 lnr issues --team ENG --state "in progress" --assignee @me
 
-# date filters
-lnr issues --created-after 2024-01-01
-lnr issues --updated-after 7d    # relative: 7 days ago
 ```
 
 ---
@@ -167,9 +230,6 @@ lnr i new       # lnr issue new
 lnr t           # lnr teams
 lnr p           # lnr projects
 lnr c           # lnr cycles
-
-# quick access
-lnr ENG-123     # lnr issue ENG-123 (if matches issue pattern)
 ```
 
 ---
@@ -247,14 +307,15 @@ cp lnr /usr/local/bin/lnr
 5. projects list
 6. cycles list
 7. search
-8. interactive mode
 
 ---
 
 ## dependencies
 
 - `@linear/sdk` - official Linear TypeScript SDK
-- `commander` - CLI argument parsing
+- `trpc-cli` - type-safe CLI from tRPC routers
+- `@trpc/server` - tRPC server primitives
+- `zod` - schema validation and CLI argument definitions
 - `chalk` - terminal colors (minimal, for errors/emphasis only)
 
 ---

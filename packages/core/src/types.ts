@@ -9,6 +9,7 @@ export interface Issue {
   createdAt: Date;
   updatedAt: Date;
   url: string;
+  parentId?: string | null;
 }
 
 export interface Project {
@@ -71,6 +72,7 @@ export interface CreateIssueInput {
   assigneeId?: string;
   priority?: number;
   labelIds?: string[];
+  parentId?: string;
 }
 
 export interface UpdateIssueInput {
@@ -78,10 +80,20 @@ export interface UpdateIssueInput {
   assigneeId?: string;
   priority?: number;
   labelIds?: string[];
+  parentId?: string;
 }
 
 export interface CreateProjectInput {
   name: string;
   description?: string;
   teamIds?: string[];
+}
+
+export interface Activity {
+  id: string;
+  identifier: string;
+  title: string;
+  state?: string | null;
+  updatedAt: Date;
+  url: string;
 }

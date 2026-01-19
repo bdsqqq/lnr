@@ -71,6 +71,8 @@ api key from: https://linear.app/settings/account/security
 - `lnr cycles` - list cycles
 - `lnr search <query>` - search issues
 - `lnr me` - show my info
+- `lnr labels` - list labels
+- `lnr docs` - list documents
 
 see SPEC.md for full command reference.
 
@@ -82,4 +84,7 @@ bun run dev
 
 # typecheck
 bun run check
+
+# run tests
+bun run test
 ```

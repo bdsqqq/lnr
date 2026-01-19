@@ -64,6 +64,7 @@ export async function listIssues(
       createdAt: n.createdAt,
       updatedAt: n.updatedAt,
       url: n.url,
+      parentId: (await n.parent)?.id ?? null,
     }))
   );
 }
@@ -81,6 +82,7 @@ export async function getIssue(
 
     const state = await issue.state;
     const assignee = await issue.assignee;
+    const parent = await issue.parent;
 
     return {
       id: issue.id,
@@ -93,6 +95,7 @@ export async function getIssue(
       createdAt: issue.createdAt,
       updatedAt: issue.updatedAt,
       url: issue.url,
+      parentId: parent?.id ?? null,
     };
   } catch {
     return null;
@@ -179,4 +182,37 @@ export async function getTeamLabels(
 
   const labels = await team.labels();
   return labels.nodes.map((l) => ({ id: l.id, name: l.name }));
+}
+
+export async function archiveIssue(
+  client: LinearClient,
+  issueId: string
+): Promise<boolean> {
+  const result = await client.archiveIssue(issueId);
+  return result.success;
+}
+
+export async function getSubIssues(
+  client: LinearClient,
+  parentIdentifier: string
+): Promise<Issue[]> {
+  const parent = await client.issue(parentIdentifier);
+  if (!parent) return [];
+
+  const children = await parent.children();
+  return Promise.all(
+    children.nodes.map(async (n) => ({
+      id: n.id,
+      identifier: n.identifier,
+      title: n.title,
+      description: n.description,
+      state: (await n.state)?.name ?? null,
+      assignee: (await n.assignee)?.name ?? null,
+      priority: n.priority,
+      createdAt: n.createdAt,
+      updatedAt: n.updatedAt,
+      url: n.url,
+      parentId: parent.id,
+    }))
+  );
 }

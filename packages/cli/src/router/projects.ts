@@ -22,23 +22,23 @@ import {
 } from "../lib/output";
 
 const listProjectsInput = z.object({
-  team: z.string().optional(),
-  status: z.string().optional(),
-  json: z.boolean().optional(),
-  quiet: z.boolean().optional(),
-  verbose: z.boolean().optional(),
+  team: z.string().optional().describe("filter by team key"),
+  status: z.string().optional().describe("filter by status (planned, started, completed, etc)"),
+  json: z.boolean().optional().describe("output as json"),
+  quiet: z.boolean().optional().describe("output ids only"),
+  verbose: z.boolean().optional().describe("show all columns"),
 });
 
 const projectInput = z.object({
-  name: z.string().meta({ positional: true }),
-  issues: z.boolean().optional(),
-  json: z.boolean().optional(),
-  quiet: z.boolean().optional(),
-  verbose: z.boolean().optional(),
-  delete: z.boolean().optional(),
-  projectName: z.string().optional(),
-  team: z.string().optional(),
-  description: z.string().optional(),
+  name: z.string().meta({ positional: true }).describe("project name or 'new'"),
+  issues: z.boolean().optional().describe("list issues in project"),
+  json: z.boolean().optional().describe("output as json"),
+  quiet: z.boolean().optional().describe("output ids only"),
+  verbose: z.boolean().optional().describe("show all columns"),
+  delete: z.boolean().optional().describe("delete the project"),
+  projectName: z.string().optional().describe("project name (required for new)"),
+  team: z.string().optional().describe("team key to associate project with"),
+  description: z.string().optional().describe("project description"),
 });
 
 export const projectsRouter = router({
