@@ -34,6 +34,7 @@ import {
   formatDate,
   formatPriority,
   truncate,
+  outputCommentThreads,
   type TableColumn,
 } from "../lib/output";
 
@@ -166,6 +167,7 @@ async function handleShowIssue(
     }
 
     const format = input.json ? "json" : getOutputFormat({});
+    const comments = await getIssueComments(client, issue.id);
 
     if (format === "json") {
       outputJson({
@@ -173,6 +175,7 @@ async function handleShowIssue(
         priority: formatPriority(issue.priority),
         createdAt: formatDate(issue.createdAt),
         updatedAt: formatDate(issue.updatedAt),
+        comments,
       });
       return;
     }
@@ -192,6 +195,13 @@ async function handleShowIssue(
     if (issue.description) {
       console.log();
       console.log(issue.description);
+    }
+
+    if (comments.length > 0) {
+      console.log();
+      console.log("─".repeat(40));
+      console.log();
+      outputCommentThreads(comments);
     }
   } catch (error) {
     handleApiError(error);

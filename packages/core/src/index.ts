@@ -101,7 +101,7 @@ export {
 } from "./labels";
 
 // comments
-export type { Comment } from "./comments";
+export type { Comment, CommentReaction, CommentSyncInfo } from "./comments";
 export {
   getIssueComments,
   updateComment,
