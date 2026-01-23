@@ -27,6 +27,10 @@ jobs:
       # ensure npm 11.5.1+ for OIDC support
       - run: npm install -g npm@latest
 
+      # generate changesets from conventional commits since last tag
+      - name: Generate changesets from commits
+        run: npx changeset-conventional-commits
+
       # compute version for PR title
       - name: Get next version
         id: version
