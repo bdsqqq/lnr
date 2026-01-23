@@ -53,19 +53,32 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # build binaries for all platforms after successful publish
+      # check if github release exists for current version
+      - name: Check for missing GitHub release
+        id: release-check
+        run: |
+          VERSION=$(node -p "require('./packages/cli/package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if gh release view "v$VERSION" &>/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # build binaries for all platforms when release is missing
       - name: Build binaries
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.release-check.outputs.exists == 'false'
         run: bun run build:all
 
       # create github release with binaries
       - name: Create GitHub Release
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.release-check.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}"
-          gh release delete "v$VERSION" --yes 2>/dev/null || true
+          VERSION="${{ steps.release-check.outputs.version }}"
           gh release create "v$VERSION" dist/* \
             --title "v$VERSION" \
             --notes "See [CHANGELOG](https://github.com/bdsqqq/lnr/blob/main/packages/cli/CHANGELOG.md) for details."
