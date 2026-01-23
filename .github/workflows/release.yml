@@ -16,6 +16,9 @@ jobs:
       id-token: write # required for npm OIDC trusted publishing
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - uses: oven-sh/setup-bun@v1
       - uses: actions/setup-node@v4
         with:
