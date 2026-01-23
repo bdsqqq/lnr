@@ -12,7 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
       id-token: write # required for npm OIDC trusted publishing
     steps:
       - uses: actions/checkout@v4
@@ -34,33 +33,33 @@ jobs:
       - name: Generate changesets from commits
         run: npx changeset-conventional-commits
 
-      # compute version for PR title
-      - name: Get next version
-        id: version
+      # check if there are changesets to process
+      - name: Check for changesets
+        id: changesets
         run: |
-          if npx changeset status --output=status.json 2>/dev/null; then
-            VERSION=$(node -e "
-              const s = require('./status.json');
-              const rel = s.releases.find(r => r.name === '@bdsqqq/lnr-cli');
-              console.log(rel ? rel.newVersion : '');
-            ")
-            echo "next=$VERSION" >> "$GITHUB_OUTPUT"
+          if ls .changeset/*.md 2>/dev/null | grep -v README.md | head -1 > /dev/null; then
+            echo "has_changesets=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changesets=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # changesets/action handles both cases:
-      # - pending changesets: creates release PR
-      # - no changesets but unpublished versions: publishes to npm
-      - name: Create Release Pull Request or Publish
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          publish: npm run release
-          title: "chore(release): v${{ steps.version.outputs.next }}"
-          createGithubReleases: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # version packages and update changelogs (commits directly to main)
+      - name: Version packages
+        if: steps.changesets.outputs.has_changesets == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          npx changeset version
+          git add -A
+          git commit -m "chore(release): version packages"
+          git push
 
-      # check if github release exists for current version
+      # publish to npm
+      - name: Publish to npm
+        if: steps.changesets.outputs.has_changesets == 'true'
+        run: npm run release
+
+      # get current version for github release
       - name: Check for missing GitHub release
         id: release-check
         run: |
