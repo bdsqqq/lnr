@@ -37,7 +37,7 @@ jobs:
       - name: Check for changesets
         id: changesets
         run: |
-          if ls .changeset/*.md 2>/dev/null | grep -v README.md | head -1 > /dev/null; then
+          if ls .changeset/*.md 2>/dev/null | grep -qv README.md; then
             echo "has_changesets=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_changesets=false" >> "$GITHUB_OUTPUT"
@@ -59,7 +59,7 @@ jobs:
         if: steps.changesets.outputs.has_changesets == 'true'
         run: npm run release
 
-      # get current version for github release
+      # get current version for github release (after versioning)
       - name: Check for missing GitHub release
         id: release-check
         run: |
