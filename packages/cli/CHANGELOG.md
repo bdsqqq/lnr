@@ -1,5 +1,24 @@
 # @bdsqqq/lnr-cli
 
+## 1.3.1
+
+### Patch Changes
+
+- fix(cli): allow composing comment/reaction ops with field updates (#14)
+
+  refactor handleUpdateIssue from early-return to collect-then-execute pattern:
+
+  - move validation for required flags (--text, --emoji) to top
+  - add mutual exclusivity checks for comment and reaction operations
+  - execute in order: field updates → relations → comments → reactions → archive
+  - archive runs last since it restricts further edits
+
+  fixes #13
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019bfb89-3044-714a-9ac5-0abf94274059
+
+  Co-authored-by: Amp <amp@ampcode.com>
+
 ## 1.3.0
 
 ### Minor Changes
