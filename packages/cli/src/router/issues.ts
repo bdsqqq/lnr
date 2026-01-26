@@ -228,61 +228,27 @@ async function handleUpdateIssue(
       exitWithError(`issue ${identifier} not found`, undefined, EXIT_CODES.NOT_FOUND);
     }
 
-    if (input.comment) {
-      await addComment(client, issue.id, input.comment);
-      console.log(`commented on ${identifier}`);
-      return;
+    // Upfront validation: required flags
+    if (input.editComment && !input.text) {
+      exitWithError("--text is required with --edit-comment");
+    }
+    if (input.replyTo && !input.text) {
+      exitWithError("--text is required with --reply-to");
+    }
+    if (input.react && !input.emoji) {
+      exitWithError("--emoji is required with --react");
     }
 
-    if (input.editComment) {
-      if (!input.text) {
-        exitWithError("--text is required with --edit-comment");
-      }
-      await updateComment(client, input.editComment, input.text);
-      console.log(`updated comment ${input.editComment.slice(0, 8)}`);
-      return;
+    // Upfront validation: mutual exclusivity for comment operations
+    const commentOpCount = [input.comment, input.editComment, input.replyTo, input.deleteComment].filter(Boolean).length;
+    if (commentOpCount > 1) {
+      exitWithError("only one comment operation allowed per invocation", "use --comment, --edit-comment, --reply-to, or --delete-comment separately");
     }
 
-    if (input.replyTo) {
-      if (!input.text) {
-        exitWithError("--text is required with --reply-to");
-      }
-      await replyToComment(client, issue.id, input.replyTo, input.text);
-      console.log(`replied to comment ${input.replyTo.slice(0, 8)}`);
-      return;
-    }
-
-    if (input.deleteComment) {
-      await deleteComment(client, input.deleteComment);
-      console.log(`deleted comment ${input.deleteComment.slice(0, 8)}`);
-      return;
-    }
-
-    if (input.archive) {
-      await archiveIssue(client, issue.id);
-      console.log(`archived ${identifier}`);
-      return;
-    }
-
-    if (input.react) {
-      if (!input.emoji) {
-        exitWithError("--emoji is required with --react");
-      }
-      const success = await createReaction(client, input.react, input.emoji);
-      if (!success) {
-        exitWithError(`failed to add reaction to comment ${input.react.slice(0, 8)}`);
-      }
-      console.log(`added reaction ${input.emoji} to comment ${input.react.slice(0, 8)}`);
-      return;
-    }
-
-    if (input.unreact) {
-      const success = await deleteReaction(client, input.unreact);
-      if (!success) {
-        exitWithError(`reaction ${input.unreact.slice(0, 8)} not found`, undefined, EXIT_CODES.NOT_FOUND);
-      }
-      console.log(`removed reaction ${input.unreact.slice(0, 8)}`);
-      return;
+    // Upfront validation: mutual exclusivity for reaction operations
+    const reactionOpCount = [input.react, input.unreact].filter(Boolean).length;
+    if (reactionOpCount > 1) {
+      exitWithError("only one reaction operation allowed per invocation", "use --react or --unreact separately");
     }
 
     const updatePayload: Record<string, unknown> = {};
@@ -420,6 +386,50 @@ async function handleUpdateIssue(
         exitWithError(`failed to create relates-to relation`);
       }
       console.log(`${identifier} now relates to ${input.relatesTo}`);
+    }
+
+    // Comment operations (mutually exclusive, validated above)
+    if (input.comment) {
+      await addComment(client, issue.id, input.comment);
+      console.log(`commented on ${identifier}`);
+    }
+
+    if (input.editComment) {
+      await updateComment(client, input.editComment, input.text!);
+      console.log(`updated comment ${input.editComment.slice(0, 8)}`);
+    }
+
+    if (input.replyTo) {
+      await replyToComment(client, issue.id, input.replyTo, input.text!);
+      console.log(`replied to comment ${input.replyTo.slice(0, 8)}`);
+    }
+
+    if (input.deleteComment) {
+      await deleteComment(client, input.deleteComment);
+      console.log(`deleted comment ${input.deleteComment.slice(0, 8)}`);
+    }
+
+    // Reaction operations (mutually exclusive, validated above)
+    if (input.react) {
+      const success = await createReaction(client, input.react, input.emoji!);
+      if (!success) {
+        exitWithError(`failed to add reaction to comment ${input.react.slice(0, 8)}`);
+      }
+      console.log(`added reaction ${input.emoji} to comment ${input.react.slice(0, 8)}`);
+    }
+
+    if (input.unreact) {
+      const success = await deleteReaction(client, input.unreact);
+      if (!success) {
+        exitWithError(`reaction ${input.unreact.slice(0, 8)} not found`, undefined, EXIT_CODES.NOT_FOUND);
+      }
+      console.log(`removed reaction ${input.unreact.slice(0, 8)}`);
+    }
+
+    // Archive last (restricts further edits)
+    if (input.archive) {
+      await archiveIssue(client, issue.id);
+      console.log(`archived ${identifier}`);
     }
   } catch (error) {
     handleApiError(error);
