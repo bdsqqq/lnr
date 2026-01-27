@@ -21,6 +21,7 @@ import {
   createReaction,
   deleteReaction,
   createIssueRelation,
+  getProject,
   type Issue,
   type ListIssuesFilter,
   type Comment,
@@ -65,6 +66,7 @@ const issueInput = z.object({
   team: z.string().optional().describe("team key (required for new)"),
   title: z.string().optional().describe("issue title (required for new)"),
   description: z.string().optional().describe("issue description"),
+  project: z.string().optional().describe("project name to add issue to"),
   comments: z.boolean().optional().describe("list comments on issue"),
   editComment: z.string().optional().describe("comment id to edit (requires --text)"),
   text: z.string().optional().describe("text for --edit-comment or --reply-to"),
@@ -462,6 +464,7 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
       priority?: number;
       labelIds?: string[];
       parentId?: string;
+      projectId?: string;
     } = {
       teamId: team.id,
       title: input.title,
@@ -507,6 +510,14 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
         exitWithError(`parent issue "${input.parent}" not found`);
       }
       createPayload.parentId = parentIssue.id;
+    }
+
+    if (input.project) {
+      const project = await getProject(client, input.project);
+      if (!project) {
+        exitWithError(`project "${input.project}" not found`);
+      }
+      createPayload.projectId = project.id;
     }
 
     const issue = await createIssue(client, createPayload);
