@@ -31,7 +31,25 @@ hand-coding doesn't scale. adding a flag currently requires touching zod schema,
   - pros: already a dependency
   - cons: may lack enums, descriptions, deprecations; can drift from actual API
 
-**recommendation:** spike OPTION A first. fall back to B or C if blocked.
+**DECISION (2026-01-27): OPTION A — GraphQL introspection**
+
+spiked all three options. introspection wins:
+
+| source | descriptions | enums | deprecations | auth required |
+|--------|--------------|-------|--------------|---------------|
+| introspection | ✓ all fields | ✓ 70 enums | ✓ 19 deprecated | yes (API key) |
+| SDK .d.ts | ✗ none | partial (unions) | ✗ none | no |
+| vendored SDL | ✓ | ✓ | ✓ | no |
+
+vendored SDL would work but requires manual updates. introspection is authoritative and already implemented.
+
+**implementation:** `packages/codegen/introspect-linear.ts` fetches schema in batches (Linear limits query complexity to 10k). outputs `packages/codegen/schema.json` with priority types (IssueUpdateInput, IssueCreateInput, etc) + all enums.
+
+**verified metadata:**
+- IssueUpdateInput: 29 fields, all with descriptions
+- 70 enum types with values (ProjectStatusType, SlaStatus, etc)
+- 19 deprecated fields with reasons (e.g., `boardOrder` → use `sortOrder`)
+- field types with nullability info
 
 **extract for each entity:**
 - operations (create, update, archive, delete, plus special ops like subscribe, move)

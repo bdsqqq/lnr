@@ -78,3 +78,22 @@ Task ID: 17
   - Operation inference can be tested in isolation without mocking network calls
   - Contract = input parsing + operation selection, not full end-to-end behavior
 ---
+
+## 2026-01-27 - Spike Introspection Query
+Thread: https://ampcode.com/threads/T-019c0105-8dc0-727b-8ced-e86ad3c2942e
+Task ID: 18
+- Created packages/codegen/introspect-linear.ts to fetch Linear GraphQL schema
+- Outputs packages/codegen/schema.json with priority types + all enums
+- Verified IssueUpdateInput has 29 fields, all with descriptions
+- Verified 70 enums with values, 19 deprecated fields with reasons
+- Documented decision in docs/IMPLEMENTATION-PLAN.md: introspection wins over SDK types and vendored SDL
+- Files changed:
+  - packages/codegen/introspect-linear.ts (new)
+  - packages/codegen/schema.json (new, generated)
+  - docs/IMPLEMENTATION-PLAN.md (updated with decision)
+- **Learnings for future iterations:**
+  - Linear API limits query complexity to 10000 - must batch introspection
+  - Fall back to ~/.lnr/config.json for API key when env var not set
+  - Priority in Linear is Int not Enum (0=none, 1=urgent, 2=high, 3=normal, 4=low)
+  - Schema includes deprecation reasons useful for CLI warnings
+---
