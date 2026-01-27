@@ -17,7 +17,7 @@ import {
 } from "../lib/output";
 import { handleApiError } from "../lib/error";
 
-const meInput = z.object({
+export const meInput = z.object({
   issues: z.boolean().optional().describe("list issues assigned to me"),
   created: z.boolean().optional().describe("list issues created by me"),
   activity: z.boolean().optional().describe("show recent activity"),

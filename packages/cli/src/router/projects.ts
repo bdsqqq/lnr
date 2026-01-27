@@ -21,7 +21,7 @@ import {
   type OutputOptions,
 } from "../lib/output";
 
-const listProjectsInput = z.object({
+export const listProjectsInput = z.object({
   team: z.string().optional().describe("filter by team key"),
   status: z.string().optional().describe("filter by status (planned, started, completed, etc)"),
   json: z.boolean().optional().describe("output as json"),
@@ -29,7 +29,7 @@ const listProjectsInput = z.object({
   verbose: z.boolean().optional().describe("show all columns"),
 });
 
-const projectInput = z.object({
+export const projectInput = z.object({
   name: z.string().meta({ positional: true }).describe("project name or 'new'"),
   issues: z.boolean().optional().describe("list issues in project"),
   json: z.boolean().optional().describe("output as json"),

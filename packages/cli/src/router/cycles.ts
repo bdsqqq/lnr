@@ -22,11 +22,11 @@ const outputOptions = z.object({
   verbose: z.boolean().optional().describe("show all columns"),
 });
 
-const cyclesInput = z.object({
+export const listCyclesInput = z.object({
   team: z.string().describe("team key"),
 }).merge(outputOptions);
 
-const cycleInput = z.object({
+export const cycleInput = z.object({
   team: z.string().describe("team key"),
   current: z.boolean().optional().describe("show current active cycle"),
   issues: z.boolean().optional().describe("list issues in cycle"),
@@ -38,7 +38,7 @@ export const cyclesRouter = router({
       aliases: { command: ["c"] },
       description: "list cycles for a team",
     })
-    .input(cyclesInput)
+    .input(listCyclesInput)
     .query(async ({ input }) => {
       try {
         const client = getClient();

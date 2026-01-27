@@ -51,3 +51,30 @@ Task ID: 16
   - `.merge()` chains require recursive schema resolution
   - Router meta blocks can include aliases for command shortcuts (e.g., ["i"] for issues)
 ---
+
+## 2026-01-27 - Generate Contract Tests from CLI Spec
+Thread: https://ampcode.com/threads/T-019c00fc-bad1-7348-ae38-29a554542d68
+Task ID: 17
+- Created packages/codegen/generate-contract-tests.ts to generate tests from cli-spec.json
+- Outputs packages/cli/src/router/contract.test.ts with 45 tests
+- Tests cover: schema parsing, required flag validation, operation inference (CREATE/UPDATE/DELETE/SHOW)
+- Exported zod schemas from all router files for direct import in tests
+- Files changed:
+  - packages/codegen/generate-contract-tests.ts (new)
+  - packages/cli/src/router/contract.test.ts (new, generated)
+  - packages/cli/src/router/issues.ts (export schemas)
+  - packages/cli/src/router/projects.ts (export schemas)
+  - packages/cli/src/router/teams.ts (export + rename teamsInput → listTeamsInput)
+  - packages/cli/src/router/cycles.ts (export + rename cyclesInput → listCyclesInput)
+  - packages/cli/src/router/docs.ts (export schemas)
+  - packages/cli/src/router/labels.ts (export schemas)
+  - packages/cli/src/router/me.ts (export schemas)
+  - packages/cli/src/router/search.ts (export schemas)
+  - packages/cli/src/router/auth.ts (export schemas)
+  - packages/cli/src/router/config.ts (export schemas)
+- **Learnings for future iterations:**
+  - Don't try to introspect TRPC router internals - they're unstable and complex
+  - Export zod schemas from router files for direct import in tests
+  - Operation inference can be tested in isolation without mocking network calls
+  - Contract = input parsing + operation selection, not full end-to-end behavior
+---

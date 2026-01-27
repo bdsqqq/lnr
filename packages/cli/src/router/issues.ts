@@ -39,7 +39,7 @@ import {
   type TableColumn,
 } from "../lib/output";
 
-const listIssuesInput = z.object({
+export const listIssuesInput = z.object({
   team: z.string().optional().describe("filter by team key"),
   state: z.string().optional().describe("filter by workflow state name"),
   assignee: z.string().optional().describe("filter by assignee email or @me"),
@@ -50,7 +50,7 @@ const listIssuesInput = z.object({
   verbose: z.boolean().optional().describe("show all columns"),
 });
 
-const issueInput = z.object({
+export const issueInput = z.object({
   idOrNew: z.string().meta({ positional: true }).describe("issue identifier (e.g. ENG-123) or 'new'"),
   json: z.boolean().optional().describe("output as json"),
   open: z.boolean().optional().describe("open issue in browser"),

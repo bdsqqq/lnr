@@ -20,14 +20,14 @@ import {
   type OutputOptions,
 } from "../lib/output";
 
-const listLabelsInput = z.object({
+export const listLabelsInput = z.object({
   team: z.string().optional().describe("filter by team key"),
   json: z.boolean().optional().describe("output as json"),
   quiet: z.boolean().optional().describe("output ids only"),
   verbose: z.boolean().optional().describe("show all columns"),
 });
 
-const labelInput = z.object({
+export const labelInput = z.object({
   id: z.string().meta({ positional: true }).describe("label id or 'new'"),
   name: z.string().optional().describe("label name (required for new)"),
   color: z.string().optional().describe("hex color code"),

@@ -10,7 +10,7 @@ import {
   truncate,
 } from "../lib/output";
 
-const searchInput = z.object({
+export const searchInput = z.object({
   query: z.string().meta({ positional: true }).describe("search query"),
   team: z.string().optional().describe("filter by team key"),
   json: z.boolean().optional().describe("output as json"),

@@ -18,14 +18,14 @@ import {
   type OutputOptions,
 } from "../lib/output";
 
-const listDocsInput = z.object({
+export const listDocsInput = z.object({
   project: z.string().optional().describe("filter by project id"),
   json: z.boolean().optional().describe("output as json"),
   quiet: z.boolean().optional().describe("output ids only"),
   verbose: z.boolean().optional().describe("show all columns"),
 });
 
-const docInput = z.object({
+export const docInput = z.object({
   id: z.string().meta({ positional: true }).describe("document id or 'new'"),
   title: z.string().optional().describe("document title (required for new)"),
   content: z.string().optional().describe("document content"),

@@ -10,12 +10,12 @@ import { router, procedure } from "./trpc";
 import { exitWithError, handleApiError, EXIT_CODES } from "../lib/error";
 import { outputJson, outputQuiet, outputTable } from "../lib/output";
 
-const teamsInput = z.object({
+export const listTeamsInput = z.object({
   json: z.boolean().optional().describe("output as json"),
   quiet: z.boolean().optional().describe("output keys only"),
 });
 
-const teamInput = z.object({
+export const teamInput = z.object({
   key: z.string().meta({ positional: true }).describe("team key"),
   members: z.boolean().optional().describe("list team members"),
   json: z.boolean().optional().describe("output as json"),
@@ -24,7 +24,7 @@ const teamInput = z.object({
 export const teamsRouter = router({
   teams: procedure
     .meta({ aliases: { command: ["t"] }, description: "list teams" })
-    .input(teamsInput)
+    .input(listTeamsInput)
     .query(async ({ input }) => {
       try {
         const client = getClient();
