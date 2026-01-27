@@ -139,3 +139,23 @@ Task ID: 20
   - Operation inference logic belongs in the generated file for self-contained commands
   - Use MUTATION_FLAGS const array for consistent operation detection across create/update paths
 ---
+
+## 2026-01-27 - Implement Identifier Resolver
+Thread: https://ampcode.com/threads/T-019c0110-3c17-741d-b637-ef47e66057fe
+Task ID: 21
+- Created resolveIssueIdentifier function in packages/core/src/resolvers.ts
+- Takes identifier like 'ENG-123', returns UUID string
+- Custom IssueNotFoundError with clear message including the identifier
+- Uses same client.issue() pattern as existing getIssue function
+- Exported from packages/core/src/index.ts for CLI consumption
+- 4 unit tests covering: valid identifier, null response, API error, error message format
+- Files changed:
+  - packages/core/src/resolvers.ts (new)
+  - packages/core/src/resolvers.test.ts (new)
+  - packages/core/src/index.ts (added exports)
+- **Learnings for future iterations:**
+  - Business logic (resolvers) belongs in core package where @linear/sdk is available
+  - CLI package consumes core exports, doesn't import SDK directly
+  - Linear identifiers are unique per workspace, no ambiguous case to handle
+  - Simple try/catch wrapping of SDK calls sufficient for error handling
+---

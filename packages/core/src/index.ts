@@ -121,3 +121,6 @@ export {
 
 // reactions
 export { createReaction, deleteReaction } from "./reactions";
+
+// resolvers
+export { resolveIssueIdentifier, IssueNotFoundError } from "./resolvers";
