@@ -73,6 +73,7 @@ export interface CreateIssueInput {
   priority?: number;
   labelIds?: string[];
   parentId?: string;
+  projectId?: string;
 }
 
 export interface UpdateIssueInput {
