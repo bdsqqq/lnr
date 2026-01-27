@@ -1,0 +1,217 @@
+# Ralph Progress Log
+Started: 2026-01-27
+Feature: schema-driven CLI generation
+Parent Task: 15
+
+## Task Order (dependencies not enforced by tool, track manually)
+
+**Phase 1: Spec + Tests (parallel tracks)**
+- 16: extract current CLI surface as spec (no deps, START HERE)
+- 17: generate contract tests from CLI spec (depends on 16)
+- 18: spike introspection query (no deps, can run parallel with 16)
+
+**Phase 2: Schema Extraction**
+- 19: build schema extraction script (depends on 18)
+
+**Phase 3: Generation**
+- 20: generate Issue commands from schema (depends on 17, 19)
+
+**Phase 4: Resolvers (parallel, no deps on each other)**
+- 21: implement identifier resolver
+- 22: implement state resolver
+- 23: implement assignee resolver
+
+**Phase 5: Integration**
+- 24: wire generated Issue commands + verify parity (depends on 20, 21, 22, 23)
+
+## Codebase Patterns
+(patterns discovered during this feature build)
+
+- zod schemas use `.meta({ positional: true })` for positional args
+- `.describe("...")` contains flag descriptions
+- `.optional()` presence determines required status
+- router procedures define command metadata via `.meta({ description, aliases })`
+- nested routers (like config) need special handling
+
+---
+
+## 2026-01-27 - Extract CLI Surface as Spec
+Thread: https://ampcode.com/threads/T-019c00f9-976f-75de-a23d-daa4b62fa6f5
+Task ID: 16
+- Created packages/codegen/extract-cli-spec.ts to parse router zod schemas
+- Outputs cli-spec.json with 18 commands, all flags, types, required status
+- Issue command: 25 flags captured (idOrNew, state, assignee, priority, label, etc)
+- Project command: 9 flags captured
+- Issues (list): 8 flags, Projects (list): 5 flags
+- Files changed:
+  - packages/codegen/extract-cli-spec.ts (new)
+  - packages/codegen/cli-spec.json (new, generated)
+- **Learnings for future iterations:**
+  - Regex parsing of zod schemas requires balanced brace tracking for nested objects
+  - `.merge()` chains require recursive schema resolution
+  - Router meta blocks can include aliases for command shortcuts (e.g., ["i"] for issues)
+---
+
+## 2026-01-27 - Generate Contract Tests from CLI Spec
+Thread: https://ampcode.com/threads/T-019c00fc-bad1-7348-ae38-29a554542d68
+Task ID: 17
+- Created packages/codegen/generate-contract-tests.ts to generate tests from cli-spec.json
+- Outputs packages/cli/src/router/contract.test.ts with 45 tests
+- Tests cover: schema parsing, required flag validation, operation inference (CREATE/UPDATE/DELETE/SHOW)
+- Exported zod schemas from all router files for direct import in tests
+- Files changed:
+  - packages/codegen/generate-contract-tests.ts (new)
+  - packages/cli/src/router/contract.test.ts (new, generated)
+  - packages/cli/src/router/issues.ts (export schemas)
+  - packages/cli/src/router/projects.ts (export schemas)
+  - packages/cli/src/router/teams.ts (export + rename teamsInput → listTeamsInput)
+  - packages/cli/src/router/cycles.ts (export + rename cyclesInput → listCyclesInput)
+  - packages/cli/src/router/docs.ts (export schemas)
+  - packages/cli/src/router/labels.ts (export schemas)
+  - packages/cli/src/router/me.ts (export schemas)
+  - packages/cli/src/router/search.ts (export schemas)
+  - packages/cli/src/router/auth.ts (export schemas)
+  - packages/cli/src/router/config.ts (export schemas)
+- **Learnings for future iterations:**
+  - Don't try to introspect TRPC router internals - they're unstable and complex
+  - Export zod schemas from router files for direct import in tests
+  - Operation inference can be tested in isolation without mocking network calls
+  - Contract = input parsing + operation selection, not full end-to-end behavior
+---
+
+## 2026-01-27 - Spike Introspection Query
+Thread: https://ampcode.com/threads/T-019c0105-8dc0-727b-8ced-e86ad3c2942e
+Task ID: 18
+- Created packages/codegen/introspect-linear.ts to fetch Linear GraphQL schema
+- Outputs packages/codegen/schema.json with priority types + all enums
+- Verified IssueUpdateInput has 29 fields, all with descriptions
+- Verified 70 enums with values, 19 deprecated fields with reasons
+- Documented decision in docs/IMPLEMENTATION-PLAN.md: introspection wins over SDK types and vendored SDL
+- Files changed:
+  - packages/codegen/introspect-linear.ts (new)
+  - packages/codegen/schema.json (new, generated)
+  - docs/IMPLEMENTATION-PLAN.md (updated with decision)
+- **Learnings for future iterations:**
+  - Linear API limits query complexity to 10000 - must batch introspection
+  - Fall back to ~/.lnr/config.json for API key when env var not set
+  - Priority in Linear is Int not Enum (0=none, 1=urgent, 2=high, 3=normal, 4=low)
+  - Schema includes deprecation reasons useful for CLI warnings
+---
+
+## 2026-01-27 - Build Schema Extraction Script
+Thread: https://ampcode.com/threads/T-019c0109-83db-757b-bc89-7dcf243f4be0
+Task ID: 19
+- Created packages/codegen/extract-schema.ts to parse schema.json and emit structured metadata
+- Outputs packages/codegen/extracted-schema.json with per-entity structure
+- Extracted Issue (34 create, 29 update, 79 output fields), Project (22 create, 31 update, 72 output fields), Comment (16 create, 7 update, 37 output fields)
+- Updated introspect-linear.ts to fetch Comment types
+- Files changed:
+  - packages/codegen/extract-schema.ts (new)
+  - packages/codegen/extracted-schema.json (new, generated)
+  - packages/codegen/introspect-linear.ts (added Comment types)
+  - packages/codegen/schema.json (regenerated with Comment)
+- **Learnings for future iterations:**
+  - GraphQL NON_NULL wrappers: required = outermost wrapper is NON_NULL, not any NON_NULL in chain
+  - LIST<NON_NULL<T>> means optional list with non-null items, not a required list
+  - Issue has 1 required create field (teamId), Project has 2 (name, teamIds), Comment has 0
+  - 5 deprecated output fields found (e.g., Issue.boardOrder)
+  - 70 enums available for autocomplete
+---
+
+## 2026-01-27 - Generate Issue Commands from Schema
+Thread: https://ampcode.com/threads/T-019c010c-69a7-7680-af12-7749457455c8
+Task ID: 20
+- Created packages/codegen/generate-issue-commands.ts to generate Issue commands from extracted-schema.json
+- Outputs packages/cli/src/generated/issue.ts with:
+  - zod schemas for input validation (issueInput, listIssuesInput)
+  - operation inference (create/read/update/archive)
+  - handlers for all operations (handleShowIssue, handleUpdateIssue, handleCreateIssue, handleArchiveIssue)
+  - generatedIssuesRouter with trpc procedures
+- Parity check: 25 flags from cli-spec.json matched, 7 extra flags from schema (delegateId, estimate, cycle, project, prioritySortOrder, subIssueSortOrder, dueDate)
+- All 76 CLI tests + 23 core tests pass
+- Files changed:
+  - packages/codegen/generate-issue-commands.ts (new)
+  - packages/cli/src/generated/issue.ts (new, generated)
+- **Learnings for future iterations:**
+  - Generated schemas must use `export const` not re-export to avoid TS2323 redeclaration errors
+  - Linear SDK team reference can be undefined - must add null check before accessing .id
+  - Schema has more fields than current CLI (expected) - extra flags are acceptable for future expansion
+  - Operation inference logic belongs in the generated file for self-contained commands
+  - Use MUTATION_FLAGS const array for consistent operation detection across create/update paths
+---
+
+## 2026-01-27 - Implement Identifier Resolver
+Thread: https://ampcode.com/threads/T-019c0110-3c17-741d-b637-ef47e66057fe
+Task ID: 21
+- Created resolveIssueIdentifier function in packages/core/src/resolvers.ts
+- Takes identifier like 'ENG-123', returns UUID string
+- Custom IssueNotFoundError with clear message including the identifier
+- Uses same client.issue() pattern as existing getIssue function
+- Exported from packages/core/src/index.ts for CLI consumption
+- 4 unit tests covering: valid identifier, null response, API error, error message format
+- Files changed:
+  - packages/core/src/resolvers.ts (new)
+  - packages/core/src/resolvers.test.ts (new)
+  - packages/core/src/index.ts (added exports)
+- **Learnings for future iterations:**
+  - Business logic (resolvers) belongs in core package where @linear/sdk is available
+  - CLI package consumes core exports, doesn't import SDK directly
+  - Linear identifiers are unique per workspace, no ambiguous case to handle
+  - Simple try/catch wrapping of SDK calls sufficient for error handling
+---
+
+## 2026-01-27 - Implement State Resolver
+Thread: https://ampcode.com/threads/T-019c0112-5ea8-74bf-b98c-7fafd4d44dd3
+Task ID: 22
+- Created resolveStateName function in packages/core/src/resolvers.ts
+- Takes client, teamId, stateName - returns stateId UUID
+- Case-insensitive matching on state name
+- Custom StateNotFoundError lists available states in error message
+- Uses existing getTeamStates(client, teamId) from issues.ts
+- Exported from packages/core/src/index.ts
+- 6 unit tests: exact match, case variants, not found, error message format, empty states
+- Files changed:
+  - packages/core/src/resolvers.ts (extended)
+  - packages/core/src/resolvers.test.ts (extended)
+  - packages/core/src/index.ts (added exports)
+- **Learnings for future iterations:**
+  - Error messages should include actionable context (available states list)
+  - Empty state case needs explicit handling for clear "none" message
+  - Mock client pattern: mock team() to return object with states() method
+---
+
+## 2026-01-27 - Implement Assignee Resolver
+Thread: https://ampcode.com/threads/T-019c0114-3080-7769-ad6f-aba4fb007bdc
+Task ID: 23
+- Created resolveAssignee function in packages/core/src/resolvers.ts
+- Handles @me → returns viewer.id via getViewer()
+- Handles email → uses client.users() with email filter (case-insensitive)
+- Custom AssigneeNotFoundError with actionable message
+- Exported from packages/core/src/index.ts
+- 5 unit tests: @me, valid email, case-insensitive, not found, error message
+- Files changed:
+  - packages/core/src/resolvers.ts (extended)
+  - packages/core/src/resolvers.test.ts (extended)
+  - packages/core/src/index.ts (added exports)
+- **Learnings for future iterations:**
+  - Linear SDK client.users() supports email filter: { email: { eq: "..." } }
+  - Viewer is available via getViewer() helper, reuse existing functions
+  - Assignee resolution simpler than state (no team context needed)
+---
+
+## 2026-01-27 - Wire Generated Issue Commands + Verify Parity
+Thread: https://ampcode.com/threads/T-019c0116-42a0-749f-bede-ba905f41b27e
+Task ID: 24
+- Replaced hand-coded issuesRouter with generatedIssuesRouter from packages/cli/src/generated/issue.ts
+- Updated contract tests to import schemas from generated file
+- All 114 tests pass (38 core + 76 CLI including 45 contract tests)
+- Generated code includes 7 extra flags from schema (delegateId, estimate, cycle, project, prioritySortOrder, subIssueSortOrder, dueDate)
+- Files changed:
+  - packages/cli/src/router/index.ts (swapped issuesRouter → generatedIssuesRouter)
+  - packages/cli/src/router/contract.test.ts (updated import path)
+- **Learnings for future iterations:**
+  - Wiring is minimal: just swap the router import in index.ts
+  - Contract tests verify schema shape, not implementation details - easy migration
+  - Generated file is self-contained with all handlers
+  - Hand-coded issues.ts can be archived/deleted once verified in production
+---
