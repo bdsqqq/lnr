@@ -1,5 +1,18 @@
 # @bdsqqq/lnr-core
 
+## 1.4.0
+
+### Minor Changes
+
+- feat(cli): add --project flag to issue new command (#15)
+- feat(cli): add --project flag to issue new command
+
+  Allows assigning issues to a project when creating them:
+  lnr issue new --team ENG --title "fix auth" --project "Frontend Support"
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c0086-59f7-750c-a784-d96f90fc91a2
+  Co-authored-by: Amp <amp@ampcode.com>
+
 ## 1.3.0
 
 ### Minor Changes
