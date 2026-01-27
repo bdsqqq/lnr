@@ -1,5 +1,22 @@
 # @bdsqqq/lnr-cli
 
+## 1.5.0
+
+### Minor Changes
+
+- feat(cli): add --pr flag to link github prs to issues
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c0090-a552-74b8-9fab-76e806e9bc3a
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(cli): add --pr flag to link github prs to issues (#16)
+
+### Patch Changes
+
+- Updated dependencies
+- Updated dependencies
+  - @bdsqqq/lnr-core@1.5.0
+
 ## 1.4.0
 
 ### Minor Changes
