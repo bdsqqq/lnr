@@ -22,6 +22,7 @@ import {
   deleteReaction,
   createIssueRelation,
   getProject,
+  linkGitHubPR,
   type Issue,
   type ListIssuesFilter,
   type Comment,
@@ -78,6 +79,7 @@ const issueInput = z.object({
   unreact: z.string().optional().describe("reaction id to remove"),
   parent: z.string().optional().describe("set parent issue identifier"),
   subIssues: z.boolean().optional().describe("list sub-issues"),
+  pr: z.string().optional().describe("link a github pr url"),
 });
 
 type IssueInput = z.infer<typeof issueInput>;
@@ -428,6 +430,15 @@ async function handleUpdateIssue(
       console.log(`removed reaction ${input.unreact.slice(0, 8)}`);
     }
 
+    // Link PR
+    if (input.pr) {
+      const success = await linkGitHubPR(client, issue.id, input.pr);
+      if (!success) {
+        exitWithError(`failed to link pr`);
+      }
+      console.log(`linked ${input.pr} to ${identifier}`);
+    }
+
     // Archive last (restricts further edits)
     if (input.archive) {
       await archiveIssue(client, issue.id);
@@ -521,10 +532,19 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
     }
 
     const issue = await createIssue(client, createPayload);
-    if (issue) {
-      console.log(`created ${issue.identifier}: ${issue.title}`);
-    } else {
+    if (!issue) {
       console.log("created issue");
+      return;
+    }
+
+    console.log(`created ${issue.identifier}: ${issue.title}`);
+
+    if (input.pr) {
+      const success = await linkGitHubPR(client, issue.id, input.pr);
+      if (!success) {
+        exitWithError(`failed to link pr`);
+      }
+      console.log(`linked ${input.pr} to ${issue.identifier}`);
     }
   } catch (error) {
     handleApiError(error);
@@ -568,7 +588,8 @@ export const issuesRouter = router({
         input.parent ||
         input.blocks ||
         input.blockedBy ||
-        input.relatesTo;
+        input.relatesTo ||
+        input.pr;
 
       if (hasUpdate) {
         await handleUpdateIssue(input.idOrNew, input);
