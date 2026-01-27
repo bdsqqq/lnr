@@ -9,7 +9,7 @@
 import { describe, test, expect } from "bun:test";
 
 // import schemas directly from router files
-import { listIssuesInput, issueInput } from "../router/issues";
+import { listIssuesInput, issueInput } from "../generated/issue";
 import { listProjectsInput, projectInput } from "../router/projects";
 import { listTeamsInput, teamInput } from "../router/teams";
 import { listCyclesInput, cycleInput } from "../router/cycles";

@@ -198,3 +198,20 @@ Task ID: 23
   - Viewer is available via getViewer() helper, reuse existing functions
   - Assignee resolution simpler than state (no team context needed)
 ---
+
+## 2026-01-27 - Wire Generated Issue Commands + Verify Parity
+Thread: https://ampcode.com/threads/T-019c0116-42a0-749f-bede-ba905f41b27e
+Task ID: 24
+- Replaced hand-coded issuesRouter with generatedIssuesRouter from packages/cli/src/generated/issue.ts
+- Updated contract tests to import schemas from generated file
+- All 114 tests pass (38 core + 76 CLI including 45 contract tests)
+- Generated code includes 7 extra flags from schema (delegateId, estimate, cycle, project, prioritySortOrder, subIssueSortOrder, dueDate)
+- Files changed:
+  - packages/cli/src/router/index.ts (swapped issuesRouter → generatedIssuesRouter)
+  - packages/cli/src/router/contract.test.ts (updated import path)
+- **Learnings for future iterations:**
+  - Wiring is minimal: just swap the router import in index.ts
+  - Contract tests verify schema shape, not implementation details - easy migration
+  - Generated file is self-contained with all handlers
+  - Hand-coded issues.ts can be archived/deleted once verified in production
+---

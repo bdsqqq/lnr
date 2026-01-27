@@ -3,7 +3,7 @@ import { authRouter } from "./auth";
 import { configRouter } from "./config";
 import { cyclesRouter } from "./cycles";
 import { docsRouter } from "./docs";
-import { issuesRouter } from "./issues";
+import { generatedIssuesRouter } from "../generated/issue";
 import { labelsRouter } from "./labels";
 import { meRouter } from "./me";
 import { projectsRouter } from "./projects";
@@ -15,7 +15,7 @@ export const appRouter = router({
   ...configRouter._def.procedures,
   ...cyclesRouter._def.procedures,
   ...docsRouter._def.procedures,
-  ...issuesRouter._def.procedures,
+  ...generatedIssuesRouter._def.procedures,
   ...labelsRouter._def.procedures,
   ...meRouter._def.procedures,
   ...projectsRouter._def.procedures,
