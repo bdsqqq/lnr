@@ -123,4 +123,9 @@ export {
 export { createReaction, deleteReaction } from "./reactions";
 
 // resolvers
-export { resolveIssueIdentifier, IssueNotFoundError } from "./resolvers";
+export {
+  resolveIssueIdentifier,
+  IssueNotFoundError,
+  resolveStateName,
+  StateNotFoundError,
+} from "./resolvers";

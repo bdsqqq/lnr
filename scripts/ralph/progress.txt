@@ -159,3 +159,23 @@ Task ID: 21
   - Linear identifiers are unique per workspace, no ambiguous case to handle
   - Simple try/catch wrapping of SDK calls sufficient for error handling
 ---
+
+## 2026-01-27 - Implement State Resolver
+Thread: https://ampcode.com/threads/T-019c0112-5ea8-74bf-b98c-7fafd4d44dd3
+Task ID: 22
+- Created resolveStateName function in packages/core/src/resolvers.ts
+- Takes client, teamId, stateName - returns stateId UUID
+- Case-insensitive matching on state name
+- Custom StateNotFoundError lists available states in error message
+- Uses existing getTeamStates(client, teamId) from issues.ts
+- Exported from packages/core/src/index.ts
+- 6 unit tests: exact match, case variants, not found, error message format, empty states
+- Files changed:
+  - packages/core/src/resolvers.ts (extended)
+  - packages/core/src/resolvers.test.ts (extended)
+  - packages/core/src/index.ts (added exports)
+- **Learnings for future iterations:**
+  - Error messages should include actionable context (available states list)
+  - Empty state case needs explicit handling for clear "none" message
+  - Mock client pattern: mock team() to return object with states() method
+---
