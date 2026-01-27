@@ -27,4 +27,27 @@ Parent Task: 15
 ## Codebase Patterns
 (patterns discovered during this feature build)
 
+- zod schemas use `.meta({ positional: true })` for positional args
+- `.describe("...")` contains flag descriptions
+- `.optional()` presence determines required status
+- router procedures define command metadata via `.meta({ description, aliases })`
+- nested routers (like config) need special handling
+
+---
+
+## 2026-01-27 - Extract CLI Surface as Spec
+Thread: https://ampcode.com/threads/T-019c00f9-976f-75de-a23d-daa4b62fa6f5
+Task ID: 16
+- Created packages/codegen/extract-cli-spec.ts to parse router zod schemas
+- Outputs cli-spec.json with 18 commands, all flags, types, required status
+- Issue command: 25 flags captured (idOrNew, state, assignee, priority, label, etc)
+- Project command: 9 flags captured
+- Issues (list): 8 flags, Projects (list): 5 flags
+- Files changed:
+  - packages/codegen/extract-cli-spec.ts (new)
+  - packages/codegen/cli-spec.json (new, generated)
+- **Learnings for future iterations:**
+  - Regex parsing of zod schemas requires balanced brace tracking for nested objects
+  - `.merge()` chains require recursive schema resolution
+  - Router meta blocks can include aliases for command shortcuts (e.g., ["i"] for issues)
 ---

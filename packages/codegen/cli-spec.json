@@ -1,0 +1,973 @@
+{
+  "extractedAt": "2026-01-27T19:43:15.190Z",
+  "version": "1.0.0",
+  "commands": [
+    {
+      "entity": "projects",
+      "command": "projects",
+      "description": "",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "team",
+          "type": "string",
+          "required": false,
+          "description": "filter by team key",
+          "positional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "required": false,
+          "description": "filter by status (planned, started, completed, etc)",
+          "positional": false
+        },
+        {
+          "name": "json",
+          "type": "boolean",
+          "required": false,
+          "description": "output as json",
+          "positional": false
+        },
+        {
+          "name": "quiet",
+          "type": "boolean",
+          "required": false,
+          "description": "output ids only",
+          "positional": false
+        },
+        {
+          "name": "verbose",
+          "type": "boolean",
+          "required": false,
+          "description": "show all columns",
+          "positional": false
+        }
+      ],
+      "operations": [
+        {
+          "name": "create",
+          "inferredWhen": "positional arg is 'new'"
+        },
+        {
+          "name": "delete",
+          "inferredWhen": "--delete or --archive flag present"
+        },
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "projects",
+      "command": "project",
+      "description": "show project details, create with ",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "project name or 'new'",
+          "positional": true
+        },
+        {
+          "name": "issues",
+          "type": "boolean",
+          "required": false,
+          "description": "list issues in project",
+          "positional": false
+        },
+        {
+          "name": "json",
+          "type": "boolean",
+          "required": false,
+          "description": "output as json",
+          "positional": false
+        },
+        {
+          "name": "quiet",
+          "type": "boolean",
+          "required": false,
+          "description": "output ids only",
+          "positional": false
+        },
+        {
+          "name": "verbose",
+          "type": "boolean",
+          "required": false,
+          "description": "show all columns",
+          "positional": false
+        },
+        {
+          "name": "delete",
+          "type": "boolean",
+          "required": false,
+          "description": "delete the project",
+          "positional": false
+        },
+        {
+          "name": "projectName",
+          "type": "string",
+          "required": false,
+          "description": "project name (required for new)",
+          "positional": false
+        },
+        {
+          "name": "team",
+          "type": "string",
+          "required": false,
+          "description": "team key to associate project with",
+          "positional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "project description",
+          "positional": false
+        }
+      ],
+      "operations": [
+        {
+          "name": "create",
+          "inferredWhen": "positional arg is 'new'"
+        },
+        {
+          "name": "delete",
+          "inferredWhen": "--delete or --archive flag present"
+        },
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "search",
+      "command": "search",
+      "description": "",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "query",
+          "type": "string",
+          "required": true,
+          "description": "search query",
+          "positional": true
+        },
+        {
+          "name": "team",
+          "type": "string",
+          "required": false,
+          "description": "filter by team key",
+          "positional": false
+        },
+        {
+          "name": "json",
+          "type": "boolean",
+          "required": false,
+          "description": "output as json",
+          "positional": false
+        },
+        {
+          "name": "quiet",
+          "type": "boolean",
+          "required": false,
+          "description": "output ids only",
+          "positional": false
+        }
+      ],
+      "operations": [
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "cycles",
+      "command": "cycles",
+      "description": "",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "team",
+          "type": "string",
+          "required": true,
+          "description": "team key",
+          "positional": false
+        }
+      ],
+      "operations": [
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "cycles",
+      "command": "cycle",
+      "description": "show cycle details",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "team",
+          "type": "string",
+          "required": true,
+          "description": "team key",
+          "positional": false
+        },
+        {
+          "name": "current",
+          "type": "boolean",
+          "required": false,
+          "description": "show current active cycle",
+          "positional": false
+        },
+        {
+          "name": "issues",
+          "type": "boolean",
+          "required": false,
+          "description": "list issues in cycle",
+          "positional": false
+        }
+      ],
+      "operations": [
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "docs",
+      "command": "docs",
+      "description": "list documents",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "project",
+          "type": "string",
+          "required": false,
+          "description": "filter by project id",
+          "positional": false
+        },
+        {
+          "name": "json",
+          "type": "boolean",
+          "required": false,
+          "description": "output as json",
+          "positional": false
+        },
+        {
+          "name": "quiet",
+          "type": "boolean",
+          "required": false,
+          "description": "output ids only",
+          "positional": false
+        },
+        {
+          "name": "verbose",
+          "type": "boolean",
+          "required": false,
+          "description": "show all columns",
+          "positional": false
+        }
+      ],
+      "operations": [
+        {
+          "name": "create",
+          "inferredWhen": "positional arg is 'new'"
+        },
+        {
+          "name": "delete",
+          "inferredWhen": "--delete or --archive flag present"
+        },
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "docs",
+      "command": "doc",
+      "description": "show document details, create with ",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "description": "document id or 'new'",
+          "positional": true
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "required": false,
+          "description": "document title (required for new)",
+          "positional": false
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "required": false,
+          "description": "document content",
+          "positional": false
+        },
+        {
+          "name": "project",
+          "type": "string",
+          "required": false,
+          "description": "project id to attach document to",
+          "positional": false
+        },
+        {
+          "name": "delete",
+          "type": "boolean",
+          "required": false,
+          "description": "delete the document",
+          "positional": false
+        },
+        {
+          "name": "json",
+          "type": "boolean",
+          "required": false,
+          "description": "output as json",
+          "positional": false
+        }
+      ],
+      "operations": [
+        {
+          "name": "create",
+          "inferredWhen": "positional arg is 'new'"
+        },
+        {
+          "name": "delete",
+          "inferredWhen": "--delete or --archive flag present"
+        },
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "teams",
+      "command": "teams",
+      "description": "",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "json",
+          "type": "boolean",
+          "required": false,
+          "description": "output as json",
+          "positional": false
+        },
+        {
+          "name": "quiet",
+          "type": "boolean",
+          "required": false,
+          "description": "output keys only",
+          "positional": false
+        }
+      ],
+      "operations": [
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "teams",
+      "command": "team",
+      "description": "show team details",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "key",
+          "type": "string",
+          "required": true,
+          "description": "team key",
+          "positional": true
+        },
+        {
+          "name": "members",
+          "type": "boolean",
+          "required": false,
+          "description": "list team members",
+          "positional": false
+        },
+        {
+          "name": "json",
+          "type": "boolean",
+          "required": false,
+          "description": "output as json",
+          "positional": false
+        }
+      ],
+      "operations": [
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "config",
+      "command": "get",
+      "description": "get a config value",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "key",
+          "type": "enum(api_key,default_team,output_format)",
+          "required": true,
+          "description": "config key to get",
+          "positional": true
+        }
+      ],
+      "operations": [
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "config",
+      "command": "set",
+      "description": "set a config value",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "key",
+          "type": "enum(api_key,default_team,output_format)",
+          "required": true,
+          "description": "config key to set",
+          "positional": true
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "value to set",
+          "positional": true
+        }
+      ],
+      "operations": [
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "config",
+      "command": "list",
+      "description": "view and manage configuration",
+      "aliases": [],
+      "flags": [],
+      "operations": [
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "me",
+      "command": "me",
+      "description": "show current user info",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "issues",
+          "type": "boolean",
+          "required": false,
+          "description": "list issues assigned to me",
+          "positional": false
+        },
+        {
+          "name": "created",
+          "type": "boolean",
+          "required": false,
+          "description": "list issues created by me",
+          "positional": false
+        },
+        {
+          "name": "activity",
+          "type": "boolean",
+          "required": false,
+          "description": "show recent activity",
+          "positional": false
+        },
+        {
+          "name": "json",
+          "type": "boolean",
+          "required": false,
+          "description": "output as json",
+          "positional": false
+        },
+        {
+          "name": "quiet",
+          "type": "boolean",
+          "required": false,
+          "description": "output ids only",
+          "positional": false
+        }
+      ],
+      "operations": [
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "labels",
+      "command": "labels",
+      "description": "list labels",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "team",
+          "type": "string",
+          "required": false,
+          "description": "filter by team key",
+          "positional": false
+        },
+        {
+          "name": "json",
+          "type": "boolean",
+          "required": false,
+          "description": "output as json",
+          "positional": false
+        },
+        {
+          "name": "quiet",
+          "type": "boolean",
+          "required": false,
+          "description": "output ids only",
+          "positional": false
+        },
+        {
+          "name": "verbose",
+          "type": "boolean",
+          "required": false,
+          "description": "show all columns",
+          "positional": false
+        }
+      ],
+      "operations": [
+        {
+          "name": "create",
+          "inferredWhen": "positional arg is 'new'"
+        },
+        {
+          "name": "delete",
+          "inferredWhen": "--delete or --archive flag present"
+        },
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "labels",
+      "command": "label",
+      "description": "show label details, create with ",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "description": "label id or 'new'",
+          "positional": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "label name (required for new)",
+          "positional": false
+        },
+        {
+          "name": "color",
+          "type": "string",
+          "required": false,
+          "description": "hex color code",
+          "positional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "label description",
+          "positional": false
+        },
+        {
+          "name": "team",
+          "type": "string",
+          "required": false,
+          "description": "team key (required for new)",
+          "positional": false
+        },
+        {
+          "name": "delete",
+          "type": "boolean",
+          "required": false,
+          "description": "delete the label",
+          "positional": false
+        },
+        {
+          "name": "json",
+          "type": "boolean",
+          "required": false,
+          "description": "output as json",
+          "positional": false
+        }
+      ],
+      "operations": [
+        {
+          "name": "create",
+          "inferredWhen": "positional arg is 'new'"
+        },
+        {
+          "name": "delete",
+          "inferredWhen": "--delete or --archive flag present"
+        },
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "auth",
+      "command": "auth",
+      "description": "authenticate with Linear API",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "apiKey",
+          "type": "string",
+          "required": false,
+          "description": "Linear API key",
+          "positional": true
+        },
+        {
+          "name": "whoami",
+          "type": "boolean",
+          "required": false,
+          "description": "show current authenticated user",
+          "positional": false
+        },
+        {
+          "name": "logout",
+          "type": "boolean",
+          "required": false,
+          "description": "clear stored credentials",
+          "positional": false
+        }
+      ],
+      "operations": [
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "issues",
+      "command": "issues",
+      "description": "",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "team",
+          "type": "string",
+          "required": false,
+          "description": "filter by team key",
+          "positional": false
+        },
+        {
+          "name": "state",
+          "type": "string",
+          "required": false,
+          "description": "filter by workflow state name",
+          "positional": false
+        },
+        {
+          "name": "assignee",
+          "type": "string",
+          "required": false,
+          "description": "filter by assignee email or @me",
+          "positional": false
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "required": false,
+          "description": "filter by label name",
+          "positional": false
+        },
+        {
+          "name": "project",
+          "type": "string",
+          "required": false,
+          "description": "filter by project name",
+          "positional": false
+        },
+        {
+          "name": "json",
+          "type": "boolean",
+          "required": false,
+          "description": "output as json",
+          "positional": false
+        },
+        {
+          "name": "quiet",
+          "type": "boolean",
+          "required": false,
+          "description": "output ids only",
+          "positional": false
+        },
+        {
+          "name": "verbose",
+          "type": "boolean",
+          "required": false,
+          "description": "show all columns",
+          "positional": false
+        }
+      ],
+      "operations": [
+        {
+          "name": "create",
+          "inferredWhen": "positional arg is 'new'"
+        },
+        {
+          "name": "update",
+          "inferredWhen": "mutation flags present (state, assignee, priority, etc)"
+        },
+        {
+          "name": "delete",
+          "inferredWhen": "--delete or --archive flag present"
+        },
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    },
+    {
+      "entity": "issues",
+      "command": "issue",
+      "description": "show or update an issue, or create with ",
+      "aliases": [],
+      "flags": [
+        {
+          "name": "idOrNew",
+          "type": "string",
+          "required": true,
+          "description": "issue identifier (e.g. ENG-123) or 'new'",
+          "positional": true
+        },
+        {
+          "name": "json",
+          "type": "boolean",
+          "required": false,
+          "description": "output as json",
+          "positional": false
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "open issue in browser",
+          "positional": false
+        },
+        {
+          "name": "state",
+          "type": "string",
+          "required": false,
+          "description": "set workflow state",
+          "positional": false
+        },
+        {
+          "name": "assignee",
+          "type": "string",
+          "required": false,
+          "description": "set assignee by email or @me",
+          "positional": false
+        },
+        {
+          "name": "priority",
+          "type": "string",
+          "required": false,
+          "description": "set priority (urgent, high, medium, low, none)",
+          "positional": false
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "required": false,
+          "description": "set label (+name to add, -name to remove)",
+          "positional": false
+        },
+        {
+          "name": "comment",
+          "type": "string",
+          "required": false,
+          "description": "add comment to issue",
+          "positional": false
+        },
+        {
+          "name": "blocks",
+          "type": "string",
+          "required": false,
+          "description": "add blocks relation to issue",
+          "positional": false
+        },
+        {
+          "name": "blockedBy",
+          "type": "string",
+          "required": false,
+          "description": "add blocked-by relation to issue",
+          "positional": false
+        },
+        {
+          "name": "relatesTo",
+          "type": "string",
+          "required": false,
+          "description": "add relates-to relation to issue",
+          "positional": false
+        },
+        {
+          "name": "team",
+          "type": "string",
+          "required": false,
+          "description": "team key (required for new)",
+          "positional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "required": false,
+          "description": "issue title (required for new)",
+          "positional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "issue description",
+          "positional": false
+        },
+        {
+          "name": "comments",
+          "type": "boolean",
+          "required": false,
+          "description": "list comments on issue",
+          "positional": false
+        },
+        {
+          "name": "editComment",
+          "type": "string",
+          "required": false,
+          "description": "comment id to edit (requires --text)",
+          "positional": false
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "required": false,
+          "description": "text for --edit-comment or --reply-to",
+          "positional": false
+        },
+        {
+          "name": "replyTo",
+          "type": "string",
+          "required": false,
+          "description": "comment id to reply to (requires --text)",
+          "positional": false
+        },
+        {
+          "name": "deleteComment",
+          "type": "string",
+          "required": false,
+          "description": "comment id to delete",
+          "positional": false
+        },
+        {
+          "name": "archive",
+          "type": "boolean",
+          "required": false,
+          "description": "archive the issue",
+          "positional": false
+        },
+        {
+          "name": "react",
+          "type": "string",
+          "required": false,
+          "description": "comment id to add reaction (requires --emoji)",
+          "positional": false
+        },
+        {
+          "name": "emoji",
+          "type": "string",
+          "required": false,
+          "description": "emoji for --react",
+          "positional": false
+        },
+        {
+          "name": "unreact",
+          "type": "string",
+          "required": false,
+          "description": "reaction id to remove",
+          "positional": false
+        },
+        {
+          "name": "parent",
+          "type": "string",
+          "required": false,
+          "description": "set parent issue identifier",
+          "positional": false
+        },
+        {
+          "name": "subIssues",
+          "type": "boolean",
+          "required": false,
+          "description": "list sub-issues",
+          "positional": false
+        }
+      ],
+      "operations": [
+        {
+          "name": "create",
+          "inferredWhen": "positional arg is 'new'"
+        },
+        {
+          "name": "update",
+          "inferredWhen": "mutation flags present (state, assignee, priority, etc)"
+        },
+        {
+          "name": "delete",
+          "inferredWhen": "--delete or --archive flag present"
+        },
+        {
+          "name": "show",
+          "inferredWhen": "no mutation flags present"
+        }
+      ]
+    }
+  ]
+}
