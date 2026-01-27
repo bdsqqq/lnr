@@ -4,6 +4,8 @@ import {
   IssueNotFoundError,
   resolveStateName,
   StateNotFoundError,
+  resolveAssignee,
+  AssigneeNotFoundError,
 } from "./resolvers";
 import type { LinearClient } from "@linear/sdk";
 
@@ -127,6 +129,82 @@ describe("resolveStateName", () => {
       expect(error instanceof StateNotFoundError).toBe(true);
       expect((error as Error).message).toBe(
         'state not found: "done". available states: none'
+      );
+    }
+  });
+});
+
+describe("resolveAssignee", () => {
+  it("returns viewer id for @me", async () => {
+    const mockClient = {
+      viewer: Promise.resolve({
+        id: "viewer-uuid-123",
+        name: "Alice",
+        email: "alice@example.com",
+        displayName: "Alice",
+        active: true,
+        admin: false,
+      }),
+    } as unknown as LinearClient;
+
+    const result = await resolveAssignee(mockClient, "@me");
+
+    expect(result).toBe("viewer-uuid-123");
+  });
+
+  it("returns userId for valid email", async () => {
+    const mockClient = {
+      users: mock(() =>
+        Promise.resolve({
+          nodes: [{ id: "user-uuid-456", email: "bob@example.com" }],
+        })
+      ),
+    } as unknown as LinearClient;
+
+    const result = await resolveAssignee(mockClient, "bob@example.com");
+
+    expect(result).toBe("user-uuid-456");
+  });
+
+  it("matches email case-insensitively", async () => {
+    const mockClient = {
+      users: mock(() =>
+        Promise.resolve({
+          nodes: [{ id: "user-uuid-789", email: "charlie@example.com" }],
+        })
+      ),
+    } as unknown as LinearClient;
+
+    const result = await resolveAssignee(mockClient, "CHARLIE@EXAMPLE.COM");
+
+    expect(result).toBe("user-uuid-789");
+    expect(mockClient.users).toHaveBeenCalledWith({
+      filter: { email: { eq: "charlie@example.com" } },
+    });
+  });
+
+  it("throws AssigneeNotFoundError when user not found", async () => {
+    const mockClient = {
+      users: mock(() => Promise.resolve({ nodes: [] })),
+    } as unknown as LinearClient;
+
+    await expect(
+      resolveAssignee(mockClient, "nobody@example.com")
+    ).rejects.toThrow(AssigneeNotFoundError);
+  });
+
+  it("error message includes the assignee value", async () => {
+    const mockClient = {
+      users: mock(() => Promise.resolve({ nodes: [] })),
+    } as unknown as LinearClient;
+
+    try {
+      await resolveAssignee(mockClient, "unknown@test.com");
+      expect(true).toBe(false);
+    } catch (error) {
+      expect(error instanceof AssigneeNotFoundError).toBe(true);
+      expect((error as Error).message).toBe(
+        'assignee not found: "unknown@test.com". use @me or a valid email address'
       );
     }
   });

@@ -128,4 +128,6 @@ export {
   IssueNotFoundError,
   resolveStateName,
   StateNotFoundError,
+  resolveAssignee,
+  AssigneeNotFoundError,
 } from "./resolvers";

@@ -179,3 +179,22 @@ Task ID: 22
   - Empty state case needs explicit handling for clear "none" message
   - Mock client pattern: mock team() to return object with states() method
 ---
+
+## 2026-01-27 - Implement Assignee Resolver
+Thread: https://ampcode.com/threads/T-019c0114-3080-7769-ad6f-aba4fb007bdc
+Task ID: 23
+- Created resolveAssignee function in packages/core/src/resolvers.ts
+- Handles @me → returns viewer.id via getViewer()
+- Handles email → uses client.users() with email filter (case-insensitive)
+- Custom AssigneeNotFoundError with actionable message
+- Exported from packages/core/src/index.ts
+- 5 unit tests: @me, valid email, case-insensitive, not found, error message
+- Files changed:
+  - packages/core/src/resolvers.ts (extended)
+  - packages/core/src/resolvers.test.ts (extended)
+  - packages/core/src/index.ts (added exports)
+- **Learnings for future iterations:**
+  - Linear SDK client.users() supports email filter: { email: { eq: "..." } }
+  - Viewer is available via getViewer() helper, reuse existing functions
+  - Assignee resolution simpler than state (no team context needed)
+---

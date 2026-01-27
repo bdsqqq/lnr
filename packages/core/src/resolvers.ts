@@ -1,5 +1,6 @@
 import type { LinearClient } from "@linear/sdk";
 import { getTeamStates } from "./issues";
+import { getViewer } from "./me";
 
 export class IssueNotFoundError extends Error {
   constructor(identifier: string) {
@@ -58,4 +59,33 @@ export async function resolveStateName(
   }
 
   return match.id;
+}
+
+export class AssigneeNotFoundError extends Error {
+  constructor(assignee: string) {
+    super(`assignee not found: "${assignee}". use @me or a valid email address`);
+    this.name = "AssigneeNotFoundError";
+  }
+}
+
+export async function resolveAssignee(
+  client: LinearClient,
+  assignee: string
+): Promise<string> {
+  if (assignee === "@me") {
+    const viewer = await getViewer(client);
+    return viewer.id;
+  }
+
+  const usersConnection = await client.users({
+    filter: { email: { eq: assignee.toLowerCase() } },
+  });
+
+  const user = usersConnection.nodes[0];
+
+  if (!user) {
+    throw new AssigneeNotFoundError(assignee);
+  }
+
+  return user.id;
 }
