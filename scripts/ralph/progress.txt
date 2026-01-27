@@ -1,0 +1,30 @@
+# Ralph Progress Log
+Started: 2026-01-27
+Feature: schema-driven CLI generation
+Parent Task: 15
+
+## Task Order (dependencies not enforced by tool, track manually)
+
+**Phase 1: Spec + Tests (parallel tracks)**
+- 16: extract current CLI surface as spec (no deps, START HERE)
+- 17: generate contract tests from CLI spec (depends on 16)
+- 18: spike introspection query (no deps, can run parallel with 16)
+
+**Phase 2: Schema Extraction**
+- 19: build schema extraction script (depends on 18)
+
+**Phase 3: Generation**
+- 20: generate Issue commands from schema (depends on 17, 19)
+
+**Phase 4: Resolvers (parallel, no deps on each other)**
+- 21: implement identifier resolver
+- 22: implement state resolver
+- 23: implement assignee resolver
+
+**Phase 5: Integration**
+- 24: wire generated Issue commands + verify parity (depends on 20, 21, 22, 23)
+
+## Codebase Patterns
+(patterns discovered during this feature build)
+
+---
