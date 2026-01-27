@@ -117,3 +117,25 @@ Task ID: 19
   - 5 deprecated output fields found (e.g., Issue.boardOrder)
   - 70 enums available for autocomplete
 ---
+
+## 2026-01-27 - Generate Issue Commands from Schema
+Thread: https://ampcode.com/threads/T-019c010c-69a7-7680-af12-7749457455c8
+Task ID: 20
+- Created packages/codegen/generate-issue-commands.ts to generate Issue commands from extracted-schema.json
+- Outputs packages/cli/src/generated/issue.ts with:
+  - zod schemas for input validation (issueInput, listIssuesInput)
+  - operation inference (create/read/update/archive)
+  - handlers for all operations (handleShowIssue, handleUpdateIssue, handleCreateIssue, handleArchiveIssue)
+  - generatedIssuesRouter with trpc procedures
+- Parity check: 25 flags from cli-spec.json matched, 7 extra flags from schema (delegateId, estimate, cycle, project, prioritySortOrder, subIssueSortOrder, dueDate)
+- All 76 CLI tests + 23 core tests pass
+- Files changed:
+  - packages/codegen/generate-issue-commands.ts (new)
+  - packages/cli/src/generated/issue.ts (new, generated)
+- **Learnings for future iterations:**
+  - Generated schemas must use `export const` not re-export to avoid TS2323 redeclaration errors
+  - Linear SDK team reference can be undefined - must add null check before accessing .id
+  - Schema has more fields than current CLI (expected) - extra flags are acceptable for future expansion
+  - Operation inference logic belongs in the generated file for self-contained commands
+  - Use MUTATION_FLAGS const array for consistent operation detection across create/update paths
+---
