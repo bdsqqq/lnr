@@ -97,3 +97,23 @@ Task ID: 18
   - Priority in Linear is Int not Enum (0=none, 1=urgent, 2=high, 3=normal, 4=low)
   - Schema includes deprecation reasons useful for CLI warnings
 ---
+
+## 2026-01-27 - Build Schema Extraction Script
+Thread: https://ampcode.com/threads/T-019c0109-83db-757b-bc89-7dcf243f4be0
+Task ID: 19
+- Created packages/codegen/extract-schema.ts to parse schema.json and emit structured metadata
+- Outputs packages/codegen/extracted-schema.json with per-entity structure
+- Extracted Issue (34 create, 29 update, 79 output fields), Project (22 create, 31 update, 72 output fields), Comment (16 create, 7 update, 37 output fields)
+- Updated introspect-linear.ts to fetch Comment types
+- Files changed:
+  - packages/codegen/extract-schema.ts (new)
+  - packages/codegen/extracted-schema.json (new, generated)
+  - packages/codegen/introspect-linear.ts (added Comment types)
+  - packages/codegen/schema.json (regenerated with Comment)
+- **Learnings for future iterations:**
+  - GraphQL NON_NULL wrappers: required = outermost wrapper is NON_NULL, not any NON_NULL in chain
+  - LIST<NON_NULL<T>> means optional list with non-null items, not a required list
+  - Issue has 1 required create field (teamId), Project has 2 (name, teamIds), Comment has 0
+  - 5 deprecated output fields found (e.g., Issue.boardOrder)
+  - 70 enums available for autocomplete
+---
