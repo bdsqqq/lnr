@@ -2,10 +2,10 @@ import { router } from "./trpc";
 import { authRouter } from "./auth";
 import { configRouter } from "./config";
 import { cyclesRouter } from "./cycles";
-import { docsRouter } from "./docs";
+import { generatedDocsRouter } from "../generated/doc";
 import { generatedIssuesRouter } from "../generated/issue";
 import { generatedProjectsRouter } from "../generated/project";
-import { labelsRouter } from "./labels";
+import { generatedLabelsRouter } from "../generated/label";
 import { meRouter } from "./me";
 import { searchRouter } from "./search";
 import { teamsRouter } from "./teams";
@@ -14,10 +14,10 @@ export const appRouter = router({
   ...authRouter._def.procedures,
   ...configRouter._def.procedures,
   ...cyclesRouter._def.procedures,
-  ...docsRouter._def.procedures,
+  ...generatedDocsRouter._def.procedures,
   ...generatedIssuesRouter._def.procedures,
   ...generatedProjectsRouter._def.procedures,
-  ...labelsRouter._def.procedures,
+  ...generatedLabelsRouter._def.procedures,
   ...meRouter._def.procedures,
   ...searchRouter._def.procedures,
   ...teamsRouter._def.procedures,
