@@ -3344,6 +3344,934 @@
         }
       ],
       "deprecatedFields": []
+    },
+    "Document": {
+      "name": "Document",
+      "description": "A document that can be attached to different entities.",
+      "operations": {
+        "create": true,
+        "update": true,
+        "read": true
+      },
+      "createInput": {
+        "fields": [
+          {
+            "name": "id",
+            "type": "String",
+            "description": "The identifier in UUID v4 format. If none is provided, the backend will generate one.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "title",
+            "type": "String",
+            "description": "The title of the document.",
+            "required": true,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "icon",
+            "type": "String",
+            "description": "The icon of the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "color",
+            "type": "String",
+            "description": "The color of the icon.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "content",
+            "type": "String",
+            "description": "The document content as markdown.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "projectId",
+            "type": "String",
+            "description": "Related project for the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "initiativeId",
+            "type": "String",
+            "description": "[Internal] Related initiative for the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "teamId",
+            "type": "String",
+            "description": "[Internal] Related team for the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "issueId",
+            "type": "String",
+            "description": "Related issue for the document. Can be a UUID or issue identifier (e.g., 'LIN-123').",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "releaseId",
+            "type": "String",
+            "description": "[Internal] Related release for the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "cycleId",
+            "type": "String",
+            "description": "[Internal] Related cycle for the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "resourceFolderId",
+            "type": "String",
+            "description": "[Internal] The resource folder containing the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "lastAppliedTemplateId",
+            "type": "String",
+            "description": "The ID of the last template applied to the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "sortOrder",
+            "type": "Float",
+            "description": "The order of the item in the resources list.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "subscriberIds",
+            "type": "String",
+            "description": "[INTERNAL] The identifiers of the users subscribing to this document.",
+            "required": false,
+            "isList": true,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "requiredFields": [
+          "title"
+        ]
+      },
+      "updateInput": {
+        "fields": [
+          {
+            "name": "title",
+            "type": "String",
+            "description": "The title of the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "icon",
+            "type": "String",
+            "description": "The icon of the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "color",
+            "type": "String",
+            "description": "The color of the icon.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "content",
+            "type": "String",
+            "description": "The document content as markdown.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "projectId",
+            "type": "String",
+            "description": "Related project for the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "initiativeId",
+            "type": "String",
+            "description": "[Internal] Related initiative for the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "teamId",
+            "type": "String",
+            "description": "[Internal] Related team for the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "issueId",
+            "type": "String",
+            "description": "Related issue for the document. Can be a UUID or issue identifier (e.g., 'LIN-123').",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "releaseId",
+            "type": "String",
+            "description": "[Internal] Related release for the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "cycleId",
+            "type": "String",
+            "description": "[Internal] Related cycle for the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "resourceFolderId",
+            "type": "String",
+            "description": "[Internal] The resource folder containing the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "lastAppliedTemplateId",
+            "type": "String",
+            "description": "The ID of the last template applied to the document.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "hiddenAt",
+            "type": "DateTime",
+            "description": "The time at which the document was hidden.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "sortOrder",
+            "type": "Float",
+            "description": "The order of the item in the resources list.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "trashed",
+            "type": "Boolean",
+            "description": "Whether the document has been trashed.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "subscriberIds",
+            "type": "String",
+            "description": "[INTERNAL] The identifiers of the users subscribing to this document.",
+            "required": false,
+            "isList": true,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ]
+      },
+      "outputFields": [
+        {
+          "name": "id",
+          "type": "ID",
+          "description": "The unique identifier of the entity.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "description": "The time at which the entity was created.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "description": "The last time at which the entity was meaningfully updated. This is the same as the creation time if the entity hasn't\n    been updated after creation.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "archivedAt",
+          "type": "DateTime",
+          "description": "The time at which the entity was archived. Null if the entity has not been archived.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "description": "The document title.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "icon",
+          "type": "String",
+          "description": "The icon of the document.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "color",
+          "type": "String",
+          "description": "The color of the icon.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "creator",
+          "type": "User",
+          "description": "The user who created the document.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "updatedBy",
+          "type": "User",
+          "description": "The user who last updated the document.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "project",
+          "type": "Project",
+          "description": "The project that the document is associated with.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "initiative",
+          "type": "Initiative",
+          "description": "The initiative that the document is associated with.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "team",
+          "type": "Team",
+          "description": "[Internal] The team that the document is associated with.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "issue",
+          "type": "Issue",
+          "description": "The issue that the document is associated with.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "release",
+          "type": "Release",
+          "description": "[Internal] The release that the document is associated with.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "cycle",
+          "type": "Cycle",
+          "description": "[Internal] The cycle that the document is associated with.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "slugId",
+          "type": "String",
+          "description": "The document's unique URL slug.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "lastAppliedTemplate",
+          "type": "Template",
+          "description": "The last template that was applied to this document.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "hiddenAt",
+          "type": "DateTime",
+          "description": "The time at which the document was hidden. Null if the entity has not been hidden.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "trashed",
+          "type": "Boolean",
+          "description": "A flag that indicates whether the document is in the trash bin.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "sortOrder",
+          "type": "Float",
+          "description": "The order of the item in the resources list.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "comments",
+          "type": "CommentConnection",
+          "description": "Comments associated with the document.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "content",
+          "type": "String",
+          "description": "The documents content in markdown format.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "contentState",
+          "type": "String",
+          "description": "[Internal] The documents content as YJS state.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "documentContentId",
+          "type": "String",
+          "description": "The ID of the document content associated with the document.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "url",
+          "type": "String",
+          "description": "The canonical url for the document.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        }
+      ],
+      "deprecatedFields": []
+    },
+    "IssueLabel": {
+      "name": "IssueLabel",
+      "description": "Labels that can be associated with issues.",
+      "operations": {
+        "create": true,
+        "update": true,
+        "read": true
+      },
+      "createInput": {
+        "fields": [
+          {
+            "name": "id",
+            "type": "String",
+            "description": "The identifier in UUID v4 format. If none is provided, the backend will generate one.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "name",
+            "type": "String",
+            "description": "The name of the label.",
+            "required": true,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "description",
+            "type": "String",
+            "description": "The description of the label.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "color",
+            "type": "String",
+            "description": "The color of the label.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "parentId",
+            "type": "String",
+            "description": "The identifier of the parent label.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "teamId",
+            "type": "String",
+            "description": "The team associated with the label. If not given, the label will be associated with the entire workspace.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "isGroup",
+            "type": "Boolean",
+            "description": "Whether the label is a group.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "retiredAt",
+            "type": "DateTime",
+            "description": "When the label was retired.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "requiredFields": [
+          "name"
+        ]
+      },
+      "updateInput": {
+        "fields": [
+          {
+            "name": "name",
+            "type": "String",
+            "description": "The name of the label.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "description",
+            "type": "String",
+            "description": "The description of the label.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "parentId",
+            "type": "String",
+            "description": "The identifier of the parent label.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "color",
+            "type": "String",
+            "description": "The color of the label.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "isGroup",
+            "type": "Boolean",
+            "description": "Whether the label is a group.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "retiredAt",
+            "type": "DateTime",
+            "description": "When the label was retired.",
+            "required": false,
+            "isList": false,
+            "enumType": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ]
+      },
+      "outputFields": [
+        {
+          "name": "id",
+          "type": "ID",
+          "description": "The unique identifier of the entity.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "description": "The time at which the entity was created.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "description": "The last time at which the entity was meaningfully updated. This is the same as the creation time if the entity hasn't\n    been updated after creation.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "archivedAt",
+          "type": "DateTime",
+          "description": "The time at which the entity was archived. Null if the entity has not been archived.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "description": "The label's name.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "description": "The label's description.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "color",
+          "type": "String",
+          "description": "The label's color as a HEX string.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "isGroup",
+          "type": "Boolean",
+          "description": "Whether the label is a group.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "lastAppliedAt",
+          "type": "DateTime",
+          "description": "The date when the label was last applied to an issue or project.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "retiredAt",
+          "type": "DateTime",
+          "description": "[Internal] When the label was retired.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "organization",
+          "type": "Organization",
+          "description": null,
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": true,
+          "deprecationReason": "Workspace labels are identified by their team being null."
+        },
+        {
+          "name": "team",
+          "type": "Team",
+          "description": "The team that the label is associated with. If null, the label is associated with the global workspace.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "creator",
+          "type": "User",
+          "description": "The user who created the label.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "retiredBy",
+          "type": "User",
+          "description": "The user who retired the label.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "parent",
+          "type": "IssueLabel",
+          "description": "The parent label.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "inheritedFrom",
+          "type": "IssueLabel",
+          "description": "The original label inherited from.",
+          "required": false,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "issues",
+          "type": "IssueConnection",
+          "description": "Issues associated with the label.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        },
+        {
+          "name": "children",
+          "type": "IssueLabelConnection",
+          "description": "Children of the label.",
+          "required": true,
+          "isList": false,
+          "enumType": null,
+          "isDeprecated": false,
+          "deprecationReason": null
+        }
+      ],
+      "deprecatedFields": [
+        "organization"
+      ]
     }
   },
   "enums": {
@@ -6115,9 +7043,9 @@
     }
   },
   "metadata": {
-    "extractedAt": "2026-01-27T20:00:34.695Z",
-    "totalEntities": 3,
+    "extractedAt": "2026-01-28T19:50:31.817Z",
+    "totalEntities": 5,
     "totalEnums": 70,
-    "totalDeprecatedFields": 5
+    "totalDeprecatedFields": 6
   }
 }

@@ -219,7 +219,7 @@ async function main() {
   }
 
   // Entities to extract
-  const entityNames = ["Issue", "Project", "Comment"];
+  const entityNames = ["Issue", "Project", "Comment", "Document", "IssueLabel"];
 
   const entities: Record<string, ExtractedEntity> = {};
   for (const name of entityNames) {
