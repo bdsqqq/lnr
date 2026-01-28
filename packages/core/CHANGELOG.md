@@ -1,5 +1,11 @@
 # @bdsqqq/lnr-core
 
+## 1.6.0
+
+### Minor Changes
+
+- feat(cli): add --branch flag to get git branch name for issues (#17)
+
 ## 1.5.0
 
 ### Minor Changes
