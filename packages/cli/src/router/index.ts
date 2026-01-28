@@ -4,9 +4,9 @@ import { configRouter } from "./config";
 import { cyclesRouter } from "./cycles";
 import { docsRouter } from "./docs";
 import { generatedIssuesRouter } from "../generated/issue";
+import { generatedProjectsRouter } from "../generated/project";
 import { labelsRouter } from "./labels";
 import { meRouter } from "./me";
-import { projectsRouter } from "./projects";
 import { searchRouter } from "./search";
 import { teamsRouter } from "./teams";
 
@@ -16,9 +16,9 @@ export const appRouter = router({
   ...cyclesRouter._def.procedures,
   ...docsRouter._def.procedures,
   ...generatedIssuesRouter._def.procedures,
+  ...generatedProjectsRouter._def.procedures,
   ...labelsRouter._def.procedures,
   ...meRouter._def.procedures,
-  ...projectsRouter._def.procedures,
   ...searchRouter._def.procedures,
   ...teamsRouter._def.procedures,
 });

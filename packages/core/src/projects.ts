@@ -1,5 +1,5 @@
 import type { LinearClient } from "@linear/sdk";
-import type { Issue, Project, CreateProjectInput } from "./types";
+import type { Issue, Project, CreateProjectInput, UpdateProjectInput } from "./types";
 
 export async function listProjects(
   client: LinearClient,
@@ -144,4 +144,42 @@ export async function deleteProject(
 
   const result = await client.deleteProject(project.id);
   return result.success;
+}
+
+export async function updateProject(
+  client: LinearClient,
+  projectId: string,
+  input: UpdateProjectInput
+): Promise<Project | null> {
+  const result = await client.updateProject(projectId, {
+    name: input.name,
+    description: input.description,
+    content: input.content,
+    statusId: input.statusId,
+    startDate: input.startDate,
+    targetDate: input.targetDate,
+    priority: input.priority,
+    leadId: input.leadId,
+    teamIds: input.teamIds,
+  });
+
+  if (!result.success) {
+    return null;
+  }
+
+  const projectData = await result.project;
+  if (!projectData) {
+    return null;
+  }
+
+  return {
+    id: projectData.id,
+    name: projectData.name,
+    description: projectData.description,
+    state: projectData.state,
+    progress: projectData.progress,
+    targetDate: projectData.targetDate,
+    startDate: projectData.startDate,
+    createdAt: projectData.createdAt,
+  };
 }

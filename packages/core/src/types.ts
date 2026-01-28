@@ -89,6 +89,18 @@ export interface CreateProjectInput {
   teamIds?: string[];
 }
 
+export interface UpdateProjectInput {
+  name?: string;
+  description?: string;
+  content?: string;
+  statusId?: string;
+  startDate?: string;
+  targetDate?: string;
+  priority?: number;
+  leadId?: string;
+  teamIds?: string[];
+}
+
 export interface Activity {
   id: string;
   identifier: string;

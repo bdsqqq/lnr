@@ -1,0 +1,367 @@
+/**
+ * GENERATED FILE - DO NOT EDIT
+ * Generated from extracted-schema.json at 2026-01-28T14:12:58.059Z
+ *
+ * Regenerate with: bun run packages/codegen/generate-project-commands.ts
+ */
+
+import { z } from "zod";
+import {
+  getClient,
+  listProjects,
+  getProject,
+  getProjectIssues,
+  createProject,
+  deleteProject,
+  updateProject,
+  findTeamByKeyOrName,
+  getAvailableTeamKeys,
+  type Project,
+} from "@bdsqqq/lnr-core";
+import { router, procedure } from "../router/trpc";
+import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
+import {
+  outputJson,
+  outputQuiet,
+  outputTable,
+  getOutputFormat,
+  formatDate,
+  truncate,
+  type OutputOptions,
+  type TableColumn,
+} from "../lib/output";
+
+export const listProjectsInput = z.object({
+  team: z.string().optional().describe("filter by team key"),
+  status: z.string().optional().describe("filter by status (planned, started, completed, etc)"),
+  json: z.boolean().optional().describe("output as json"),
+  quiet: z.boolean().optional().describe("output ids only"),
+  verbose: z.boolean().optional().describe("show all columns"),
+});
+
+export const projectInput = z.object({
+  name: z.string().meta({ positional: true }).describe("project name or 'new'"),
+  issues: z.boolean().optional().describe("list issues in project"),
+  json: z.boolean().optional().describe("output as json"),
+  quiet: z.boolean().optional().describe("output ids only"),
+  verbose: z.boolean().optional().describe("show all columns"),
+  delete: z.boolean().optional().describe("delete the project"),
+  status: z.string().optional().describe("set project status"),
+  newName: z.string().optional().describe("new name for the project"),
+  description: z.string().optional().describe("project description"),
+  content: z.string().optional().describe("set project content as markdown"),
+  team: z.string().optional().describe("team key to associate project with"),
+  lead: z.string().optional().describe("set lead by email or @me"),
+  startDate: z.string().optional().describe("set start date (YYYY-MM-DD)"),
+  targetDate: z.string().optional().describe("set target date (YYYY-MM-DD)"),
+  priority: z.number().optional().describe("set priority (0=none, 1=urgent, 2=high, 3=normal, 4=low)"),
+});
+
+type ProjectInput = z.infer<typeof projectInput>;
+
+const projectColumns: TableColumn<Project>[] = [
+  { header: "NAME", value: (p) => truncate(p.name, 30), width: 30 },
+  { header: "STATE", value: (p) => p.state ?? "-", width: 12 },
+  { header: "PROGRESS", value: (p) => `${Math.round((p.progress ?? 0) * 100)}%`, width: 10 },
+  { header: "TARGET", value: (p) => formatDate(p.targetDate), width: 12 },
+];
+
+const MUTATION_FLAGS = [
+  "status", "lead", "team", "priority", "startDate", "targetDate",
+  "content", "description", "newName"
+] as const;
+
+function inferOperation(input: ProjectInput): "create" | "read" | "update" | "delete" {
+  if (input.name === "new") {
+    return "create";
+  }
+  if (input.delete) {
+    return "delete";
+  }
+  for (const flag of MUTATION_FLAGS) {
+    if (input[flag] !== undefined) {
+      return "update";
+    }
+  }
+  return "read";
+}
+
+async function handleListProjects(input: z.infer<typeof listProjectsInput>): Promise<void> {
+  try {
+    const client = getClient();
+    const outputOpts: OutputOptions = {
+      format: input.json ? "json" : input.quiet ? "quiet" : undefined,
+      verbose: input.verbose,
+    };
+    const format = getOutputFormat(outputOpts);
+
+    const projects = await listProjects(client, {
+      team: input.team,
+      status: input.status,
+    });
+
+    if (format === "json") {
+      outputJson(projects);
+      return;
+    }
+
+    if (format === "quiet") {
+      outputQuiet(projects.map((p) => p.id));
+      return;
+    }
+
+    outputTable(projects, projectColumns, outputOpts);
+  } catch (error) {
+    handleApiError(error);
+  }
+}
+
+async function handleShowProject(
+  name: string,
+  input: ProjectInput
+): Promise<void> {
+  try {
+    const client = getClient();
+    const outputOpts: OutputOptions = {
+      format: input.json ? "json" : input.quiet ? "quiet" : undefined,
+      verbose: input.verbose,
+    };
+    const format = getOutputFormat(outputOpts);
+
+    const project = await getProject(client, name);
+
+    if (!project) {
+      exitWithError(`project "${name}" not found`, undefined, EXIT_CODES.NOT_FOUND);
+    }
+
+    if (input.issues) {
+      const issues = await getProjectIssues(client, name);
+
+      if (format === "json") {
+        outputJson(issues);
+        return;
+      }
+
+      if (format === "quiet") {
+        outputQuiet(issues.map((i) => i.identifier));
+        return;
+      }
+
+      outputTable(
+        issues,
+        [
+          { header: "ID", value: (i) => i.identifier, width: 12 },
+          { header: "TITLE", value: (i) => truncate(i.title, 50), width: 50 },
+          { header: "CREATED", value: (i) => formatDate(i.createdAt), width: 12 },
+        ],
+        outputOpts
+      );
+      return;
+    }
+
+    if (format === "json") {
+      outputJson(project);
+      return;
+    }
+
+    if (format === "quiet") {
+      console.log(project.id);
+      return;
+    }
+
+    console.log(`${project.name}`);
+    if (project.description) {
+      console.log(`  ${truncate(project.description, 80)}`);
+    }
+    console.log();
+    console.log(`state:    ${project.state ?? "-"}`);
+    console.log(`progress: ${Math.round((project.progress ?? 0) * 100)}%`);
+    console.log(`target:   ${formatDate(project.targetDate)}`);
+    console.log(`started:  ${formatDate(project.startDate)}`);
+    console.log(`created:  ${formatDate(project.createdAt)}`);
+  } catch (error) {
+    handleApiError(error);
+  }
+}
+
+async function handleUpdateProject(
+  name: string,
+  input: ProjectInput
+): Promise<void> {
+  try {
+    const client = getClient();
+    const project = await getProject(client, name);
+
+    if (!project) {
+      exitWithError(`project "${name}" not found`, undefined, EXIT_CODES.NOT_FOUND);
+    }
+
+    const updatePayload: {
+      name?: string;
+      description?: string;
+      content?: string;
+      statusId?: string;
+      startDate?: string;
+      targetDate?: string;
+      priority?: number;
+      leadId?: string;
+      teamIds?: string[];
+    } = {};
+
+    if (input.newName) {
+      updatePayload.name = input.newName;
+    }
+
+    if (input.description !== undefined) {
+      updatePayload.description = input.description;
+    }
+
+    if (input.content !== undefined) {
+      updatePayload.content = input.content;
+    }
+
+    if (input.status !== undefined) {
+      updatePayload.statusId = input.status;
+    }
+
+    if (input.startDate !== undefined) {
+      updatePayload.startDate = input.startDate;
+    }
+
+    if (input.targetDate !== undefined) {
+      updatePayload.targetDate = input.targetDate;
+    }
+
+    if (input.priority !== undefined) {
+      updatePayload.priority = input.priority;
+    }
+
+    if (input.lead !== undefined) {
+      if (input.lead === "@me") {
+        const viewer = await client.viewer;
+        updatePayload.leadId = viewer.id;
+      } else {
+        const users = await client.users({ filter: { email: { eq: input.lead } } });
+        const user = users.nodes[0];
+        if (!user) {
+          exitWithError(`user "${input.lead}" not found`);
+        }
+        updatePayload.leadId = user.id;
+      }
+    }
+
+    if (input.team !== undefined) {
+      const team = await findTeamByKeyOrName(client, input.team);
+      if (!team) {
+        const available = (await getAvailableTeamKeys(client)).join(", ");
+        exitWithError(`team "${input.team}" not found`, `available teams: ${available}`);
+      }
+      updatePayload.teamIds = [team.id];
+    }
+
+    if (Object.keys(updatePayload).length > 0) {
+      await updateProject(client, project.id, updatePayload);
+      console.log(`updated ${name}`);
+    }
+  } catch (error) {
+    handleApiError(error);
+  }
+}
+
+async function handleCreateProject(input: ProjectInput): Promise<void> {
+  if (!input.newName && !input.description) {
+    exitWithError("--new-name is required", 'usage: lnr project new --new-name "..."');
+  }
+
+  const projectName = input.newName;
+  if (!projectName) {
+    exitWithError("--new-name is required", 'usage: lnr project new --new-name "..."');
+  }
+
+  try {
+    const client = getClient();
+    let teamIds: string[] = [];
+
+    if (input.team) {
+      const team = await findTeamByKeyOrName(client, input.team);
+      if (!team) {
+        const available = (await getAvailableTeamKeys(client)).join(", ");
+        exitWithError(
+          `team "${input.team}" not found`,
+          `available teams: ${available}`,
+          EXIT_CODES.NOT_FOUND
+        );
+      }
+      teamIds = [team.id];
+    }
+
+    const project = await createProject(client, {
+      name: projectName,
+      description: input.description,
+      teamIds,
+    });
+
+    if (project) {
+      console.log(`created project: ${project.name}`);
+    } else {
+      console.log("created project");
+    }
+  } catch (error) {
+    handleApiError(error);
+  }
+}
+
+async function handleDeleteProject(
+  name: string,
+  _input: ProjectInput
+): Promise<void> {
+  try {
+    const client = getClient();
+    const success = await deleteProject(client, name);
+
+    if (!success) {
+      exitWithError(`project "${name}" not found`, undefined, EXIT_CODES.NOT_FOUND);
+    }
+
+    console.log(`deleted project: ${name}`);
+  } catch (error) {
+    handleApiError(error);
+  }
+}
+
+export const generatedProjectsRouter = router({
+  projects: procedure
+    .meta({
+      description: "list projects",
+      aliases: { command: ["p"] },
+    })
+    .input(listProjectsInput)
+    .query(async ({ input }) => {
+      await handleListProjects(input);
+    }),
+
+  project: procedure
+    .meta({
+      description: "show or update a project, or create with 'new'",
+    })
+    .input(projectInput)
+    .mutation(async ({ input }) => {
+      const operation = inferOperation(input);
+
+      switch (operation) {
+        case "create":
+          await handleCreateProject(input);
+          break;
+        case "delete":
+          await handleDeleteProject(input.name, input);
+          break;
+        case "update":
+          await handleUpdateProject(input.name, input);
+          break;
+        case "read":
+        default:
+          await handleShowProject(input.name, input);
+          break;
+      }
+    }),
+});

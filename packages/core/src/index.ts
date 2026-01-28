@@ -10,6 +10,7 @@ export type {
   CreateIssueInput,
   UpdateIssueInput,
   CreateProjectInput,
+  UpdateProjectInput,
 } from "./types";
 
 // client
@@ -56,6 +57,7 @@ export {
   getProjectIssues,
   createProject,
   deleteProject,
+  updateProject,
 } from "./projects";
 
 // teams
