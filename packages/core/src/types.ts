@@ -10,6 +10,7 @@ export interface Issue {
   updatedAt: Date;
   url: string;
   parentId?: string | null;
+  branchName: string;
 }
 
 export interface Project {

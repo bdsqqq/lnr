@@ -32,6 +32,7 @@ export async function getMyIssues(client: LinearClient): Promise<Issue[]> {
       createdAt: i.createdAt,
       updatedAt: i.updatedAt,
       url: i.url,
+      branchName: i.branchName,
     }))
   );
 }
@@ -56,6 +57,7 @@ export async function getMyCreatedIssues(
       createdAt: i.createdAt,
       updatedAt: i.updatedAt,
       url: i.url,
+      branchName: i.branchName,
     }))
   );
 }
