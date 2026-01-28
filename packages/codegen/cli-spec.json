@@ -948,6 +948,20 @@
           "required": false,
           "description": "list sub-issues",
           "positional": false
+        },
+        {
+          "name": "branch",
+          "type": "boolean",
+          "required": false,
+          "description": "output git branch name",
+          "positional": false
+        },
+        {
+          "name": "pr",
+          "type": "string",
+          "required": false,
+          "description": "link a github pr url",
+          "positional": false
         }
       ],
       "operations": [

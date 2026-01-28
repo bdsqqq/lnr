@@ -36,3 +36,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 status.json
 lnr
 dist/
+
+# codegen intermediates (regenerate with extract-schema.ts)
+packages/codegen/extracted-schema.json

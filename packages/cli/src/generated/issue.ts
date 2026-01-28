@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-01-27T20:04:35.111Z
+ * Generated from extracted-schema.json at 2026-01-28T20:17:35.484Z
  *
  * Regenerate with: bun run packages/codegen/generate-issue-commands.ts
  */
@@ -28,6 +28,8 @@ import {
   createReaction,
   deleteReaction,
   createIssueRelation,
+  getProject,
+  linkGitHubPR,
   type Issue,
   type ListIssuesFilter,
   type Comment,
@@ -90,6 +92,8 @@ export const issueInput = z.object({
   emoji: z.string().optional().describe("emoji for --react"),
   unreact: z.string().optional().describe("reaction id to remove"),
   subIssues: z.boolean().optional().describe("list sub-issues"),
+  branch: z.boolean().optional().describe("output git branch name"),
+  pr: z.string().optional().describe("link a github pr url"),
 });
 
 type IssueInput = z.infer<typeof issueInput>;
@@ -116,7 +120,7 @@ const MUTATION_FLAGS = [
   "state", "assignee", "priority", "label", "comment",
   "editComment", "replyTo", "deleteComment", "react", "unreact",
   "parent", "blocks", "blockedBy", "relatesTo", "title", "description",
-  "team", "project", "cycle", "estimate", "dueDate"
+  "team", "project", "cycle", "estimate", "dueDate", "pr"
 ] as const;
 
 /**
@@ -188,6 +192,16 @@ async function handleShowIssue(
       const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
       spawn(cmd, [issue.url], { detached: true, stdio: "ignore" }).unref();
       console.log(`opened ${issue.url}`);
+      return;
+    }
+
+    if (input.branch) {
+      const branchName = `${issue.identifier.toLowerCase()}-${issue.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, 50)}`;
+      console.log(branchName);
       return;
     }
 
@@ -457,6 +471,14 @@ async function handleUpdateIssue(
         exitWithError(`reaction ${input.unreact.slice(0, 8)} not found`, undefined, EXIT_CODES.NOT_FOUND);
       }
       console.log(`removed reaction ${input.unreact.slice(0, 8)}`);
+    }
+
+    if (input.pr) {
+      const success = await linkGitHubPR(client, issue.id, input.pr);
+      if (!success) {
+        exitWithError(`failed to link pr ${input.pr}`);
+      }
+      console.log(`linked pr ${input.pr} to ${identifier}`);
     }
   } catch (error) {
     handleApiError(error);
