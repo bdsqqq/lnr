@@ -65,6 +65,7 @@ export async function listIssues(
       updatedAt: n.updatedAt,
       url: n.url,
       parentId: (await n.parent)?.id ?? null,
+      branchName: n.branchName,
     }))
   );
 }
@@ -96,6 +97,7 @@ export async function getIssue(
       updatedAt: issue.updatedAt,
       url: issue.url,
       parentId: parent?.id ?? null,
+      branchName: issue.branchName,
     };
   } catch {
     return null;
@@ -134,6 +136,7 @@ export async function createIssue(
           createdAt: createdIssue.createdAt,
           updatedAt: createdIssue.updatedAt,
           url: createdIssue.url,
+          branchName: createdIssue.branchName,
         };
       }
     } catch {
@@ -213,6 +216,7 @@ export async function getSubIssues(
       updatedAt: n.updatedAt,
       url: n.url,
       parentId: parent.id,
+      branchName: n.branchName,
     }))
   );
 }

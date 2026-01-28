@@ -89,3 +89,16 @@ jobs:
           gh release create "v$VERSION" dist/* \
             --title "v$VERSION" \
             --notes "See [CHANGELOG](https://github.com/bdsqqq/lnr/blob/main/packages/cli/CHANGELOG.md) for details."
+
+      # update nix package hashes after release
+      - name: Update nix package
+        if: steps.release-check.outputs.exists == 'false'
+        uses: cachix/install-nix-action@v27
+      - name: Update nix hashes and commit
+        if: steps.release-check.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.release-check.outputs.version }}"
+          ./scripts/update-nix-hashes.sh "$VERSION"
+          git add nix/default.nix
+          git commit -m "chore(nix): update to v$VERSION"
+          git push

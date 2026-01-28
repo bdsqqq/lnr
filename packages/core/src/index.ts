@@ -124,6 +124,10 @@ export {
 // reactions
 export { createReaction, deleteReaction } from "./reactions";
 
+// attachments
+export type { Attachment, CreateAttachmentInput } from "./attachments";
+export { createAttachment, getIssueAttachments, linkGitHubPR } from "./attachments";
+
 // resolvers
 export {
   resolveIssueIdentifier,

@@ -28,6 +28,7 @@ export async function searchIssues(
       createdAt: i.createdAt,
       updatedAt: i.updatedAt,
       url: i.url,
+      branchName: i.branchName,
     }))
   );
 }

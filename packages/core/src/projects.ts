@@ -94,6 +94,7 @@ export async function getProjectIssues(
       createdAt: i.createdAt,
       updatedAt: i.updatedAt,
       url: i.url,
+      branchName: i.branchName,
     }))
   );
 }

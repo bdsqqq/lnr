@@ -1,5 +1,52 @@
 # @bdsqqq/lnr-cli
 
+## 1.6.0
+
+### Minor Changes
+
+- feat(cli): add --branch flag to get git branch name for issues (#17)
+
+### Patch Changes
+
+- Updated dependencies
+  - @bdsqqq/lnr-core@1.6.0
+
+## 1.5.0
+
+### Minor Changes
+
+- feat(cli): add --pr flag to link github prs to issues
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c0090-a552-74b8-9fab-76e806e9bc3a
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(cli): add --pr flag to link github prs to issues (#16)
+
+### Patch Changes
+
+- Updated dependencies
+- Updated dependencies
+  - @bdsqqq/lnr-core@1.5.0
+
+## 1.4.0
+
+### Minor Changes
+
+- feat(cli): add --project flag to issue new command (#15)
+- feat(cli): add --project flag to issue new command
+
+  Allows assigning issues to a project when creating them:
+  lnr issue new --team ENG --title "fix auth" --project "Frontend Support"
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c0086-59f7-750c-a784-d96f90fc91a2
+  Co-authored-by: Amp <amp@ampcode.com>
+
+### Patch Changes
+
+- Updated dependencies
+- Updated dependencies
+  - @bdsqqq/lnr-core@1.4.0
+
 ## 1.3.1
 
 ### Patch Changes

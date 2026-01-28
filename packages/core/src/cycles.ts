@@ -85,6 +85,7 @@ export async function getCycleIssues(
         createdAt: i.createdAt,
         updatedAt: i.updatedAt,
         url: i.url,
+        branchName: i.branchName,
       }))
     );
   } catch {

@@ -7,24 +7,24 @@
 }:
 
 let
-  version = "1.3.0";
+  version = "1.6.0";
 
   sources = {
     "x86_64-linux" = {
       url = "https://github.com/bdsqqq/lnr/releases/download/v${version}/lnr-linux-x64";
-      hash = "sha256-sfHIffKvsbiYwOFv7ELkoiRpiTOKMYhvaLFIbL4fqO4=";
+      hash = "sha256-rLYo684/lkmukFM6wTSVvntp8LYnvGSwVWnD+/ZSVw8=";
     };
     "aarch64-linux" = {
       url = "https://github.com/bdsqqq/lnr/releases/download/v${version}/lnr-linux-arm64";
-      hash = "sha256-BdI/5Dj7VuZqxUJYJo6LULyyNNevj4Kch3cXGk3JCR0=";
+      hash = "sha256-zSMC7CWTawCCKwrnKFGMLLOCD7P/r6stQ3SCX1kXdAw=";
     };
     "x86_64-darwin" = {
       url = "https://github.com/bdsqqq/lnr/releases/download/v${version}/lnr-darwin-x64";
-      hash = "sha256-0pzL1C2q5d33Qw5NISKWVaG9bgRFspWcSk3amaLq4Zk=";
+      hash = "sha256-Ns2Btylhh17s8bucjtxyfKM7MgUF5qEvT68GyKk5Kb0=";
     };
     "aarch64-darwin" = {
       url = "https://github.com/bdsqqq/lnr/releases/download/v${version}/lnr-darwin-arm64";
-      hash = "sha256-WR5klnrTBPq4GiH6i3atJ3S9XYWYc6z4SuU68BrCxRY=";
+      hash = "sha256-bkFBd2wFqS4jlQ5746pz3wWB2QHAFmeNDFFdDhNF3pg=";
     };
   };
 

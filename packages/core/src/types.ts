@@ -10,6 +10,7 @@ export interface Issue {
   updatedAt: Date;
   url: string;
   parentId?: string | null;
+  branchName: string;
 }
 
 export interface Project {
@@ -73,6 +74,7 @@ export interface CreateIssueInput {
   priority?: number;
   labelIds?: string[];
   parentId?: string;
+  projectId?: string;
 }
 
 export interface UpdateIssueInput {
