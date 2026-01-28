@@ -59,6 +59,9 @@ interface CLIFlag {
   required: boolean;
   description: string;
   positional: boolean;
+  cliOnly?: boolean;
+  handler?: string;
+  dispatchIn?: "show" | "update" | "create";
 }
 
 interface CLICommand {
@@ -214,8 +217,46 @@ function generateIssueInputSchema(): string {
   lines.push('  emoji: z.string().optional().describe("emoji for --react"),');
   lines.push('  unreact: z.string().optional().describe("reaction id to remove"),');
   lines.push('  subIssues: z.boolean().optional().describe("list sub-issues"),');
+
+  // CLI-only flags from cli-spec.json
+  const cliOnlyFlags = issueCommand?.flags.filter(f => f.cliOnly) || [];
+  for (const flag of cliOnlyFlags) {
+    const zodType = flag.type === "boolean" ? "z.boolean()" : "z.string()";
+    const desc = flag.description.replace(/"/g, '\\"');
+    lines.push(`  ${flag.name}: ${zodType}.optional().describe("${desc}"),`);
+  }
+
   lines.push("});");
 
+  return lines.join("\n");
+}
+
+function generateCliOnlyShowDispatchers(): string {
+  const cliOnlyFlags = issueCommand?.flags.filter(f => f.cliOnly && f.dispatchIn === "show") || [];
+  if (cliOnlyFlags.length === 0) return "";
+
+  const lines: string[] = [""];
+  for (const flag of cliOnlyFlags) {
+    lines.push(`    if (input.${flag.name}) {`);
+    lines.push(`      ${flag.handler}(issue);`);
+    lines.push(`      return;`);
+    lines.push(`    }`);
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+
+function generateCliOnlyUpdateDispatchers(): string {
+  const cliOnlyFlags = issueCommand?.flags.filter(f => f.cliOnly && f.dispatchIn === "update") || [];
+  if (cliOnlyFlags.length === 0) return "";
+
+  const lines: string[] = [""];
+  for (const flag of cliOnlyFlags) {
+    lines.push(`    if (input.${flag.name}) {`);
+    lines.push(`      await ${flag.handler}(client, issue, input.${flag.name});`);
+    lines.push(`    }`);
+    lines.push("");
+  }
   return lines.join("\n");
 }
 
@@ -234,6 +275,16 @@ function generateListIssuesInputSchema(): string {
 
 function generateOutput(): string {
   const timestamp = new Date().toISOString();
+  const cliOnlyFlags = issueCommand?.flags.filter(f => f.cliOnly) || [];
+  const handCraftedHandlers = cliOnlyFlags.map(f => f.handler).filter(Boolean);
+  const handCraftedImport = handCraftedHandlers.length > 0
+    ? `import { ${handCraftedHandlers.join(", ")} } from "../hand-crafted/issue";`
+    : "";
+
+  // Add CLI-only mutation flags to MUTATION_FLAGS
+  const cliOnlyMutationFlags = cliOnlyFlags
+    .filter(f => f.dispatchIn === "update")
+    .map(f => `"${f.name}"`);
 
   return `/**
  * GENERATED FILE - DO NOT EDIT
@@ -282,6 +333,7 @@ import {
   outputCommentThreads,
   type TableColumn,
 } from "../lib/output";
+${handCraftedImport ? handCraftedImport : ""}
 
 ${generateListIssuesInputSchema()}
 
@@ -311,7 +363,7 @@ const MUTATION_FLAGS = [
   "state", "assignee", "priority", "label", "comment",
   "editComment", "replyTo", "deleteComment", "react", "unreact",
   "parent", "blocks", "blockedBy", "relatesTo", "title", "description",
-  "team", "project", "cycle", "estimate", "dueDate"
+  "team", "project", "cycle", "estimate", "dueDate"${cliOnlyMutationFlags.length > 0 ? `, ${cliOnlyMutationFlags.join(", ")}` : ""}
 ] as const;
 
 /**
@@ -385,7 +437,7 @@ async function handleShowIssue(
       console.log(\`opened \${issue.url}\`);
       return;
     }
-
+${generateCliOnlyShowDispatchers()}
     if (input.comments) {
       const { comments, error } = await getIssueComments(client, issue.id);
       if (error) {
@@ -653,7 +705,7 @@ async function handleUpdateIssue(
       }
       console.log(\`removed reaction \${input.unreact.slice(0, 8)}\`);
     }
-  } catch (error) {
+${generateCliOnlyUpdateDispatchers()}  } catch (error) {
     handleApiError(error);
   }
 }

@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-01-28T20:17:35.484Z
+ * Generated from extracted-schema.json at 2026-01-28T20:24:28.329Z
  *
  * Regenerate with: bun run packages/codegen/generate-issue-commands.ts
  */
@@ -28,8 +28,6 @@ import {
   createReaction,
   deleteReaction,
   createIssueRelation,
-  getProject,
-  linkGitHubPR,
   type Issue,
   type ListIssuesFilter,
   type Comment,
@@ -47,6 +45,7 @@ import {
   outputCommentThreads,
   type TableColumn,
 } from "../lib/output";
+import { handleBranch, handlePr } from "../hand-crafted/issue";
 
 export const listIssuesInput = z.object({
   team: z.string().optional().describe("filter by team key"),
@@ -196,12 +195,7 @@ async function handleShowIssue(
     }
 
     if (input.branch) {
-      const branchName = `${issue.identifier.toLowerCase()}-${issue.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "")
-        .slice(0, 50)}`;
-      console.log(branchName);
+      handleBranch(issue);
       return;
     }
 
@@ -474,11 +468,7 @@ async function handleUpdateIssue(
     }
 
     if (input.pr) {
-      const success = await linkGitHubPR(client, issue.id, input.pr);
-      if (!success) {
-        exitWithError(`failed to link pr ${input.pr}`);
-      }
-      console.log(`linked pr ${input.pr} to ${identifier}`);
+      await handlePr(client, issue, input.pr);
     }
   } catch (error) {
     handleApiError(error);

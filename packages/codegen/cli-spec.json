@@ -954,14 +954,20 @@
           "type": "boolean",
           "required": false,
           "description": "output git branch name",
-          "positional": false
+          "positional": false,
+          "cliOnly": true,
+          "handler": "handleBranch",
+          "dispatchIn": "show"
         },
         {
           "name": "pr",
           "type": "string",
           "required": false,
           "description": "link a github pr url",
-          "positional": false
+          "positional": false,
+          "cliOnly": true,
+          "handler": "handlePr",
+          "dispatchIn": "update"
         }
       ],
       "operations": [
