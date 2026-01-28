@@ -13,7 +13,12 @@ NIX_FILE="nix/default.nix"
 
 get_hash() {
   local url="$1"
-  nix-prefetch-url --type sha256 "$url" 2>/dev/null | xargs nix hash convert --to sri --hash-algo sha256
+  local raw_hash
+  raw_hash=$(nix-prefetch-url --type sha256 "$url") || {
+    echo "error: failed to fetch $url" >&2
+    exit 1
+  }
+  echo "$raw_hash" | xargs nix hash convert --to sri --hash-algo sha256
 }
 
 echo "fetching hashes for v${VERSION}..."
@@ -22,6 +27,13 @@ HASH_LINUX_X64=$(get_hash "${BASE_URL}/lnr-linux-x64")
 HASH_LINUX_ARM64=$(get_hash "${BASE_URL}/lnr-linux-arm64")
 HASH_DARWIN_X64=$(get_hash "${BASE_URL}/lnr-darwin-x64")
 HASH_DARWIN_ARM64=$(get_hash "${BASE_URL}/lnr-darwin-arm64")
+
+for hash in "$HASH_LINUX_X64" "$HASH_LINUX_ARM64" "$HASH_DARWIN_X64" "$HASH_DARWIN_ARM64"; do
+  if [[ -z "$hash" || ! "$hash" =~ ^sha256- ]]; then
+    echo "error: invalid hash '$hash'" >&2
+    exit 1
+  fi
+done
 
 echo "linux-x64:     $HASH_LINUX_X64"
 echo "linux-arm64:   $HASH_LINUX_ARM64"
@@ -36,5 +48,18 @@ sed -i.bak -E '/x86_64-darwin/,/hash =/{s|hash = "sha256-[^"]+"|hash = "'"$HASH_
 sed -i.bak -E '/aarch64-darwin/,/hash =/{s|hash = "sha256-[^"]+"|hash = "'"$HASH_DARWIN_ARM64"'"|;}' "$NIX_FILE"
 
 rm -f "${NIX_FILE}.bak"
+
+# verify the update worked
+if ! grep -q "version = \"${VERSION}\"" "$NIX_FILE"; then
+  echo "error: failed to update version in $NIX_FILE" >&2
+  exit 1
+fi
+
+for platform in x86_64-linux aarch64-linux x86_64-darwin aarch64-darwin; do
+  if ! grep -A2 "\"$platform\"" "$NIX_FILE" | grep -q "sha256-"; then
+    echo "error: failed to update hash for $platform" >&2
+    exit 1
+  fi
+done
 
 echo "updated $NIX_FILE to v${VERSION}"
