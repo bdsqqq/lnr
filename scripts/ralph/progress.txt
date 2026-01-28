@@ -24,3 +24,32 @@ Parent Task: 15
 - Contract tests verify schema shape, not implementation details
 
 ---
+
+## 2026-01-28 - Extend Introspection for Doc and Label
+Thread: https://ampcode.com/threads/T-019c0116-42a0-749f-bede-ba905f41b27e
+Task ID: 25
+- Added Document and IssueLabel types to introspect-linear.ts priority list
+- Updated extract-schema.ts to include Document and IssueLabel entities
+- Regenerated schema.json (now 89 types) and extracted-schema.json (now 5 entities)
+- Document: 15 create fields (1 required), 16 update fields, 25 output fields
+- IssueLabel: 8 create fields (1 required), 6 update fields, 18 output fields
+---
+
+## 2026-01-28 - Generate Doc and Label Commands
+Thread: https://ampcode.com/threads/T-019c0116-42a0-749f-bede-ba905f41b27e
+Task IDs: 26, 27
+- Created generate-doc-commands.ts and generate-label-commands.ts
+- Generated packages/cli/src/generated/doc.ts and label.ts
+- Wired generatedDocsRouter and generatedLabelsRouter into router/index.ts
+- Updated contract tests to import from generated files
+- All 114 tests pass
+---
+
+## 2026-01-28 - Cleanup: Remove Hand-coded Routers
+Thread: https://ampcode.com/threads/T-019c0116-42a0-749f-bede-ba905f41b27e
+Task ID: 28
+- Deleted packages/cli/src/router/{issues,projects,docs,labels}.ts (1133 lines)
+- Remaining hand-coded routers: auth, config, cycles, me, search, teams
+- All imports already using generated versions
+- All 114 tests still pass
+---
