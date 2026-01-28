@@ -56,6 +56,7 @@ const issueInput = z.object({
   idOrNew: z.string().meta({ positional: true }).describe("issue identifier (e.g. ENG-123) or 'new'"),
   json: z.boolean().optional().describe("output as json"),
   open: z.boolean().optional().describe("open issue in browser"),
+  branch: z.boolean().optional().describe("output git branch name"),
   state: z.string().optional().describe("set workflow state"),
   assignee: z.string().optional().describe("set assignee by email or @me"),
   priority: z.string().optional().describe("set priority (urgent, high, medium, low, none)"),
@@ -139,6 +140,11 @@ async function handleShowIssue(
 
     if (!issue) {
       exitWithError(`issue ${identifier} not found`, undefined, EXIT_CODES.NOT_FOUND);
+    }
+
+    if (input.branch) {
+      console.log(issue.branchName);
+      return;
     }
 
     if (input.open) {
