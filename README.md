@@ -76,6 +76,55 @@ api key from: https://linear.app/settings/account/security
 
 see SPEC.md for full command reference.
 
+## architecture
+
+lnr uses **schema-driven code generation** to stay in sync with Linear's API while keeping full control over CLI UX.
+
+```
+Linear GraphQL Schema
+        ↓ introspect
+   schema metadata
+        ↓ codegen
+  generated commands
+        ↓ calls
+  hand-crafted UX layer
+```
+
+### what's generated (from Linear's schema)
+
+- **zod input schemas** — flags, types, descriptions
+- **operation inference** — `new` → create, mutation flags → update, etc.
+- **trpc router wiring** — command registration and dispatch
+- **handler dispatch** — routes to the right function
+
+when Linear adds a field to `IssueUpdateInput`, re-run codegen and the flag appears automatically.
+
+### what's hand-crafted (full control)
+
+- **output formatting** — tables, threaded comments, reactions, colors
+- **UX resolvers** — `@me` → user ID, `done` → state ID, `ENG-123` → UUID
+- **error messages** — actionable, lowercase, with fix suggestions
+- **composition rules** — which flags work together vs. conflict
+- **core business logic** — all SDK interactions in `packages/core`
+
+this means the tedious plumbing (schema → zod → router) is automated, but the *experience* of using lnr stays yours.
+
+### regenerating commands
+
+```bash
+# regenerate issue commands
+bun run packages/codegen/generate-issue-commands.ts
+
+# regenerate project commands
+bun run packages/codegen/generate-project-commands.ts
+
+# refresh schema from Linear API (requires LINEAR_API_KEY)
+bun run packages/codegen/introspect-linear.ts
+bun run packages/codegen/extract-schema.ts
+```
+
+generated files live in `packages/cli/src/generated/`.
+
 ## development
 
 ```bash
