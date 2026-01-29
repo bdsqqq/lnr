@@ -96,6 +96,7 @@ import {
   createDocument,
   updateDocument,
   deleteDocument,
+  resolveProjectByName,
   type Document,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
@@ -142,7 +143,12 @@ async function handleListDocs(
     };
     const format = getOutputFormat(outputOpts);
 
-    const documents = await listDocuments(client, input.project);
+    let projectId: string | undefined;
+    if (input.project) {
+      projectId = await resolveProjectByName(client, input.project);
+    }
+
+    const documents = await listDocuments(client, projectId);
 
     if (format === "json") {
       outputJson(documents);
@@ -223,11 +229,23 @@ async function handleCreateDoc(input: DocInput): Promise<void> {
   try {
     const client = getClient();
 
-    const doc = await createDocument(client, {
+    const createPayload: {
+      title: string;
+      content?: string;
+      projectId?: string;
+    } = {
       title: input.title,
-      content: input.content,
-      projectId: input.project,
-    });
+    };
+
+    if (input.content) {
+      createPayload.content = input.content;
+    }
+
+    if (input.project) {
+      createPayload.projectId = await resolveProjectByName(client, input.project);
+    }
+
+    const doc = await createDocument(client, createPayload);
 
     if (doc) {
       console.log(\`created document: \${doc.title}\`);
