@@ -7,6 +7,12 @@
  * Usage: bun run packages/codegen/extract-schema.ts
  */
 
+import {
+  getSupportedEntityNames,
+  getExcludedEntityNames,
+  getExclusionReason,
+} from "./entity-config";
+
 interface GraphQLType {
   kind: "NON_NULL" | "LIST" | "SCALAR" | "ENUM" | "INPUT_OBJECT" | "OBJECT";
   name: string | null;
@@ -218,11 +224,50 @@ async function main() {
     process.exit(1);
   }
 
-  // Entities to extract
-  const entityNames = ["Issue", "Project", "Comment", "Document", "IssueLabel"];
+  // Discover potential entities in schema (types with matching Create/Update inputs)
+  const potentialEntities = types
+    .filter((t) => t.kind === "OBJECT" && !t.name.startsWith("__"))
+    .filter((t) => {
+      const hasCreateInput = types.some((ti) => ti.name === `${t.name}CreateInput`);
+      const hasUpdateInput = types.some((ti) => ti.name === `${t.name}UpdateInput`);
+      return hasCreateInput || hasUpdateInput;
+    })
+    .map((t) => t.name);
 
+  const supportedNames = getSupportedEntityNames();
+  const excludedNames = getExcludedEntityNames();
+
+  // Log entity categorization
+  console.log("entity extraction:\n");
+  console.log("  supported:");
+  for (const name of supportedNames) {
+    console.log(`    + ${name}`);
+  }
+
+  const excludedInSchema = potentialEntities.filter((n) => excludedNames.includes(n));
+  if (excludedInSchema.length > 0) {
+    console.log("\n  excluded:");
+    for (const name of excludedInSchema) {
+      const reason = getExclusionReason(name);
+      console.log(`    - ${name}: ${reason}`);
+    }
+  }
+
+  const unknownEntities = potentialEntities.filter(
+    (n) => !supportedNames.includes(n) && !excludedNames.includes(n)
+  );
+  if (unknownEntities.length > 0) {
+    console.log("\n  ⚠ unknown (not categorized):");
+    for (const name of unknownEntities) {
+      console.log(`    ? ${name}`);
+    }
+  }
+
+  console.log("");
+
+  // Extract supported entities
   const entities: Record<string, ExtractedEntity> = {};
-  for (const name of entityNames) {
+  for (const name of supportedNames) {
     const entity = extractEntity(name, types);
     if (entity) {
       entities[name] = entity;
