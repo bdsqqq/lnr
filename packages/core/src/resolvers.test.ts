@@ -6,6 +6,12 @@ import {
   StateNotFoundError,
   resolveAssignee,
   AssigneeNotFoundError,
+  resolveTeamByKey,
+  TeamNotFoundError,
+  resolveProjectByName,
+  ProjectNotFoundError,
+  resolveCycleByName,
+  CycleNotFoundError,
 } from "./resolvers";
 import type { LinearClient } from "@linear/sdk";
 
@@ -205,6 +211,208 @@ describe("resolveAssignee", () => {
       expect(error instanceof AssigneeNotFoundError).toBe(true);
       expect((error as Error).message).toBe(
         'assignee not found: "unknown@test.com". use @me or a valid email address'
+      );
+    }
+  });
+});
+
+describe("resolveTeamByKey", () => {
+  it("returns team id for valid key", async () => {
+    const mockClient = {
+      teams: mock(() =>
+        Promise.resolve({
+          nodes: [
+            { id: "team-uuid-123", key: "ENG", name: "Engineering", description: null, private: false, timezone: "UTC" },
+          ],
+        })
+      ),
+    } as unknown as LinearClient;
+
+    const result = await resolveTeamByKey(mockClient, "ENG");
+
+    expect(result).toBe("team-uuid-123");
+  });
+
+  it("throws TeamNotFoundError when team not found", async () => {
+    const mockClient = {
+      teams: mock(() =>
+        Promise.resolve({
+          nodes: [
+            { id: "team-1", key: "ENG", name: "Engineering", description: null, private: false, timezone: "UTC" },
+            { id: "team-2", key: "DES", name: "Design", description: null, private: false, timezone: "UTC" },
+          ],
+        })
+      ),
+    } as unknown as LinearClient;
+
+    await expect(resolveTeamByKey(mockClient, "INVALID")).rejects.toThrow(
+      TeamNotFoundError
+    );
+  });
+
+  it("error message includes available teams", async () => {
+    const mockClient = {
+      teams: mock(() =>
+        Promise.resolve({
+          nodes: [
+            { id: "team-1", key: "ENG", name: "Engineering", description: null, private: false, timezone: "UTC" },
+            { id: "team-2", key: "DES", name: "Design", description: null, private: false, timezone: "UTC" },
+          ],
+        })
+      ),
+    } as unknown as LinearClient;
+
+    try {
+      await resolveTeamByKey(mockClient, "UNKNOWN");
+      expect(true).toBe(false);
+    } catch (error) {
+      expect(error instanceof TeamNotFoundError).toBe(true);
+      expect((error as Error).message).toBe(
+        'team not found: "UNKNOWN". available teams: ENG, DES'
+      );
+    }
+  });
+});
+
+describe("resolveProjectByName", () => {
+  const mockProjects = [
+    { id: "proj-1", name: "Alpha" },
+    { id: "proj-2", name: "Beta Release" },
+    { id: "proj-3", name: "Gamma" },
+  ];
+
+  function createMockClient(projects: Array<{ id: string; name: string }>) {
+    return {
+      projects: mock(() => Promise.resolve({ nodes: projects })),
+    } as unknown as LinearClient;
+  }
+
+  it("returns project id for exact match", async () => {
+    const mockClient = createMockClient(mockProjects);
+
+    const result = await resolveProjectByName(mockClient, "Alpha");
+
+    expect(result).toBe("proj-1");
+  });
+
+  it("matches case-insensitively", async () => {
+    const mockClient = createMockClient(mockProjects);
+
+    const result = await resolveProjectByName(mockClient, "beta release");
+
+    expect(result).toBe("proj-2");
+  });
+
+  it("throws ProjectNotFoundError when project not found", async () => {
+    const mockClient = createMockClient(mockProjects);
+
+    await expect(
+      resolveProjectByName(mockClient, "NonExistent")
+    ).rejects.toThrow(ProjectNotFoundError);
+  });
+
+  it("error message includes available projects", async () => {
+    const mockClient = createMockClient(mockProjects);
+
+    try {
+      await resolveProjectByName(mockClient, "missing");
+      expect(true).toBe(false);
+    } catch (error) {
+      expect(error instanceof ProjectNotFoundError).toBe(true);
+      expect((error as Error).message).toBe(
+        'project not found: "missing". available projects: Alpha, Beta Release, Gamma'
+      );
+    }
+  });
+
+  it("handles empty projects list", async () => {
+    const mockClient = createMockClient([]);
+
+    try {
+      await resolveProjectByName(mockClient, "anything");
+      expect(true).toBe(false);
+    } catch (error) {
+      expect(error instanceof ProjectNotFoundError).toBe(true);
+      expect((error as Error).message).toBe(
+        'project not found: "anything". available projects: none'
+      );
+    }
+  });
+});
+
+describe("resolveCycleByName", () => {
+  const mockCycles = [
+    { id: "cycle-1", name: "Sprint 1", number: 1 },
+    { id: "cycle-2", name: "Sprint 2", number: 2 },
+    { id: "cycle-3", name: null, number: 3 },
+  ];
+
+  function createMockClient(cycles: Array<{ id: string; name: string | null; number: number }>) {
+    return {
+      team: mock(() =>
+        Promise.resolve({
+          cycles: () => Promise.resolve({ nodes: cycles }),
+        })
+      ),
+    } as unknown as LinearClient;
+  }
+
+  it("returns cycle id for name match", async () => {
+    const mockClient = createMockClient(mockCycles);
+
+    const result = await resolveCycleByName(mockClient, "ENG", "Sprint 1");
+
+    expect(result).toBe("cycle-1");
+  });
+
+  it("matches name case-insensitively", async () => {
+    const mockClient = createMockClient(mockCycles);
+
+    const result = await resolveCycleByName(mockClient, "ENG", "sprint 2");
+
+    expect(result).toBe("cycle-2");
+  });
+
+  it("matches by cycle number", async () => {
+    const mockClient = createMockClient(mockCycles);
+
+    const result = await resolveCycleByName(mockClient, "ENG", "3");
+
+    expect(result).toBe("cycle-3");
+  });
+
+  it("throws CycleNotFoundError when cycle not found", async () => {
+    const mockClient = createMockClient(mockCycles);
+
+    await expect(
+      resolveCycleByName(mockClient, "ENG", "Sprint 99")
+    ).rejects.toThrow(CycleNotFoundError);
+  });
+
+  it("error message includes available cycles", async () => {
+    const mockClient = createMockClient(mockCycles);
+
+    try {
+      await resolveCycleByName(mockClient, "ENG", "nonexistent");
+      expect(true).toBe(false);
+    } catch (error) {
+      expect(error instanceof CycleNotFoundError).toBe(true);
+      expect((error as Error).message).toBe(
+        'cycle not found: "nonexistent". available cycles: Sprint 1, Sprint 2, #3'
+      );
+    }
+  });
+
+  it("handles empty cycles list", async () => {
+    const mockClient = createMockClient([]);
+
+    try {
+      await resolveCycleByName(mockClient, "ENG", "any");
+      expect(true).toBe(false);
+    } catch (error) {
+      expect(error instanceof CycleNotFoundError).toBe(true);
+      expect((error as Error).message).toBe(
+        'cycle not found: "any". available cycles: none'
       );
     }
   });
