@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-01-28T14:12:58.059Z
+ * Generated from extracted-schema.json at 2026-01-29T14:04:31.493Z
  *
  * Regenerate with: bun run packages/codegen/generate-project-commands.ts
  */
@@ -16,6 +16,8 @@ import {
   updateProject,
   findTeamByKeyOrName,
   getAvailableTeamKeys,
+  resolveAssignee,
+  resolveTeamByKey,
   type Project,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
@@ -237,26 +239,11 @@ async function handleUpdateProject(
     }
 
     if (input.lead !== undefined) {
-      if (input.lead === "@me") {
-        const viewer = await client.viewer;
-        updatePayload.leadId = viewer.id;
-      } else {
-        const users = await client.users({ filter: { email: { eq: input.lead } } });
-        const user = users.nodes[0];
-        if (!user) {
-          exitWithError(`user "${input.lead}" not found`);
-        }
-        updatePayload.leadId = user.id;
-      }
+      updatePayload.leadId = await resolveAssignee(client, input.lead);
     }
 
     if (input.team !== undefined) {
-      const team = await findTeamByKeyOrName(client, input.team);
-      if (!team) {
-        const available = (await getAvailableTeamKeys(client)).join(", ");
-        exitWithError(`team "${input.team}" not found`, `available teams: ${available}`);
-      }
-      updatePayload.teamIds = [team.id];
+      updatePayload.teamIds = [await resolveTeamByKey(client, input.team)];
     }
 
     if (Object.keys(updatePayload).length > 0) {
@@ -280,26 +267,49 @@ async function handleCreateProject(input: ProjectInput): Promise<void> {
 
   try {
     const client = getClient();
-    let teamIds: string[] = [];
 
-    if (input.team) {
-      const team = await findTeamByKeyOrName(client, input.team);
-      if (!team) {
-        const available = (await getAvailableTeamKeys(client)).join(", ");
-        exitWithError(
-          `team "${input.team}" not found`,
-          `available teams: ${available}`,
-          EXIT_CODES.NOT_FOUND
-        );
-      }
-      teamIds = [team.id];
+    const createPayload: {
+      name: string;
+      description?: string;
+      content?: string;
+      teamIds?: string[];
+      leadId?: string;
+      startDate?: string;
+      targetDate?: string;
+      priority?: number;
+    } = {
+      name: projectName,
+    };
+
+    if (input.description) {
+      createPayload.description = input.description;
     }
 
-    const project = await createProject(client, {
-      name: projectName,
-      description: input.description,
-      teamIds,
-    });
+    if (input.content) {
+      createPayload.content = input.content;
+    }
+
+    if (input.team) {
+      createPayload.teamIds = [await resolveTeamByKey(client, input.team)];
+    }
+
+    if (input.lead) {
+      createPayload.leadId = await resolveAssignee(client, input.lead);
+    }
+
+    if (input.startDate) {
+      createPayload.startDate = input.startDate;
+    }
+
+    if (input.targetDate) {
+      createPayload.targetDate = input.targetDate;
+    }
+
+    if (input.priority !== undefined) {
+      createPayload.priority = input.priority;
+    }
+
+    const project = await createProject(client, createPayload);
 
     if (project) {
       console.log(`created project: ${project.name}`);

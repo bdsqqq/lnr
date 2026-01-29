@@ -8,6 +8,7 @@
         "@changesets/cli": "^2.29.8",
         "@types/bun": "latest",
         "changeset-conventional-commits": "^0.2.5",
+        "tiktoken": "^1.0.22",
       },
       "peerDependencies": {
         "typescript": "^5",
@@ -15,7 +16,7 @@
     },
     "packages/cli": {
       "name": "@bdsqqq/lnr-cli",
-      "version": "1.1.2",
+      "version": "1.6.0",
       "bin": {
         "lnr": "./src/cli.ts",
       },
@@ -33,7 +34,7 @@
     },
     "packages/core": {
       "name": "@bdsqqq/lnr-core",
-      "version": "1.1.1",
+      "version": "1.6.0",
       "dependencies": {
         "@linear/sdk": "^68.0.0",
       },
@@ -277,6 +278,8 @@
     "supports-color": ["supports-color@5.5.0", "", { "dependencies": { "has-flag": "^3.0.0" } }, "sha512-QjVjwdXIt408MIiAqCX4oUKsgU2EqAGzs2Ppkm4aQYbjm+ZEWEcW4SfFNTr4uMNZma0ey4f5lgLrkB0aX0QMow=="],
 
     "term-size": ["term-size@2.2.1", "", {}, "sha512-wK0Ri4fOGjv/XPy8SBHZChl8CM7uMc5VML7SqiQ0zG7+J5Vr+RMQDoHa2CNT6KHUnTGIXH34UDMkPzAUyapBZg=="],
+
+    "tiktoken": ["tiktoken@1.0.22", "", {}, "sha512-PKvy1rVF1RibfF3JlXBSP0Jrcw2uq3yXdgcEXtKTYn3QJ/cBRBHDnrJ5jHky+MENZ6DIPwNUGWpkVx+7joCpNA=="],
 
     "to-regex-range": ["to-regex-range@5.0.1", "", { "dependencies": { "is-number": "^7.0.0" } }, "sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ=="],
 
