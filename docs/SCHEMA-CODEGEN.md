@@ -66,8 +66,21 @@ translate human-friendly inputs to Linear API IDs.
 | `@me` | `resolveAssignee` | current user UUID |
 | `done` | `resolveStateName` | state UUID for team |
 | `ENG-123` | `resolveIssueIdentifier` | issue UUID |
+| `MyProject` | `resolveProjectByName` | project UUID |
+| `ENG` | `resolveTeamByKey` | team UUID |
+| `Sprint 1` | `resolveCycleByName` | cycle UUID |
 
-resolvers throw typed errors with actionable messages: `StateNotFoundError` lists available states.
+resolvers live in `packages/core/src/resolvers.ts` and throw typed errors with actionable messages: `StateNotFoundError` lists available states.
+
+### field resolver registry
+
+`packages/codegen/field-resolvers.ts` maps Linear API fields to CLI handling:
+
+- **resolved** — needs ID lookup via resolver (projectId, assigneeId, teamId, etc.)
+- **passthrough** — direct value (title, description, priority, etc.)
+- **excluded** — internal, not CLI-exposed (templateId, slaBreachesAt, etc.)
+
+generators import resolvers from `@bdsqqq/lnr-core` and call them in handlers. see [ADR-0003](adr/0003-field-resolver-registry.md) for the rationale.
 
 ## regeneration
 
