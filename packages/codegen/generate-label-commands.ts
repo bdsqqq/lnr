@@ -193,8 +193,7 @@ import {
   createLabel,
   updateLabel,
   deleteLabel,
-  findTeamByKeyOrName,
-  getAvailableTeamKeys,
+  resolveTeamByKey,
   type Label,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
@@ -250,16 +249,7 @@ async function handleListLabels(
 
     let teamId: string | undefined;
     if (input.team) {
-      const team = await findTeamByKeyOrName(client, input.team);
-      if (!team) {
-        const available = await getAvailableTeamKeys(client);
-        exitWithError(
-          \`team not found: \${input.team}\`,
-          \`available teams: \${available.join(", ")}\`,
-          EXIT_CODES.NOT_FOUND
-        );
-      }
-      teamId = team.id;
+      teamId = await resolveTeamByKey(client, input.team);
     }
 
     const labels = await listLabels(client, teamId);
@@ -364,19 +354,11 @@ async function handleCreateLabel(input: LabelInput): Promise<void> {
   try {
     const client = getClient();
 
-    const team = await findTeamByKeyOrName(client, input.team);
-    if (!team) {
-      const available = (await getAvailableTeamKeys(client)).join(", ");
-      exitWithError(
-        \`team "\${input.team}" not found\`,
-        \`available teams: \${available}\`,
-        EXIT_CODES.NOT_FOUND
-      );
-    }
+    const teamId = await resolveTeamByKey(client, input.team);
 
     const label = await createLabel(client, {
       name: input.name,
-      teamId: team.id,
+      teamId,
       color: input.color,
       description: input.description,
     });
