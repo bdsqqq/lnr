@@ -1,9 +1,7 @@
 /**
  * contract tests: CLI input → core function parameters
- * generated from cli-spec.json at 2026-01-27T19:52:44.600Z
  *
  * these tests verify the transformation from CLI flags to API request payloads.
- * regenerate with: bun run packages/codegen/generate-contract-tests.ts
  */
 
 import { describe, test, expect } from "bun:test";
