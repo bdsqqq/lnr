@@ -254,7 +254,12 @@ export const fieldResolvers: Record<string, FieldResolver> = {
   releaseId: { exclude: true, reason: "releases not exposed" },
   resourceFolderId: { exclude: true, reason: "folders not exposed" },
   icon: { exclude: true, reason: "icon picker not CLI-friendly" },
-  statusId: { exclude: true, reason: "project status, use state for issues" },
+  statusId: {
+    cliFlag: "status",
+    cliDescription: "project status",
+    inputType: "string",
+    passthrough: true,
+  },
   startDateResolution: { exclude: true, reason: "internal date resolution" },
   targetDateResolution: { exclude: true, reason: "internal date resolution" },
   isGroup: { exclude: true, reason: "label groups not exposed" },
@@ -300,10 +305,10 @@ export function getImportsForFields(
       imports.set(resolver.from, existing);
     }
 
-    if (isPassthrough(resolver) && resolver.transformImport) {
-      const existing = imports.get(resolver.transformFrom!) ?? new Set();
+    if (isPassthrough(resolver) && resolver.transformImport && resolver.transformFrom) {
+      const existing = imports.get(resolver.transformFrom) ?? new Set();
       existing.add(resolver.transformImport);
-      imports.set(resolver.transformFrom!, existing);
+      imports.set(resolver.transformFrom, existing);
     }
   }
 
