@@ -28,6 +28,11 @@ import {
   createReaction,
   deleteReaction,
   createIssueRelation,
+  resolveProjectByName,
+  resolveCycleByName,
+  resolveStateName,
+  resolveAssignee,
+  resolveIssueIdentifier,
   type Issue,
   type ListIssuesFilter,
   type Comment,
@@ -520,6 +525,11 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
       priority?: number;
       labelIds?: string[];
       parentId?: string;
+      projectId?: string;
+      cycleId?: string;
+      stateId?: string;
+      estimate?: number;
+      dueDate?: string;
     } = {
       teamId: team.id,
       title: input.title,
@@ -530,17 +540,7 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
     }
 
     if (input.assignee) {
-      if (input.assignee === "@me") {
-        const viewer = await client.viewer;
-        createPayload.assigneeId = viewer.id;
-      } else {
-        const users = await client.users({ filter: { email: { eq: input.assignee } } });
-        const user = users.nodes[0];
-        if (!user) {
-          exitWithError(`user "${input.assignee}" not found`);
-        }
-        createPayload.assigneeId = user.id;
-      }
+      createPayload.assigneeId = await resolveAssignee(client, input.assignee);
     }
 
     if (input.priority) {
@@ -560,15 +560,51 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
     }
 
     if (input.parent) {
-      const parentIssue = await getIssue(client, input.parent);
-      if (!parentIssue) {
-        exitWithError(`parent issue "${input.parent}" not found`);
-      }
-      createPayload.parentId = parentIssue.id;
+      createPayload.parentId = await resolveIssueIdentifier(client, input.parent);
+    }
+
+    if (input.project) {
+      createPayload.projectId = await resolveProjectByName(client, input.project);
+    }
+
+    if (input.cycle) {
+      createPayload.cycleId = await resolveCycleByName(client, team.id, input.cycle);
+    }
+
+    if (input.state) {
+      createPayload.stateId = await resolveStateName(client, team.id, input.state);
+    }
+
+    if (input.estimate !== undefined) {
+      createPayload.estimate = input.estimate;
+    }
+
+    if (input.dueDate) {
+      createPayload.dueDate = input.dueDate;
     }
 
     const issue = await createIssue(client, createPayload);
+
+    // handle post-create relations
     if (issue) {
+      if (input.blocks) {
+        const blockedIssueId = await resolveIssueIdentifier(client, input.blocks);
+        await createIssueRelation(client, issue.id, blockedIssueId, "blocks");
+        console.log(`${issue.identifier} now blocks ${input.blocks}`);
+      }
+
+      if (input.blockedBy) {
+        const blockerIssueId = await resolveIssueIdentifier(client, input.blockedBy);
+        await createIssueRelation(client, blockerIssueId, issue.id, "blocks");
+        console.log(`${issue.identifier} is now blocked by ${input.blockedBy}`);
+      }
+
+      if (input.relatesTo) {
+        const relatedIssueId = await resolveIssueIdentifier(client, input.relatesTo);
+        await createIssueRelation(client, issue.id, relatedIssueId, "related");
+        console.log(`${issue.identifier} now relates to ${input.relatesTo}`);
+      }
+
       console.log(`created ${issue.identifier}: ${issue.title}`);
     } else {
       console.log("created issue");

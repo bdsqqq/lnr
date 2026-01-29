@@ -1,6 +1,9 @@
 import type { LinearClient } from "@linear/sdk";
 import { getTeamStates } from "./issues";
 import { getViewer } from "./me";
+import { findTeamByKeyOrName } from "./teams";
+import { listProjects } from "./projects";
+import { listCycles } from "./cycles";
 
 export class IssueNotFoundError extends Error {
   constructor(identifier: string) {
@@ -88,4 +91,101 @@ export async function resolveAssignee(
   }
 
   return user.id;
+}
+
+// === team resolver ===
+
+export class TeamNotFoundError extends Error {
+  constructor(key: string, availableTeams: string[]) {
+    const teamList = availableTeams.length > 0
+      ? availableTeams.join(", ")
+      : "none";
+    super(`team not found: "${key}". available teams: ${teamList}`);
+    this.name = "TeamNotFoundError";
+  }
+}
+
+export async function resolveTeamByKey(
+  client: LinearClient,
+  key: string
+): Promise<string> {
+  const team = await findTeamByKeyOrName(client, key);
+
+  if (!team) {
+    const teams = await client.teams();
+    const available = teams.nodes.map((t) => t.key);
+    throw new TeamNotFoundError(key, available);
+  }
+
+  return team.id;
+}
+
+// === project resolver ===
+
+export class ProjectNotFoundError extends Error {
+  constructor(name: string, availableProjects: string[]) {
+    const projectList = availableProjects.length > 0
+      ? availableProjects.slice(0, 10).join(", ") + (availableProjects.length > 10 ? "..." : "")
+      : "none";
+    super(`project not found: "${name}". available projects: ${projectList}`);
+    this.name = "ProjectNotFoundError";
+  }
+}
+
+export async function resolveProjectByName(
+  client: LinearClient,
+  name: string
+): Promise<string> {
+  const projects = await listProjects(client, {});
+  const normalizedInput = name.toLowerCase();
+
+  const match = projects.find(
+    (p) => p.name.toLowerCase() === normalizedInput
+  );
+
+  if (!match) {
+    throw new ProjectNotFoundError(
+      name,
+      projects.map((p) => p.name)
+    );
+  }
+
+  return match.id;
+}
+
+// === cycle resolver ===
+
+export class CycleNotFoundError extends Error {
+  constructor(name: string, availableCycles: string[]) {
+    const cycleList = availableCycles.length > 0
+      ? availableCycles.join(", ")
+      : "none";
+    super(`cycle not found: "${name}". available cycles: ${cycleList}`);
+    this.name = "CycleNotFoundError";
+  }
+}
+
+export async function resolveCycleByName(
+  client: LinearClient,
+  teamIdOrKey: string,
+  name: string
+): Promise<string> {
+  // listCycles accepts team key or id (SDK handles both)
+  const cycles = await listCycles(client, teamIdOrKey);
+  const normalizedInput = name.toLowerCase();
+
+  // match by name or number
+  const match = cycles.find(
+    (c) => c.name?.toLowerCase() === normalizedInput ||
+           c.number?.toString() === name
+  );
+
+  if (!match) {
+    throw new CycleNotFoundError(
+      name,
+      cycles.map((c) => c.name ?? `#${c.number}`)
+    );
+  }
+
+  return match.id;
 }
