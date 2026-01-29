@@ -15,6 +15,7 @@ import {
   type ExtractedSchema,
   graphqlTypeToZod,
 } from "./types";
+import { getCliFlagForField } from "./field-resolvers";
 
 const rootDir = join(import.meta.dir, "../..");
 const schemaPath = join(import.meta.dir, "extracted-schema.json");
@@ -29,7 +30,6 @@ interface EntityConfig {
   pluralAlias?: string[];
   outputFile: string;
   positionalArg: { name: string; description: string };
-  schemaToCliMapping: Record<string, string>;
   fieldsToExclude: string[];
   imports: string[];
   coreTypes: string[];
@@ -56,15 +56,6 @@ const issueConfig: EntityConfig = {
   pluralAlias: ["i"],
   outputFile: "issue.ts",
   positionalArg: { name: "idOrNew", description: "issue identifier (e.g. ENG-123) or 'new'" },
-  schemaToCliMapping: {
-    stateId: "state",
-    assigneeId: "assignee",
-    parentId: "parent",
-    labelIds: "label",
-    teamId: "team",
-    projectId: "project",
-    cycleId: "cycle",
-  },
   fieldsToExclude: [
     "id", "slaBreachesAt", "slaStartedAt", "snoozedUntilAt", "snoozedById", "slaType",
     "autoClosedByParentClosing", "descriptionData", "lastAppliedTemplateId",
@@ -121,7 +112,7 @@ const issueConfig: EntityConfig = {
     const filteredFields = fields.filter(f => !f.isDeprecated && !issueConfig.fieldsToExclude.includes(f.name) && !f.description.includes("[Internal]"));
 
     for (const field of filteredFields) {
-      const cliName = issueConfig.schemaToCliMapping[field.name] || field.name;
+      const cliName = getCliFlagForField(field.name);
       let zodType: string;
       
       if (cliName === "priority") {
@@ -211,11 +202,6 @@ const projectConfig: EntityConfig = {
   pluralAlias: ["p"],
   outputFile: "project.ts",
   positionalArg: { name: "name", description: "project name or 'new'" },
-  schemaToCliMapping: {
-    statusId: "status",
-    leadId: "lead",
-    teamIds: "team",
-  },
   fieldsToExclude: [
     "id", "sortOrder", "prioritySortOrder", "trashed",
     "lastAppliedTemplateId", "convertedFromIssueId",
@@ -259,7 +245,7 @@ const projectConfig: EntityConfig = {
     const filteredFields = fields.filter(f => !f.isDeprecated && !projectConfig.fieldsToExclude.includes(f.name) && !f.description.includes("[Internal]"));
 
     for (const field of filteredFields) {
-      const cliName = projectConfig.schemaToCliMapping[field.name] || field.name;
+      const cliName = getCliFlagForField(field.name);
 
       let zodType: string;
       if (cliName === "status") {
@@ -328,10 +314,6 @@ const labelConfig: EntityConfig = {
   pluralCommand: "labels",
   outputFile: "label.ts",
   positionalArg: { name: "id", description: "label id or 'new'" },
-  schemaToCliMapping: {
-    teamId: "team",
-    parentId: "parent",
-  },
   fieldsToExclude: ["id", "retiredAt", "isGroup", "parentId"],
   imports: [
     "getClient",
@@ -360,7 +342,7 @@ const labelConfig: EntityConfig = {
     const filteredFields = fields.filter(f => !f.isDeprecated && !labelConfig.fieldsToExclude.includes(f.name));
 
     for (const field of filteredFields) {
-      const cliName = labelConfig.schemaToCliMapping[field.name] || field.name;
+      const cliName = getCliFlagForField(field.name);
 
       let zodType: string;
       if (cliName === "color") {
@@ -413,7 +395,6 @@ const docConfig: EntityConfig = {
   pluralCommand: "docs",
   outputFile: "doc.ts",
   positionalArg: { name: "id", description: "document id or 'new'" },
-  schemaToCliMapping: {},
   fieldsToExclude: [],
   imports: [
     "getClient",

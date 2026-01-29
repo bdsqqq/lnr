@@ -224,7 +224,14 @@ export const fieldResolvers: Record<string, FieldResolver> = {
   subscriberIds: { exclude: true, reason: "bulk operation, not single-flag" },
   labelIds: { exclude: true, reason: "handled separately via +label/-label syntax" },
   memberIds: { exclude: true, reason: "bulk operation, not single-flag" },
-  teamIds: { exclude: true, reason: "handled separately" },
+  teamIds: {
+    cliFlag: "team",
+    cliDescription: "team key(s) for project",
+    inputType: "string",
+    resolve: "[await resolveTeamByKey(client, input.team)]",
+    import: "resolveTeamByKey",
+    from: "@bdsqqq/lnr-core",
+  },
   createAsUser: { exclude: true, reason: "internal impersonation" },
   displayIconUrl: { exclude: true, reason: "internal" },
   preserveSortOrderOnCreate: { exclude: true, reason: "internal" },
@@ -285,6 +292,17 @@ export function isPassthrough(field: FieldResolver): field is PassthroughField {
  */
 export function isResolved(field: FieldResolver): field is ResolvedField {
   return "resolve" in field;
+}
+
+/**
+ * get CLI flag name for a field (registry is source of truth for mappings)
+ */
+export function getCliFlagForField(fieldName: string): string {
+  const resolver = fieldResolvers[fieldName];
+  if (resolver && !isExcluded(resolver)) {
+    return resolver.cliFlag;
+  }
+  return fieldName;
 }
 
 /**
