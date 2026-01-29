@@ -1,8 +1,8 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-01-29T14:04:31.493Z
+ * Generated from extracted-schema.json at 2026-01-29T16:44:42.520Z
  *
- * Regenerate with: bun run packages/codegen/generate-project-commands.ts
+ * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
 
 import { z } from "zod";
@@ -28,10 +28,12 @@ import {
   outputTable,
   getOutputFormat,
   formatDate,
+  formatPriority,
   truncate,
   type OutputOptions,
   type TableColumn,
 } from "../lib/output";
+
 
 export const listProjectsInput = z.object({
   team: z.string().optional().describe("filter by team key"),
@@ -68,39 +70,35 @@ const projectColumns: TableColumn<Project>[] = [
   { header: "TARGET", value: (p) => formatDate(p.targetDate), width: 12 },
 ];
 
-const MUTATION_FLAGS = [
-  "status", "lead", "team", "priority", "startDate", "targetDate",
-  "content", "description", "newName"
-] as const;
+type Operation = "create" | "read" | "update" | "delete";
 
-function inferOperation(input: ProjectInput): "create" | "read" | "update" | "delete" {
-  if (input.name === "new") {
-    return "create";
+function inferOperation(input: ProjectInput): Operation {
+  if (input.name === "new") return "create";
+  if (input.delete) return "delete";
+
+  const mutationFlags: (keyof ProjectInput)[] = [
+    "newName", "description", "content", "status", "startDate", "targetDate", "priority", "lead", "team"
+  ];
+  for (const flag of mutationFlags) {
+    if (input[flag] !== undefined) return "update";
   }
-  if (input.delete) {
-    return "delete";
-  }
-  for (const flag of MUTATION_FLAGS) {
-    if (input[flag] !== undefined) {
-      return "update";
-    }
-  }
+
   return "read";
 }
 
-async function handleListProjects(input: z.infer<typeof listProjectsInput>): Promise<void> {
+async function handleListProjects(
+  input: z.infer<typeof listProjectsInput>
+): Promise<void> {
   try {
     const client = getClient();
+
     const outputOpts: OutputOptions = {
       format: input.json ? "json" : input.quiet ? "quiet" : undefined,
       verbose: input.verbose,
     };
     const format = getOutputFormat(outputOpts);
 
-    const projects = await listProjects(client, {
-      team: input.team,
-      status: input.status,
-    });
+    const projects = await listProjects(client);
 
     if (format === "json") {
       outputJson(projects);
@@ -124,6 +122,7 @@ async function handleShowProject(
 ): Promise<void> {
   try {
     const client = getClient();
+
     const outputOpts: OutputOptions = {
       format: input.json ? "json" : input.quiet ? "quiet" : undefined,
       verbose: input.verbose,
@@ -137,27 +136,16 @@ async function handleShowProject(
     }
 
     if (input.issues) {
-      const issues = await getProjectIssues(client, name);
-
+      const issues = await getProjectIssues(client, project.id);
       if (format === "json") {
         outputJson(issues);
-        return;
-      }
-
-      if (format === "quiet") {
+      } else if (format === "quiet") {
         outputQuiet(issues.map((i) => i.identifier));
-        return;
+      } else {
+        for (const issue of issues) {
+          console.log(`${issue.identifier}: ${issue.title}`);
+        }
       }
-
-      outputTable(
-        issues,
-        [
-          { header: "ID", value: (i) => i.identifier, width: 12 },
-          { header: "TITLE", value: (i) => truncate(i.title, 50), width: 50 },
-          { header: "CREATED", value: (i) => formatDate(i.createdAt), width: 12 },
-        ],
-        outputOpts
-      );
       return;
     }
 
@@ -210,41 +198,15 @@ async function handleUpdateProject(
       teamIds?: string[];
     } = {};
 
-    if (input.newName) {
-      updatePayload.name = input.newName;
-    }
-
-    if (input.description !== undefined) {
-      updatePayload.description = input.description;
-    }
-
-    if (input.content !== undefined) {
-      updatePayload.content = input.content;
-    }
-
-    if (input.status !== undefined) {
-      updatePayload.statusId = input.status;
-    }
-
-    if (input.startDate !== undefined) {
-      updatePayload.startDate = input.startDate;
-    }
-
-    if (input.targetDate !== undefined) {
-      updatePayload.targetDate = input.targetDate;
-    }
-
-    if (input.priority !== undefined) {
-      updatePayload.priority = input.priority;
-    }
-
-    if (input.lead !== undefined) {
-      updatePayload.leadId = await resolveAssignee(client, input.lead);
-    }
-
-    if (input.team !== undefined) {
-      updatePayload.teamIds = [await resolveTeamByKey(client, input.team)];
-    }
+    if (input.newName) updatePayload.name = input.newName;
+    if (input.description !== undefined) updatePayload.description = input.description;
+    if (input.content !== undefined) updatePayload.content = input.content;
+    if (input.status !== undefined) updatePayload.statusId = input.status;
+    if (input.startDate !== undefined) updatePayload.startDate = input.startDate;
+    if (input.targetDate !== undefined) updatePayload.targetDate = input.targetDate;
+    if (input.priority !== undefined) updatePayload.priority = input.priority;
+    if (input.lead !== undefined) updatePayload.leadId = await resolveAssignee(client, input.lead);
+    if (input.team !== undefined) updatePayload.teamIds = [await resolveTeamByKey(client, input.team)];
 
     if (Object.keys(updatePayload).length > 0) {
       await updateProject(client, project.id, updatePayload);
@@ -281,33 +243,13 @@ async function handleCreateProject(input: ProjectInput): Promise<void> {
       name: projectName,
     };
 
-    if (input.description) {
-      createPayload.description = input.description;
-    }
-
-    if (input.content) {
-      createPayload.content = input.content;
-    }
-
-    if (input.team) {
-      createPayload.teamIds = [await resolveTeamByKey(client, input.team)];
-    }
-
-    if (input.lead) {
-      createPayload.leadId = await resolveAssignee(client, input.lead);
-    }
-
-    if (input.startDate) {
-      createPayload.startDate = input.startDate;
-    }
-
-    if (input.targetDate) {
-      createPayload.targetDate = input.targetDate;
-    }
-
-    if (input.priority !== undefined) {
-      createPayload.priority = input.priority;
-    }
+    if (input.description) createPayload.description = input.description;
+    if (input.content) createPayload.content = input.content;
+    if (input.team) createPayload.teamIds = [await resolveTeamByKey(client, input.team)];
+    if (input.lead) createPayload.leadId = await resolveAssignee(client, input.lead);
+    if (input.startDate) createPayload.startDate = input.startDate;
+    if (input.targetDate) createPayload.targetDate = input.targetDate;
+    if (input.priority !== undefined) createPayload.priority = input.priority;
 
     const project = await createProject(client, createPayload);
 
@@ -339,6 +281,8 @@ async function handleDeleteProject(
   }
 }
 
+
+
 export const generatedProjectsRouter = router({
   projects: procedure
     .meta({
@@ -365,6 +309,7 @@ export const generatedProjectsRouter = router({
         case "delete":
           await handleDeleteProject(input.name, input);
           break;
+        
         case "update":
           await handleUpdateProject(input.name, input);
           break;

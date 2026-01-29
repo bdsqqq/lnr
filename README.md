@@ -127,11 +127,8 @@ resolvers live in `packages/core/src/resolvers.ts` and throw typed errors with a
 ### regenerating commands
 
 ```bash
-# regenerate all commands
-bun run packages/codegen/generate-issue-commands.ts
-bun run packages/codegen/generate-project-commands.ts
-bun run packages/codegen/generate-doc-commands.ts
-bun run packages/codegen/generate-label-commands.ts
+# regenerate all entity commands (issue, project, label, doc)
+bun run packages/codegen/generate-commands.ts
 
 # refresh schema from Linear API (requires LINEAR_API_KEY)
 bun run packages/codegen/introspect-linear.ts

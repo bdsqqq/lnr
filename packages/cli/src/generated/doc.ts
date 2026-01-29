@@ -1,8 +1,8 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from cli-spec.json at 2026-01-29T14:05:29.733Z
+ * Generated from extracted-schema.json at 2026-01-29T16:44:42.521Z
  *
- * Regenerate with: bun run packages/codegen/generate-doc-commands.ts
+ * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
 
 import { z } from "zod";
@@ -23,10 +23,13 @@ import {
   outputQuiet,
   outputTable,
   getOutputFormat,
+  formatDate,
+  formatPriority,
   truncate,
   type OutputOptions,
   type TableColumn,
 } from "../lib/output";
+
 
 export const listDocsInput = z.object({
   project: z.string().optional().describe("filter by project id"),
@@ -48,19 +51,19 @@ export const docInput = z.object({
 
 type DocInput = z.infer<typeof docInput>;
 
-type Operation = "new" | "read" | "update" | "delete";
-
-function inferOperation(input: DocInput): Operation {
-  if (input.id === "new") return "new";
-  if (input.delete) return "delete";
-  if (input.title !== undefined || input.content !== undefined) return "update";
-  return "read";
-}
-
 const docColumns: TableColumn<Document>[] = [
   { header: "ID", value: (d) => d.id, width: 20 },
   { header: "TITLE", value: (d) => truncate(d.title, 50), width: 50 },
 ];
+
+type Operation = "create" | "read" | "update" | "delete";
+
+function inferOperation(input: DocInput): Operation {
+  if (input.id === "new") return "create";
+  if (input.delete) return "delete";
+  if (input.title !== undefined || input.content !== undefined) return "update";
+  return "read";
+}
 
 async function handleListDocs(
   input: z.infer<typeof listDocsInput>
@@ -168,13 +171,8 @@ async function handleCreateDoc(input: DocInput): Promise<void> {
       title: input.title,
     };
 
-    if (input.content) {
-      createPayload.content = input.content;
-    }
-
-    if (input.project) {
-      createPayload.projectId = await resolveProjectByName(client, input.project);
-    }
+    if (input.content) createPayload.content = input.content;
+    if (input.project) createPayload.projectId = await resolveProjectByName(client, input.project);
 
     const doc = await createDocument(client, createPayload);
 
@@ -204,10 +202,13 @@ async function handleDeleteDoc(id: string, _input: DocInput): Promise<void> {
   }
 }
 
+
+
 export const generatedDocsRouter = router({
   docs: procedure
     .meta({
-      description: "list documents",
+      description: "list docs",
+      
     })
     .input(listDocsInput)
     .query(async ({ input }) => {
@@ -216,19 +217,20 @@ export const generatedDocsRouter = router({
 
   doc: procedure
     .meta({
-      description: "show document details, create with 'new', update, or delete with --delete",
+      description: "show or update a doc, or create with 'new'",
     })
     .input(docInput)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);
 
       switch (operation) {
-        case "new":
+        case "create":
           await handleCreateDoc(input);
           break;
         case "delete":
           await handleDeleteDoc(input.id, input);
           break;
+        
         case "update":
           await handleUpdateDoc(input.id, input);
           break;

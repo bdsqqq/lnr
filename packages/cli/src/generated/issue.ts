@@ -1,41 +1,39 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-01-29T13:59:25.597Z
+ * Generated from extracted-schema.json at 2026-01-29T16:44:42.519Z
  *
- * Regenerate with: bun run packages/codegen/generate-issue-commands.ts
+ * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
 
 import { z } from "zod";
-import chalk from "chalk";
 import {
   getClient,
   listIssues,
   getIssue,
   createIssue,
   updateIssue,
-  addComment,
-  priorityFromString,
-  getTeamStates,
-  getTeamLabels,
+  archiveIssue,
   findTeamByKeyOrName,
   getAvailableTeamKeys,
-  getIssueComments,
+  getTeamLabels,
+  resolveAssignee,
+  priorityFromString,
+  resolveStateName,
+  resolveIssueIdentifier,
+  resolveProjectByName,
+  resolveCycleByName,
+  createIssueRelation,
+  addComment,
   updateComment,
   replyToComment,
   deleteComment,
-  archiveIssue,
-  getSubIssues,
   createReaction,
   deleteReaction,
-  createIssueRelation,
-  resolveProjectByName,
-  resolveCycleByName,
-  resolveStateName,
-  resolveAssignee,
-  resolveIssueIdentifier,
+  getIssueComments,
+  getSubIssues,
+  getTeamStates,
   type Issue,
   type ListIssuesFilter,
-  type Comment,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
@@ -47,17 +45,19 @@ import {
   formatDate,
   formatPriority,
   truncate,
-  outputCommentThreads,
+  type OutputOptions,
   type TableColumn,
 } from "../lib/output";
-import { handleBranch, handlePr } from "../hand-crafted/issue";
+
 
 export const listIssuesInput = z.object({
   team: z.string().optional().describe("filter by team key"),
-  state: z.string().optional().describe("filter by workflow state name"),
-  assignee: z.string().optional().describe("filter by assignee email or @me"),
-  label: z.string().optional().describe("filter by label name"),
   project: z.string().optional().describe("filter by project name"),
+  assignee: z.string().optional().describe("filter by assignee email or @me"),
+  state: z.string().optional().describe("filter by state name"),
+  priority: z.string().optional().describe("filter by priority"),
+  label: z.string().optional().describe("filter by label name"),
+  cycle: z.string().optional().describe("filter by cycle"),
   json: z.boolean().optional().describe("output as json"),
   quiet: z.boolean().optional().describe("output ids only"),
   verbose: z.boolean().optional().describe("show all columns"),
@@ -70,7 +70,6 @@ export const issueInput = z.object({
   title: z.string().optional().describe("The issue title."),
   description: z.string().optional().describe("The issue description in markdown format."),
   assignee: z.string().optional().describe("set assignee by email or @me"),
-  delegateId: z.string().optional().describe("The identifier of the agent user to delegate the issue to."),
   parent: z.string().optional().describe("set parent issue identifier"),
   priority: z.string().optional().describe("set priority (urgent, high, medium, low, none)"),
   estimate: z.number().optional().describe("set estimate points"),
@@ -80,7 +79,6 @@ export const issueInput = z.object({
   project: z.string().optional().describe("set project name"),
   state: z.string().optional().describe("set workflow state"),
   prioritySortOrder: z.number().optional().describe("The position of the issue related to other issues, when ordered by priority."),
-  subIssueSortOrder: z.number().optional().describe("The position of the issue in parent's sub-issue list."),
   dueDate: z.string().optional().describe("set due date (YYYY-MM-DD)"),
   comment: z.string().optional().describe("add comment to issue"),
   blocks: z.string().optional().describe("add blocks relation to issue"),
@@ -96,8 +94,6 @@ export const issueInput = z.object({
   emoji: z.string().optional().describe("emoji for --react"),
   unreact: z.string().optional().describe("reaction id to remove"),
   subIssues: z.boolean().optional().describe("list sub-issues"),
-  branch: z.boolean().optional().describe("output git branch name"),
-  pr: z.string().optional().describe("link a github pr url"),
 });
 
 type IssueInput = z.infer<typeof issueInput>;
@@ -110,58 +106,60 @@ const issueColumns: TableColumn<Issue>[] = [
   { header: "PRIORITY", value: (i) => formatPriority(i.priority), width: 8 },
 ];
 
-const commentColumns: TableColumn<Comment>[] = [
-  { header: "ID", value: (c) => c.id.slice(0, 8), width: 10 },
-  { header: "USER", value: (c) => c.user ?? "-", width: 15 },
-  { header: "BODY", value: (c) => truncate(c.body, 50), width: 50 },
-  { header: "CREATED", value: (c) => formatDate(c.createdAt), width: 12 },
-];
+type Operation = "create" | "read" | "update" | "archive";
 
-/**
- * Mutation flags that trigger UPDATE operation when present
- */
-const MUTATION_FLAGS = [
-  "state", "assignee", "priority", "label", "comment",
-  "editComment", "replyTo", "deleteComment", "react", "unreact",
-  "parent", "blocks", "blockedBy", "relatesTo", "title", "description",
-  "team", "project", "cycle", "estimate", "dueDate", "pr"
-] as const;
+function inferOperation(input: IssueInput): Operation {
+  if (input.idOrNew === "new") return "create";
+  if (input.archive) return "archive";
 
-/**
- * Infer operation from input flags
- * - no identifier + required create fields → CREATE
- * - identifier + no mutation flags → READ
- * - identifier + mutation flags → UPDATE
- * - identifier + --archive → ARCHIVE
- */
-function inferOperation(input: IssueInput): "create" | "read" | "update" | "archive" {
-  if (input.idOrNew === "new") {
-    return "create";
+  const mutationFlags: (keyof IssueInput)[] = [
+    "state", "assignee", "priority", "label", "comment",
+    "editComment", "replyTo", "deleteComment", "react", "unreact",
+    "parent", "blocks", "blockedBy", "relatesTo", "title", "description",
+    "project", "cycle", "estimate", "dueDate",
+  ];
+  for (const flag of mutationFlags) {
+    if (input[flag] !== undefined) return "update";
   }
-  if (input.archive) {
-    return "archive";
-  }
-  for (const flag of MUTATION_FLAGS) {
-    if (input[flag] !== undefined) {
-      return "update";
-    }
-  }
+
   return "read";
 }
 
-async function handleListIssues(input: z.infer<typeof listIssuesInput>): Promise<void> {
+async function handleListIssues(
+  input: z.infer<typeof listIssuesInput>
+): Promise<void> {
   try {
     const client = getClient();
-    const filter: ListIssuesFilter = {
-      team: input.team,
-      state: input.state,
-      assignee: input.assignee,
-      label: input.label,
-      project: input.project,
-    };
 
-    const issues = await listIssues(client, filter);
-    const format = input.json ? "json" : input.quiet ? "quiet" : getOutputFormat({});
+    const outputOpts: OutputOptions = {
+      format: input.json ? "json" : input.quiet ? "quiet" : undefined,
+      verbose: input.verbose,
+    };
+    const format = getOutputFormat(outputOpts);
+
+    const filters: ListIssuesFilter = {};
+    
+    if (input.team) {
+      filters.team = input.team;
+    }
+
+    if (input.assignee) {
+      filters.assignee = input.assignee;
+    }
+
+    if (input.state) {
+      filters.state = input.state;
+    }
+
+    if (input.label) {
+      filters.label = input.label;
+    }
+
+    if (input.project) {
+      filters.project = input.project;
+    }
+
+    const issues = await listIssues(client, filters);
 
     if (format === "json") {
       outputJson(issues);
@@ -173,7 +171,7 @@ async function handleListIssues(input: z.infer<typeof listIssuesInput>): Promise
       return;
     }
 
-    outputTable(issues, issueColumns, { verbose: input.verbose });
+    outputTable(issues, issueColumns, outputOpts);
   } catch (error) {
     handleApiError(error);
   }
@@ -185,91 +183,54 @@ async function handleShowIssue(
 ): Promise<void> {
   try {
     const client = getClient();
+
+    const outputOpts: OutputOptions = {
+      format: input.json ? "json" : undefined,
+    };
+    const format = getOutputFormat(outputOpts);
+
     const issue = await getIssue(client, identifier);
 
     if (!issue) {
       exitWithError(`issue ${identifier} not found`, undefined, EXIT_CODES.NOT_FOUND);
     }
 
-    if (input.open) {
-      const { spawn } = await import("child_process");
-      const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
-      spawn(cmd, [issue.url], { detached: true, stdio: "ignore" }).unref();
-      console.log(`opened ${issue.url}`);
-      return;
-    }
-
-    if (input.branch) {
-      handleBranch(issue);
-      return;
-    }
-
     if (input.comments) {
-      const { comments, error } = await getIssueComments(client, issue.id);
-      if (error) {
-        console.error(`failed to fetch comments: ${error}`);
-        return;
-      }
-      const format = input.json ? "json" : getOutputFormat({});
+      const result = await getIssueComments(client, issue.id);
       if (format === "json") {
-        outputJson(comments);
+        outputJson(result.comments);
       } else {
-        outputTable(comments, commentColumns);
+        for (const c of result.comments) {
+          console.log(`[${c.id.slice(0, 8)}] ${c.user ?? "unknown"}: ${c.body}`);
+        }
       }
       return;
     }
 
     if (input.subIssues) {
       const subIssues = await getSubIssues(client, issue.id);
-      const format = input.json ? "json" : getOutputFormat({});
       if (format === "json") {
         outputJson(subIssues);
       } else {
-        outputTable(subIssues, issueColumns);
+        outputTable(subIssues, issueColumns, outputOpts);
       }
       return;
     }
 
-    const format = input.json ? "json" : getOutputFormat({});
-    const { comments, error: commentsError } = await getIssueComments(client, issue.id);
-
     if (format === "json") {
-      outputJson({
-        ...issue,
-        priority: formatPriority(issue.priority),
-        createdAt: formatDate(issue.createdAt),
-        updatedAt: formatDate(issue.updatedAt),
-        comments,
-      });
+      outputJson(issue);
       return;
     }
 
     console.log(`${issue.identifier}: ${issue.title}`);
+    if (issue.description) {
+      console.log(`  ${truncate(issue.description, 80)}`);
+    }
     console.log();
     console.log(`state:    ${issue.state ?? "-"}`);
     console.log(`assignee: ${issue.assignee ?? "-"}`);
     console.log(`priority: ${formatPriority(issue.priority)}`);
-    if (issue.parentId) {
-      console.log(`parent:   ${issue.parentId}`);
-    }
     console.log(`created:  ${formatDate(issue.createdAt)}`);
-    console.log(`updated:  ${formatDate(issue.updatedAt)}`);
-    console.log(`url:      ${issue.url}`);
-
-    if (issue.description) {
-      console.log();
-      console.log(issue.description);
-    }
-
-    if (commentsError) {
-      console.log();
-      console.log(chalk.dim(`comments: failed to load (${commentsError})`));
-    } else if (comments.length > 0) {
-      console.log();
-      console.log("─".repeat(40));
-      console.log();
-      outputCommentThreads(comments);
-    }
   } catch (error) {
     handleApiError(error);
   }
@@ -287,7 +248,6 @@ async function handleUpdateIssue(
       exitWithError(`issue ${identifier} not found`, undefined, EXIT_CODES.NOT_FOUND);
     }
 
-    // Upfront validation: required flags
     if (input.editComment && !input.text) {
       exitWithError("--text is required with --edit-comment");
     }
@@ -298,13 +258,11 @@ async function handleUpdateIssue(
       exitWithError("--emoji is required with --react");
     }
 
-    // Upfront validation: mutual exclusivity for comment operations
     const commentOpCount = [input.comment, input.editComment, input.replyTo, input.deleteComment].filter(Boolean).length;
     if (commentOpCount > 1) {
       exitWithError("only one comment operation allowed per invocation", "use --comment, --edit-comment, --reply-to, or --delete-comment separately");
     }
 
-    // Upfront validation: mutual exclusivity for reaction operations
     const reactionOpCount = [input.react, input.unreact].filter(Boolean).length;
     if (reactionOpCount > 1) {
       exitWithError("only one reaction operation allowed per invocation", "use --react or --unreact, not both");
@@ -434,7 +392,6 @@ async function handleUpdateIssue(
       console.log(`${identifier} now relates to ${input.relatesTo}`);
     }
 
-    // Comment operations (mutually exclusive, validated above)
     if (input.comment) {
       await addComment(client, issue.id, input.comment);
       console.log(`commented on ${identifier}`);
@@ -455,7 +412,6 @@ async function handleUpdateIssue(
       console.log(`deleted comment ${input.deleteComment.slice(0, 8)}`);
     }
 
-    // Reaction operations (mutually exclusive, validated above)
     if (input.react) {
       const success = await createReaction(client, input.react, input.emoji!);
       if (!success) {
@@ -471,29 +427,6 @@ async function handleUpdateIssue(
       }
       console.log(`removed reaction ${input.unreact.slice(0, 8)}`);
     }
-
-    if (input.pr) {
-      await handlePr(client, issue, input.pr);
-    }
-  } catch (error) {
-    handleApiError(error);
-  }
-}
-
-async function handleArchiveIssue(
-  identifier: string,
-  input: IssueInput
-): Promise<void> {
-  try {
-    const client = getClient();
-    const issue = await getIssue(client, identifier);
-
-    if (!issue) {
-      exitWithError(`issue ${identifier} not found`, undefined, EXIT_CODES.NOT_FOUND);
-    }
-
-    await archiveIssue(client, issue.id);
-    console.log(`archived ${identifier}`);
   } catch (error) {
     handleApiError(error);
   }
@@ -535,17 +468,9 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
       title: input.title,
     };
 
-    if (input.description) {
-      createPayload.description = input.description;
-    }
-
-    if (input.assignee) {
-      createPayload.assigneeId = await resolveAssignee(client, input.assignee);
-    }
-
-    if (input.priority) {
-      createPayload.priority = priorityFromString(input.priority);
-    }
+    if (input.description) createPayload.description = input.description;
+    if (input.assignee) createPayload.assigneeId = await resolveAssignee(client, input.assignee);
+    if (input.priority) createPayload.priority = priorityFromString(input.priority);
 
     if (input.label) {
       const labels = await getTeamLabels(client, team.id);
@@ -559,33 +484,15 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
       createPayload.labelIds = [targetLabel.id];
     }
 
-    if (input.parent) {
-      createPayload.parentId = await resolveIssueIdentifier(client, input.parent);
-    }
-
-    if (input.project) {
-      createPayload.projectId = await resolveProjectByName(client, input.project);
-    }
-
-    if (input.cycle) {
-      createPayload.cycleId = await resolveCycleByName(client, team.id, input.cycle);
-    }
-
-    if (input.state) {
-      createPayload.stateId = await resolveStateName(client, team.id, input.state);
-    }
-
-    if (input.estimate !== undefined) {
-      createPayload.estimate = input.estimate;
-    }
-
-    if (input.dueDate) {
-      createPayload.dueDate = input.dueDate;
-    }
+    if (input.parent) createPayload.parentId = await resolveIssueIdentifier(client, input.parent);
+    if (input.project) createPayload.projectId = await resolveProjectByName(client, input.project);
+    if (input.cycle) createPayload.cycleId = await resolveCycleByName(client, team.id, input.cycle);
+    if (input.state) createPayload.stateId = await resolveStateName(client, team.id, input.state);
+    if (input.estimate !== undefined) createPayload.estimate = input.estimate;
+    if (input.dueDate) createPayload.dueDate = input.dueDate;
 
     const issue = await createIssue(client, createPayload);
 
-    // handle post-create relations
     if (issue) {
       if (input.blocks) {
         const blockedIssueId = await resolveIssueIdentifier(client, input.blocks);
@@ -614,6 +521,27 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
   }
 }
 
+
+
+async function handleArchiveIssue(
+  identifier: string,
+  input: IssueInput
+): Promise<void> {
+  try {
+    const client = getClient();
+    const issue = await getIssue(client, identifier);
+
+    if (!issue) {
+      exitWithError(`issue ${identifier} not found`, undefined, EXIT_CODES.NOT_FOUND);
+    }
+
+    await archiveIssue(client, issue.id);
+    console.log(`archived ${identifier}`);
+  } catch (error) {
+    handleApiError(error);
+  }
+}
+
 export const generatedIssuesRouter = router({
   issues: procedure
     .meta({
@@ -627,7 +555,7 @@ export const generatedIssuesRouter = router({
 
   issue: procedure
     .meta({
-      description: "show or update an issue, or create with 'new'",
+      description: "show or update a issue, or create with 'new'",
     })
     .input(issueInput)
     .mutation(async ({ input }) => {
@@ -637,6 +565,7 @@ export const generatedIssuesRouter = router({
         case "create":
           await handleCreateIssue(input);
           break;
+        
         case "archive":
           await handleArchiveIssue(input.idOrNew, input);
           break;
@@ -650,4 +579,3 @@ export const generatedIssuesRouter = router({
       }
     }),
 });
-

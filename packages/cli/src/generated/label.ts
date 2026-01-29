@@ -1,8 +1,8 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-01-29T14:06:27.115Z
+ * Generated from extracted-schema.json at 2026-01-29T16:44:42.520Z
  *
- * Regenerate with: bun run packages/codegen/generate-label-commands.ts
+ * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
 
 import { z } from "zod";
@@ -23,10 +23,13 @@ import {
   outputQuiet,
   outputTable,
   getOutputFormat,
+  formatDate,
+  formatPriority,
   truncate,
   type OutputOptions,
   type TableColumn,
 } from "../lib/output";
+
 
 export const listLabelsInput = z.object({
   team: z.string().optional().describe("filter by team key"),
@@ -151,17 +154,9 @@ async function handleUpdateLabel(
       description?: string;
     } = {};
 
-    if (input.name !== undefined) {
-      updatePayload.name = input.name;
-    }
-
-    if (input.color !== undefined) {
-      updatePayload.color = input.color;
-    }
-
-    if (input.description !== undefined) {
-      updatePayload.description = input.description;
-    }
+    if (input.name !== undefined) updatePayload.name = input.name;
+    if (input.color !== undefined) updatePayload.color = input.color;
+    if (input.description !== undefined) updatePayload.description = input.description;
 
     if (Object.keys(updatePayload).length > 0) {
       const success = await updateLabel(client, id, updatePayload);
@@ -224,10 +219,13 @@ async function handleDeleteLabel(
   }
 }
 
+
+
 export const generatedLabelsRouter = router({
   labels: procedure
     .meta({
       description: "list labels",
+      
     })
     .input(listLabelsInput)
     .query(async ({ input }) => {
@@ -236,7 +234,7 @@ export const generatedLabelsRouter = router({
 
   label: procedure
     .meta({
-      description: "show label details, create with 'new', update, or delete with --delete",
+      description: "show or update a label, or create with 'new'",
     })
     .input(labelInput)
     .mutation(async ({ input }) => {
@@ -249,6 +247,7 @@ export const generatedLabelsRouter = router({
         case "delete":
           await handleDeleteLabel(input.id, input);
           break;
+        
         case "update":
           await handleUpdateLabel(input.id, input);
           break;
