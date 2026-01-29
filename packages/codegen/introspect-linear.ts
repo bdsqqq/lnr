@@ -164,6 +164,7 @@ async function main() {
   const typesToFetch = [...new Set([...priorityTypes, ...enumTypes])];
 
   const types: any[] = [];
+  const failedTypes: string[] = [];
   for (const typeName of typesToFetch) {
     try {
       const data = await fetchGraphQL(apiKey, typeDetailQuery(typeName));
@@ -172,10 +173,27 @@ async function main() {
         process.stdout.write(".");
       }
     } catch (err) {
+      failedTypes.push(typeName);
       console.error(`\nwarning: failed to fetch ${typeName}: ${(err as Error).message}`);
     }
   }
-  console.log(` done (${types.length} types fetched)`);
+  console.log();
+
+  // summary of fetch results
+  const total = typesToFetch.length;
+  const succeeded = types.length;
+  const failed = failedTypes.length;
+
+  if (failed === total) {
+    console.error(`error: all ${total} type fetches failed`);
+    console.error(`fix: check LINEAR_API_KEY and network connectivity`);
+    process.exit(1);
+  }
+
+  console.log(`fetched ${succeeded} of ${total} types (${failed} failed)`);
+  if (failed > 0) {
+    console.log(`failed types: ${failedTypes.join(", ")}`);
+  }
 
   // Build schema structure
   const schema = {
