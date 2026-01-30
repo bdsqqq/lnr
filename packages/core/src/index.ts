@@ -246,3 +246,19 @@ export {
   subscribeToIssue,
   unsubscribeFromIssue,
 } from "./subscriptions";
+
+// git automation states
+export type {
+  GitAutomationState,
+  GitAutomationEvent,
+  CreateGitAutomationStateInput,
+  UpdateGitAutomationStateInput,
+} from "./types";
+export {
+  listGitAutomationStates,
+  getGitAutomationState,
+  findGitAutomationStateByEvent,
+  createGitAutomationState,
+  updateGitAutomationState,
+  deleteGitAutomationState,
+} from "./git-automation-states";

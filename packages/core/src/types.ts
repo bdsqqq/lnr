@@ -301,3 +301,32 @@ export interface ViewPreferences {
   updatedAt: Date;
   preferences: ViewPreferencesValues;
 }
+
+export type GitAutomationEvent = "draft" | "merge" | "mergeable" | "review" | "start";
+
+export interface GitAutomationState {
+  id: string;
+  event: GitAutomationEvent;
+  stateId?: string | null;
+  stateName?: string | null;
+  targetBranchId?: string | null;
+  targetBranchPattern?: string | null;
+  teamId: string;
+  teamKey?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  archivedAt?: Date | null;
+}
+
+export interface CreateGitAutomationStateInput {
+  teamId: string;
+  event: GitAutomationEvent;
+  stateId?: string;
+  targetBranchId?: string;
+}
+
+export interface UpdateGitAutomationStateInput {
+  event?: GitAutomationEvent;
+  stateId?: string;
+  targetBranchId?: string;
+}

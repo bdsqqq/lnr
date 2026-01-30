@@ -514,3 +514,36 @@ Task ID: 0019
 - For batch updates, state/label/cycle resolution uses first issue's team context
 
 ---
+
+## 2026-01-30 - Add GitAutomationState support
+Thread: https://ampcode.com/threads/T-019c1127-93e5-76ff-8b9e-a0e6c95c3b9c
+Task ID: 0020
+
+**What was implemented:**
+- Added GitAutomationState, GitAutomationEvent, CreateGitAutomationStateInput, UpdateGitAutomationStateInput types to core/types.ts
+- Created packages/core/src/git-automation-states.ts with listGitAutomationStates, getGitAutomationState, findGitAutomationStateByEvent, createGitAutomationState, updateGitAutomationState, deleteGitAutomationState
+- Exported types and functions from core/index.ts
+- Created packages/cli/src/router/git-automation-states.ts with:
+  - `lnr git-automations --team <key>` - list git automation states (alias: `lnr ga`)
+  - `lnr git-automation <event|id> --team <key>` - show specific automation
+  - `lnr git-automation new --team <key> --event <event> --state <state>` - create
+  - `lnr git-automation <event> --team <key> --state <new-state>` - update
+  - `lnr git-automation <event> --team <key> --delete` - delete
+  - --json, --quiet, --verbose flags
+- Wired up gitAutomationStatesRouter in router/index.ts
+
+**Files changed:**
+- packages/core/src/types.ts
+- packages/core/src/git-automation-states.ts (new)
+- packages/core/src/index.ts
+- packages/cli/src/router/git-automation-states.ts (new)
+- packages/cli/src/router/index.ts
+
+**Learnings:**
+- GitAutomationState is team-scoped, accessed via team.gitAutomationStates()
+- SDK has createGitAutomationState, updateGitAutomationState, deleteGitAutomationState but NO client.gitAutomationState(id) accessor
+- Event types: draft, merge, mergeable, review, start (pull/merge request states)
+- Links WorkflowState to git events - when event triggers, issue moves to that state
+- targetBranch is optional - if null, applies to all branches
+
+---

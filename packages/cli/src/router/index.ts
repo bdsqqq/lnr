@@ -15,6 +15,7 @@ import { usersRouter } from "./users";
 import { notificationsRouter } from "./notifications";
 import { initiativesRouter } from "./initiatives";
 import { roadmapsRouter } from "./roadmaps";
+import { gitAutomationStatesRouter } from "./git-automation-states";
 
 export const appRouter = router({
   ...authRouter._def.procedures,
@@ -33,6 +34,7 @@ export const appRouter = router({
   ...notificationsRouter._def.procedures,
   ...initiativesRouter._def.procedures,
   ...roadmapsRouter._def.procedures,
+  ...gitAutomationStatesRouter._def.procedures,
 });
 
 export type AppRouter = typeof appRouter;
