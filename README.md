@@ -67,13 +67,12 @@ api key from: https://linear.app/settings/account/security
 - `lnr issue <id>` - show/update issue
 - `lnr issue new` - create issue
 - `lnr teams` - list teams
-- `lnr projects` - list projects
+- `lnr projects` - list projects (use `lnr project <name> --milestones` for milestones)
 - `lnr cycles` - list cycles
 - `lnr search <query>` - search issues
 - `lnr me` - show my info
 - `lnr labels` - list labels
 - `lnr docs` - list documents
-- `lnr milestones` - list milestones
 
 see SPEC.md for full command reference.
 
@@ -129,7 +128,7 @@ resolvers live in `packages/core/src/resolvers.ts` and throw typed errors with a
 ### regenerating commands
 
 ```bash
-# regenerate all entity commands (issue, project, label, doc, milestone)
+# regenerate all entity commands (issue, project, label, doc)
 bun run packages/codegen/generate-commands.ts
 
 # refresh schema from Linear API (requires LINEAR_API_KEY)
