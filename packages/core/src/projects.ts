@@ -1,5 +1,5 @@
 import type { LinearClient } from "@linear/sdk";
-import type { Issue, Project, CreateProjectInput, UpdateProjectInput, ProjectUpdate } from "./types";
+import type { Issue, Project, CreateProjectInput, UpdateProjectInput, ProjectUpdate, ProjectLabel } from "./types";
 
 export async function listProjects(
   client: LinearClient,
@@ -212,4 +212,27 @@ export async function getProjectUpdates(
       };
     })
   );
+}
+
+export async function getProjectLabels(
+  client: LinearClient,
+  projectId: string
+): Promise<ProjectLabel[]> {
+  const project = await client.project(projectId);
+
+  if (!project) {
+    return [];
+  }
+
+  const labelsConnection = await project.labels();
+
+  return labelsConnection.nodes.map((l) => ({
+    id: l.id,
+    name: l.name,
+    color: l.color,
+    description: l.description,
+    isGroup: l.isGroup,
+    createdAt: l.createdAt,
+    updatedAt: l.updatedAt,
+  }));
 }

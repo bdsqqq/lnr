@@ -248,3 +248,13 @@ export interface Roadmap {
   ownerId?: string | null;
   ownerName?: string | null;
 }
+
+export interface ProjectLabel {
+  id: string;
+  name: string;
+  color: string;
+  description?: string | null;
+  isGroup: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}

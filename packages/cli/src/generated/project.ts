@@ -12,6 +12,7 @@ import {
   getProject,
   getProjectIssues,
   getProjectUpdates,
+  getProjectLabels,
   createProject,
   deleteProject,
   updateProject,
@@ -21,6 +22,7 @@ import {
   resolveTeamByKey,
   type Project,
   type ProjectUpdate,
+  type ProjectLabel,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
@@ -49,6 +51,7 @@ export const projectInput = z.object({
   name: z.string().meta({ positional: true }).describe("project name or 'new'"),
   issues: z.boolean().optional().describe("list issues in project"),
   updates: z.boolean().optional().describe("list project updates"),
+  labels: z.boolean().optional().describe("list project labels"),
   json: z.boolean().optional().describe("output as json"),
   quiet: z.boolean().optional().describe("output ids only"),
   verbose: z.boolean().optional().describe("show all columns"),
@@ -83,6 +86,19 @@ const updateColumns: TableColumn<ProjectUpdate>[] = [
 const verboseUpdateColumns: TableColumn<ProjectUpdate>[] = [
   { header: "ID", value: (u) => u.id, width: 36 },
   ...updateColumns,
+];
+
+const labelColumns: TableColumn<ProjectLabel>[] = [
+  { header: "NAME", value: (l) => l.name, width: 30 },
+  { header: "COLOR", value: (l) => l.color, width: 10 },
+];
+
+const verboseLabelColumns: TableColumn<ProjectLabel>[] = [
+  { header: "ID", value: (l) => l.id, width: 36 },
+  { header: "NAME", value: (l) => l.name, width: 30 },
+  { header: "COLOR", value: (l) => l.color, width: 10 },
+  { header: "GROUP", value: (l) => l.isGroup ? "yes" : "no", width: 6 },
+  { header: "DESCRIPTION", value: (l) => truncate(l.description ?? "-", 40), width: 40 },
 ];
 
 type Operation = "create" | "read" | "update" | "delete";
@@ -173,6 +189,19 @@ async function handleShowProject(
       } else {
         const cols = outputOpts.verbose ? verboseUpdateColumns : updateColumns;
         outputTable(updates, cols, outputOpts);
+      }
+      return;
+    }
+
+    if (input.labels) {
+      const labels = await getProjectLabels(client, project.id);
+      if (format === "json") {
+        outputJson(labels);
+      } else if (format === "quiet") {
+        outputQuiet(labels.map((l) => l.id));
+      } else {
+        const cols = outputOpts.verbose ? verboseLabelColumns : labelColumns;
+        outputTable(labels, cols, outputOpts);
       }
       return;
     }

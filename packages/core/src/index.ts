@@ -51,12 +51,13 @@ export {
 } from "./issues";
 
 // projects
-export type { ProjectUpdate } from "./types";
+export type { ProjectUpdate, ProjectLabel } from "./types";
 export {
   listProjects,
   getProject,
   getProjectIssues,
   getProjectUpdates,
+  getProjectLabels,
   createProject,
   deleteProject,
   updateProject,

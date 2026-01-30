@@ -324,3 +324,28 @@ Task ID: 0012
 - Follows same scoped entity pattern as ProjectUpdate and InitiativeUpdate: `lnr roadmap <name> --projects`
 
 ---
+
+## 2026-01-30 - Add ProjectLabel scoped to project
+Thread: https://ampcode.com/threads/T-019c1111-4df2-75eb-8cbf-f095d5c9b125
+Task ID: 0013
+
+**What was implemented:**
+- Added ProjectLabel type to core/types.ts with id, name, color, description, isGroup, createdAt, updatedAt
+- Added getProjectLabels(client, projectId) to projects.ts - fetches labels via project.labels()
+- Exported ProjectLabel type and getProjectLabels from core/index.ts
+- Added --labels flag to project command in generated/project.ts
+- Display labels as table with name, color columns
+- Supports --json, --quiet, --verbose flags
+
+**Files changed:**
+- packages/core/src/types.ts
+- packages/core/src/projects.ts
+- packages/core/src/index.ts
+- packages/cli/src/generated/project.ts
+
+**Learnings:**
+- ProjectLabel accessed via project.labels() connection (returns ProjectLabelConnection)
+- ProjectLabels are org-scoped but can be associated with projects
+- Follows same scoped entity pattern: `lnr project <name> --labels`
+
+---
