@@ -104,6 +104,11 @@ export interface UpdateIssueInput {
   parentId?: string;
 }
 
+export interface BatchIssueResult {
+  success: boolean;
+  issues: Issue[];
+}
+
 export interface CreateProjectInput {
   name: string;
   description?: string;

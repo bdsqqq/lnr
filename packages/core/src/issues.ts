@@ -1,5 +1,5 @@
 import type { LinearClient } from "@linear/sdk";
-import type { Issue, ListIssuesFilter, CreateIssueInput, UpdateIssueInput } from "./types";
+import type { Issue, ListIssuesFilter, CreateIssueInput, UpdateIssueInput, BatchIssueResult } from "./types";
 
 export function priorityFromString(priority: string): number {
   switch (priority.toLowerCase()) {
@@ -219,4 +219,67 @@ export async function getSubIssues(
       branchName: n.branchName,
     }))
   );
+}
+
+export async function batchCreateIssues(
+  client: LinearClient,
+  issues: CreateIssueInput[]
+): Promise<BatchIssueResult> {
+  const result = await client.createIssueBatch({ issues });
+
+  if (!result.success) {
+    return { success: false, issues: [] };
+  }
+
+  const createdIssues = await result.issues;
+  const mappedIssues: Issue[] = await Promise.all(
+    createdIssues.map(async (issue) => ({
+      id: issue.id,
+      identifier: issue.identifier,
+      title: issue.title,
+      description: issue.description,
+      state: (await issue.state)?.name ?? null,
+      assignee: (await issue.assignee)?.name ?? null,
+      priority: issue.priority,
+      createdAt: issue.createdAt,
+      updatedAt: issue.updatedAt,
+      url: issue.url,
+      parentId: (await issue.parent)?.id ?? null,
+      branchName: issue.branchName,
+    }))
+  );
+
+  return { success: true, issues: mappedIssues };
+}
+
+export async function batchUpdateIssues(
+  client: LinearClient,
+  ids: string[],
+  input: UpdateIssueInput
+): Promise<BatchIssueResult> {
+  const result = await client.updateIssueBatch(ids, input);
+
+  if (!result.success) {
+    return { success: false, issues: [] };
+  }
+
+  const updatedIssues = await result.issues;
+  const mappedIssues: Issue[] = await Promise.all(
+    updatedIssues.map(async (issue) => ({
+      id: issue.id,
+      identifier: issue.identifier,
+      title: issue.title,
+      description: issue.description,
+      state: (await issue.state)?.name ?? null,
+      assignee: (await issue.assignee)?.name ?? null,
+      priority: issue.priority,
+      createdAt: issue.createdAt,
+      updatedAt: issue.updatedAt,
+      url: issue.url,
+      parentId: (await issue.parent)?.id ?? null,
+      branchName: issue.branchName,
+    }))
+  );
+
+  return { success: true, issues: mappedIssues };
 }

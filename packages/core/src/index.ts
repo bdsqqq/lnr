@@ -37,6 +37,7 @@ export {
 } from "./config";
 
 // issues
+export type { BatchIssueResult } from "./types";
 export {
   listIssues,
   getIssue,
@@ -48,6 +49,8 @@ export {
   getTeamLabels,
   archiveIssue,
   getSubIssues,
+  batchCreateIssues,
+  batchUpdateIssues,
 } from "./issues";
 
 // projects

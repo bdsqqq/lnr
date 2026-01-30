@@ -486,3 +486,31 @@ Task ID: 0018
 - Issue.subscribe/unsubscribe methods don't exist in SDK; must manipulate subscriberIds directly
 
 ---
+
+## 2026-01-30 - Add IssueBatch as `lnr issue batch` subcommand
+Thread: https://ampcode.com/threads/T-019c1122-f5dd-7742-89e7-2eea4d52fda6
+Task ID: 0019
+
+**What was implemented:**
+- Added BatchIssueResult type to core/types.ts
+- Added batchCreateIssues, batchUpdateIssues functions to core/issues.ts
+- Exported batch functions and type from core/index.ts
+- Added `lnr issue batch` subcommand to generated/issue.ts with:
+  - Positional arg: comma-separated issue identifiers (e.g. ENG-1,ENG-2,ENG-3)
+  - --state, --assignee, --priority, --label, --project, --cycle flags
+  - --json, --quiet output options
+- Uses Linear SDK client.updateIssueBatch(ids, input) for atomic batch updates
+
+**Files changed:**
+- packages/core/src/types.ts
+- packages/core/src/issues.ts
+- packages/core/src/index.ts
+- packages/cli/src/generated/issue.ts
+
+**Learnings:**
+- Linear SDK has client.createIssueBatch(input) and client.updateIssueBatch(ids, input) for batch operations
+- IssueBatchCreateInput takes { issues: Array<IssueCreateInput> }
+- updateIssueBatch takes array of UUIDs plus single IssueUpdateInput applied to all
+- For batch updates, state/label/cycle resolution uses first issue's team context
+
+---
