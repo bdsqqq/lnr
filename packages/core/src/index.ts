@@ -137,7 +137,8 @@ export {
 } from "./comments";
 
 // reactions
-export { createReaction, deleteReaction } from "./reactions";
+export type { ReactionTarget } from "./reactions";
+export { createReaction, createCommentReaction, deleteReaction } from "./reactions";
 
 // attachments
 export type { Attachment, CreateAttachmentInput } from "./attachments";

@@ -433,3 +433,29 @@ Task ID: 0016
 - Follows embedded entity pattern: `lnr view <name> --preferences`
 
 ---
+
+## 2026-01-30 - Extend Reaction to all comment-like entities
+Thread: https://ampcode.com/threads/T-019c111b-9884-728f-b86c-a3383dde459c
+Task ID: 0017
+
+**What was implemented:**
+- Updated createReaction to accept ReactionTarget discriminated union (comment, issue, projectUpdate, initiativeUpdate)
+- Added ReactionTarget type and createCommentReaction helper (backward compat) to core
+- Updated issue.ts to use createCommentReaction for existing --react flag
+- Added --react/--emoji/--unreact flags to project command for project update reactions
+- Added --react/--emoji/--unreact flags to initiative command for initiative update reactions
+- Changed initiative procedure from query to mutation to support reactions
+
+**Files changed:**
+- packages/core/src/reactions.ts
+- packages/core/src/index.ts
+- packages/cli/src/generated/issue.ts
+- packages/cli/src/generated/project.ts
+- packages/cli/src/router/initiatives.ts
+
+**Learnings:**
+- ReactionCreateInput supports commentId, issueId, projectUpdateId, initiativeUpdateId (public), plus postId, pullRequestId, pullRequestCommentId (internal)
+- Using discriminated union for ReactionTarget provides type safety and extensibility
+- Legacy createCommentReaction wrapper maintains backward compatibility
+
+---

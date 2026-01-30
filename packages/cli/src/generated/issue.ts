@@ -28,7 +28,7 @@ import {
   updateComment,
   replyToComment,
   deleteComment,
-  createReaction,
+  createCommentReaction,
   deleteReaction,
   getIssueComments,
   getSubIssues,
@@ -423,7 +423,7 @@ async function handleUpdateIssue(
     }
 
     if (input.react) {
-      const success = await createReaction(client, input.react, input.emoji!);
+      const success = await createCommentReaction(client, input.react, input.emoji!);
       if (!success) {
         exitWithError(`failed to add reaction to comment ${input.react.slice(0, 8)}`);
       }

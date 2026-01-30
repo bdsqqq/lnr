@@ -6,6 +6,8 @@ import {
   findInitiativeByName,
   getInitiativeUpdates,
   getInitiativeExternalLinks,
+  createReaction,
+  deleteReaction,
   type Initiative,
   type InitiativeUpdate,
   type EntityExternalLink,
@@ -34,6 +36,9 @@ export const initiativeInput = z.object({
   verbose: z.boolean().optional().describe("show all columns"),
   updates: z.boolean().optional().describe("show initiative updates"),
   links: z.boolean().optional().describe("show initiative external links"),
+  react: z.string().optional().describe("initiative update id to add reaction (requires --emoji)"),
+  emoji: z.string().optional().describe("emoji for --react"),
+  unreact: z.string().optional().describe("reaction id to remove"),
 });
 
 const initiativeColumns: TableColumn<Initiative>[] = [
@@ -105,9 +110,9 @@ export const initiativesRouter = router({
     }),
 
   initiative: procedure
-    .meta({ description: "show initiative details" })
+    .meta({ description: "show or update initiative" })
     .input(initiativeInput)
-    .query(async ({ input }) => {
+    .mutation(async ({ input }) => {
       try {
         const client = getClient();
         let initiative = await getInitiative(client, input.nameOrId);
@@ -129,6 +134,27 @@ export const initiativesRouter = router({
           verbose: input.verbose,
         };
         const format = getOutputFormat(outputOpts);
+
+        if (input.react) {
+          if (!input.emoji) {
+            exitWithError("--emoji is required when using --react");
+          }
+          const success = await createReaction(client, { type: "initiativeUpdate", id: input.react }, input.emoji);
+          if (!success) {
+            exitWithError(`failed to add reaction to initiative update ${input.react.slice(0, 8)}`);
+          }
+          console.log(`added reaction ${input.emoji} to initiative update ${input.react.slice(0, 8)}`);
+          return;
+        }
+
+        if (input.unreact) {
+          const success = await deleteReaction(client, input.unreact);
+          if (!success) {
+            exitWithError(`reaction ${input.unreact.slice(0, 8)} not found`, undefined, EXIT_CODES.NOT_FOUND);
+          }
+          console.log(`removed reaction ${input.unreact.slice(0, 8)}`);
+          return;
+        }
 
         if (input.updates) {
           const updates = await getInitiativeUpdates(client, initiative.id);

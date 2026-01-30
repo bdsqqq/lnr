@@ -22,6 +22,8 @@ import {
   getAvailableTeamKeys,
   resolveAssignee,
   resolveTeamByKey,
+  createReaction,
+  deleteReaction,
   type Project,
   type ProjectUpdate,
   type ProjectLabel,
@@ -71,6 +73,9 @@ export const projectInput = z.object({
   startDate: z.string().optional().describe("set start date (YYYY-MM-DD)"),
   targetDate: z.string().optional().describe("set target date (YYYY-MM-DD)"),
   priority: z.number().optional().describe("set priority (0=none, 1=urgent, 2=high, 3=normal, 4=low)"),
+  react: z.string().optional().describe("project update id to add reaction (requires --emoji)"),
+  emoji: z.string().optional().describe("emoji for --react"),
+  unreact: z.string().optional().describe("reaction id to remove"),
 });
 
 type ProjectInput = z.infer<typeof projectInput>;
@@ -142,7 +147,8 @@ function inferOperation(input: ProjectInput): Operation {
   if (input.delete) return "delete";
 
   const mutationFlags: (keyof ProjectInput)[] = [
-    "newName", "description", "content", "status", "startDate", "targetDate", "priority", "lead", "team"
+    "newName", "description", "content", "status", "startDate", "targetDate", "priority", "lead", "team",
+    "react", "unreact",
   ];
   for (const flag of mutationFlags) {
     if (input[flag] !== undefined) return "update";
@@ -336,6 +342,25 @@ async function handleUpdateProject(
     if (Object.keys(updatePayload).length > 0) {
       await updateProject(client, project.id, updatePayload);
       console.log(`updated ${name}`);
+    }
+
+    if (input.react) {
+      if (!input.emoji) {
+        exitWithError("--emoji is required when using --react");
+      }
+      const success = await createReaction(client, { type: "projectUpdate", id: input.react }, input.emoji);
+      if (!success) {
+        exitWithError(`failed to add reaction to project update ${input.react.slice(0, 8)}`);
+      }
+      console.log(`added reaction ${input.emoji} to project update ${input.react.slice(0, 8)}`);
+    }
+
+    if (input.unreact) {
+      const success = await deleteReaction(client, input.unreact);
+      if (!success) {
+        exitWithError(`reaction ${input.unreact.slice(0, 8)} not found`, undefined, EXIT_CODES.NOT_FOUND);
+      }
+      console.log(`removed reaction ${input.unreact.slice(0, 8)}`);
     }
   } catch (error) {
     handleApiError(error);
