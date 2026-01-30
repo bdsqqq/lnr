@@ -277,3 +277,16 @@ export {
   updateGitAutomationTargetBranch,
   deleteGitAutomationTargetBranch,
 } from "./git-automation-target-branches";
+
+// agent sessions (experimental)
+export type {
+  AgentSession,
+  AgentSessionStatus,
+  AgentSessionType,
+  UpdateAgentSessionInput,
+} from "./types";
+export {
+  listAgentSessions,
+  getAgentSession,
+  updateAgentSession,
+} from "./agent-sessions";

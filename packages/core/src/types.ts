@@ -352,3 +352,41 @@ export interface UpdateGitAutomationTargetBranchInput {
   branchPattern?: string;
   isRegex?: boolean;
 }
+
+export type AgentSessionStatus =
+  | "active"
+  | "awaitingInput"
+  | "complete"
+  | "error"
+  | "pending"
+  | "stale";
+
+export type AgentSessionType = "commentThread";
+
+export interface AgentSession {
+  id: string;
+  status: AgentSessionStatus;
+  type: AgentSessionType;
+  summary?: string | null;
+  externalLink?: string | null;
+  plan?: Record<string, unknown> | null;
+  sourceMetadata?: Record<string, unknown> | null;
+  createdAt: Date;
+  updatedAt: Date;
+  startedAt?: Date | null;
+  endedAt?: Date | null;
+  dismissedAt?: Date | null;
+  archivedAt?: Date | null;
+  issueId?: string | null;
+  issueIdentifier?: string | null;
+  commentId?: string | null;
+  creatorId?: string | null;
+  creatorName?: string | null;
+  appUserId?: string | null;
+  appUserName?: string | null;
+}
+
+export interface UpdateAgentSessionInput {
+  externalLink?: string;
+  plan?: Record<string, unknown>;
+}
