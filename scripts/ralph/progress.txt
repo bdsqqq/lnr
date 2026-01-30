@@ -667,3 +667,29 @@ Task ID: 0026
 - Extending handleApiError with optional param maintains backward compatibility
 
 ---
+
+## 2026-01-30 - Verify git automation API requirements (team context?)
+Thread: https://ampcode.com/threads/T-019c1143-1537-77f6-8993-8d767564b9e3
+Task ID: 0027
+
+**What was verified:**
+- GitAutomationState commands require --team flag (git-automation-states.ts L33-36, L44)
+- GitAutomationTargetBranch commands require --team flag (git-automation-target-branches.ts L29-32, L41)
+- Core listGitAutomationStates uses team.gitAutomationStates() connection (L14, L20)
+- Core listGitAutomationTargetBranches uses same connection + Map for deduplication (L13, L19-36)
+- Create operations resolve team via findTeamByKeyOrName then pass teamId
+- All CRUD operations work correctly with team context
+
+**Files reviewed (no changes needed):**
+- packages/cli/src/router/git-automation-states.ts
+- packages/cli/src/router/git-automation-target-branches.ts
+- packages/core/src/git-automation-states.ts
+- packages/core/src/git-automation-target-branches.ts
+
+**Learnings:**
+- Both entities properly require --team and pass team context through to core
+- SDK lacks client.gitAutomationState(id) accessor, so lookup requires listing + filter
+- targetBranch access via gitAutomationStates().targetBranch is intentional (no direct connection)
+- Verification tasks are valid ralph tasks — not all tasks require code changes
+
+---
