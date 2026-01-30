@@ -109,7 +109,7 @@ export const initiativesRouter = router({
         const columns = input.verbose ? verboseInitiativeColumns : initiativeColumns;
         outputTable(initiatives, columns, outputOpts);
       } catch (error) {
-        handleApiError(error);
+        handleApiError(error, "initiatives");
       }
     }),
 
@@ -248,7 +248,7 @@ export const initiativesRouter = router({
           console.log(`id: ${initiative.id}`);
         }
       } catch (error) {
-        handleApiError(error);
+        handleApiError(error, "initiatives");
       }
     }),
 });

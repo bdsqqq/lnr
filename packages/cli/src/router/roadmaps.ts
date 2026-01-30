@@ -86,7 +86,7 @@ export const roadmapsRouter = router({
         const columns = input.verbose ? verboseRoadmapColumns : roadmapColumns;
         outputTable(roadmaps, columns, outputOpts);
       } catch (error) {
-        handleApiError(error);
+        handleApiError(error, "roadmaps");
       }
     }),
 
@@ -165,7 +165,7 @@ export const roadmapsRouter = router({
           console.log(`id: ${roadmap.id}`);
         }
       } catch (error) {
-        handleApiError(error);
+        handleApiError(error, "roadmaps");
       }
     }),
 });

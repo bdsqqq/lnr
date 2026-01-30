@@ -640,3 +640,30 @@ Task ID: 0023
 - Follows embedded entity pattern: `lnr agent-session <id> --activities`
 
 ---
+
+## 2026-01-30 - Graceful error handling for enterprise-only entities
+Thread: https://ampcode.com/threads/T-019c1140-f2d3-73bb-9a54-d6d6602764f8
+Task ID: 0026
+
+**What was implemented:**
+- Added PLAN_REQUIRED exit code (5) to EXIT_CODES in error.ts
+- Added isEnterpriseError() detection for plan/access-related error patterns
+- Added detectEnterpriseEntity() to extract entity name from error messages
+- Extended handleApiError with optional entityHint parameter for better error messages
+- Updated initiatives.ts router to pass "initiatives" as entityHint
+- Updated roadmaps.ts router to pass "roadmaps" as entityHint
+- Enterprise error now shows: "initiatives requires a Linear Business or Enterprise plan"
+- Includes actionable hint: "check your workspace plan at linear.app/settings/billing"
+
+**Files changed:**
+- packages/cli/src/lib/error.ts
+- packages/cli/src/router/initiatives.ts
+- packages/cli/src/router/roadmaps.ts
+
+**Learnings:**
+- Linear SDK error messages vary; detection uses pattern matching on common phrases
+- entityHint param allows callers to provide better context than auto-detection
+- Enterprise patterns include: "entity not accessible", "access denied", "requires enterprise", "feature not available"
+- Extending handleApiError with optional param maintains backward compatibility
+
+---
