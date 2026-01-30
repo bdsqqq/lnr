@@ -128,6 +128,20 @@ export { createReaction, deleteReaction } from "./reactions";
 export type { Attachment, CreateAttachmentInput } from "./attachments";
 export { createAttachment, getIssueAttachments, linkGitHubPR } from "./attachments";
 
+// milestones
+export type {
+  ProjectMilestone,
+  CreateProjectMilestoneInput,
+  UpdateProjectMilestoneInput,
+} from "./types";
+export {
+  listMilestones,
+  getMilestone,
+  createMilestone,
+  updateMilestone,
+  deleteMilestone,
+} from "./milestones";
+
 // resolvers
 export {
   resolveIssueIdentifier,
@@ -142,4 +156,6 @@ export {
   ProjectNotFoundError,
   resolveCycleByName,
   CycleNotFoundError,
+  resolveMilestoneByName,
+  MilestoneNotFoundError,
 } from "./resolvers";

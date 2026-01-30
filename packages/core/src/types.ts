@@ -111,3 +111,27 @@ export interface Activity {
   updatedAt: Date;
   url: string;
 }
+
+export interface ProjectMilestone {
+  id: string;
+  name: string;
+  description?: string | null;
+  targetDate?: Date | null;
+  sortOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateProjectMilestoneInput {
+  name: string;
+  projectId: string;
+  description?: string;
+  targetDate?: string;
+}
+
+export interface UpdateProjectMilestoneInput {
+  name?: string;
+  description?: string;
+  targetDate?: string;
+  sortOrder?: number;
+}
