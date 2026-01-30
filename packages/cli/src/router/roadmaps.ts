@@ -4,7 +4,9 @@ import {
   listRoadmaps,
   getRoadmap,
   findRoadmapByName,
+  getRoadmapProjects,
   type Roadmap,
+  type Project,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "./trpc";
 import { exitWithError, handleApiError, EXIT_CODES } from "../lib/error";
@@ -28,6 +30,7 @@ export const roadmapInput = z.object({
   json: z.boolean().optional().describe("output as json"),
   quiet: z.boolean().optional().describe("output id only"),
   verbose: z.boolean().optional().describe("show all columns"),
+  projects: z.boolean().optional().describe("show roadmap projects"),
 });
 
 const roadmapColumns: TableColumn<Roadmap>[] = [
@@ -40,6 +43,19 @@ const verboseRoadmapColumns: TableColumn<Roadmap>[] = [
   ...roadmapColumns,
   { header: "COLOR", value: (r) => r.color ?? "-", width: 10 },
   { header: "ID", value: (r) => r.id, width: 36 },
+];
+
+const projectColumns: TableColumn<Project>[] = [
+  { header: "NAME", value: (p) => p.name, width: 32 },
+  { header: "STATE", value: (p) => p.state ?? "-", width: 12 },
+  { header: "PROGRESS", value: (p) => p.progress != null ? `${Math.round(p.progress * 100)}%` : "-", width: 10 },
+  { header: "TARGET", value: (p) => p.targetDate?.toISOString().slice(0, 10) ?? "-", width: 12 },
+];
+
+const verboseProjectColumns: TableColumn<Project>[] = [
+  ...projectColumns,
+  { header: "START", value: (p) => p.startDate?.toISOString().slice(0, 10) ?? "-", width: 12 },
+  { header: "ID", value: (p) => p.id, width: 36 },
 ];
 
 export const roadmapsRouter = router({
@@ -99,6 +115,29 @@ export const roadmapsRouter = router({
           verbose: input.verbose,
         };
         const format = getOutputFormat(outputOpts);
+
+        if (input.projects) {
+          const projects = await getRoadmapProjects(client, roadmap.id);
+
+          if (format === "json") {
+            outputJson(projects);
+            return;
+          }
+
+          if (format === "quiet") {
+            outputQuiet(projects.map((p) => p.id));
+            return;
+          }
+
+          if (projects.length === 0) {
+            console.log("no projects");
+            return;
+          }
+
+          const columns = input.verbose ? verboseProjectColumns : projectColumns;
+          outputTable(projects, columns, outputOpts);
+          return;
+        }
 
         if (format === "json") {
           outputJson(roadmap);

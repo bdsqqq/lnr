@@ -301,3 +301,26 @@ Task ID: 0011
 - SDK shows roadmap has CRUD (create/update/delete/archive) but task was read-only only
 
 ---
+
+## 2026-01-30 - Add RoadmapToProject via roadmap command
+Thread: https://ampcode.com/threads/T-019c110e-e440-74ae-b5b2-3348a836aa05
+Task ID: 0012
+
+**What was implemented:**
+- Added getRoadmapProjects(client, roadmapId) to roadmaps.ts - fetches projects via roadmap.projects()
+- Exported getRoadmapProjects from core/index.ts
+- Added --projects flag to roadmap command in router/roadmaps.ts
+- Display projects as table with name, state, progress, target columns
+- Supports --json, --quiet, --verbose flags
+
+**Files changed:**
+- packages/core/src/roadmaps.ts
+- packages/core/src/index.ts
+- packages/cli/src/router/roadmaps.ts
+
+**Learnings:**
+- RoadmapToProject is a join table linking roadmaps to projects
+- roadmap.projects() returns ProjectConnection directly (not RoadmapToProjectConnection)
+- Follows same scoped entity pattern as ProjectUpdate and InitiativeUpdate: `lnr roadmap <name> --projects`
+
+---

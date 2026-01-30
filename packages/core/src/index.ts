@@ -224,4 +224,4 @@ export {
 
 // roadmaps
 export type { Roadmap } from "./types";
-export { listRoadmaps, getRoadmap, findRoadmapByName } from "./roadmaps";
+export { listRoadmaps, getRoadmap, findRoadmapByName, getRoadmapProjects } from "./roadmaps";

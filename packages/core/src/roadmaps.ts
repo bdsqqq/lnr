@@ -1,5 +1,5 @@
 import type { LinearClient } from "@linear/sdk";
-import type { Roadmap } from "./types";
+import type { Roadmap, Project } from "./types";
 
 export async function listRoadmaps(client: LinearClient): Promise<Roadmap[]> {
   const roadmapsConnection = await client.roadmaps();
@@ -74,4 +74,28 @@ export async function findRoadmapByName(
     ownerId: owner?.id ?? null,
     ownerName: owner?.name ?? null,
   };
+}
+
+export async function getRoadmapProjects(
+  client: LinearClient,
+  roadmapId: string
+): Promise<Project[]> {
+  const roadmap = await client.roadmap(roadmapId);
+
+  if (!roadmap) {
+    return [];
+  }
+
+  const projectsConnection = await roadmap.projects();
+
+  return projectsConnection.nodes.map((p) => ({
+    id: p.id,
+    name: p.name,
+    description: p.description ?? null,
+    state: p.state,
+    progress: p.progress ?? null,
+    targetDate: p.targetDate ?? null,
+    startDate: p.startDate ?? null,
+    createdAt: p.createdAt,
+  }));
 }
