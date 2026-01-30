@@ -51,7 +51,7 @@ export {
 } from "./issues";
 
 // projects
-export type { ProjectUpdate, ProjectLabel, ProjectStatus } from "./types";
+export type { ProjectUpdate, ProjectLabel, ProjectStatus, EntityExternalLink } from "./types";
 export {
   listProjects,
   getProject,
@@ -59,6 +59,7 @@ export {
   getProjectUpdates,
   getProjectLabels,
   getProjectStatus,
+  getProjectExternalLinks,
   createProject,
   deleteProject,
   updateProject,
@@ -222,6 +223,7 @@ export {
   getInitiative,
   findInitiativeByName,
   getInitiativeUpdates,
+  getInitiativeExternalLinks,
 } from "./initiatives";
 
 // roadmaps

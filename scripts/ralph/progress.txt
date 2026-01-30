@@ -375,3 +375,33 @@ Task ID: 0014
 - type field uses ProjectStatusType enum: backlog, planned, started, paused, completed, canceled
 
 ---
+
+## 2026-01-30 - Add EntityExternalLink as --links flag
+Thread: https://ampcode.com/threads/T-019c1116-47b4-73e3-a26d-f7d38b2da836
+Task ID: 0015
+
+**What was implemented:**
+- Added EntityExternalLink type to core/types.ts with id, label, url, sortOrder, createdAt, updatedAt, creatorId, creatorName
+- Added getProjectExternalLinks(client, projectId) to projects.ts - fetches links via project.externalLinks()
+- Added getInitiativeExternalLinks(client, initiativeId) to initiatives.ts - fetches links via initiative.links()
+- Exported EntityExternalLink type and both functions from core/index.ts
+- Added --links flag to project command in generated/project.ts
+- Added --links flag to initiative command in router/initiatives.ts
+- Display links as table with label, url columns
+- Supports --json, --quiet, --verbose flags
+
+**Files changed:**
+- packages/core/src/types.ts
+- packages/core/src/projects.ts
+- packages/core/src/initiatives.ts
+- packages/core/src/index.ts
+- packages/cli/src/generated/project.ts
+- packages/cli/src/router/initiatives.ts
+
+**Learnings:**
+- EntityExternalLink attaches to projects and initiatives (can attach to both via projectId/initiativeId in create)
+- Project uses project.externalLinks() connection, initiative uses initiative.links() connection
+- Creator info requires async fetch via l.creator promise
+- Follows scoped entity pattern: `lnr project <name> --links`, `lnr initiative <name> --links`
+
+---

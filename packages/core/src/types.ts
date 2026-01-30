@@ -270,3 +270,14 @@ export interface ProjectStatus {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface EntityExternalLink {
+  id: string;
+  label: string;
+  url: string;
+  sortOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+  creatorId?: string;
+  creatorName?: string;
+}

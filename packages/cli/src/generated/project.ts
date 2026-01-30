@@ -14,6 +14,7 @@ import {
   getProjectUpdates,
   getProjectLabels,
   getProjectStatus,
+  getProjectExternalLinks,
   createProject,
   deleteProject,
   updateProject,
@@ -25,6 +26,7 @@ import {
   type ProjectUpdate,
   type ProjectLabel,
   type ProjectStatus,
+  type EntityExternalLink,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
@@ -55,6 +57,7 @@ export const projectInput = z.object({
   updates: z.boolean().optional().describe("list project updates"),
   labels: z.boolean().optional().describe("list project labels"),
   showStatus: z.boolean().optional().describe("show project status details"),
+  links: z.boolean().optional().describe("list project external links"),
   json: z.boolean().optional().describe("output as json"),
   quiet: z.boolean().optional().describe("output ids only"),
   verbose: z.boolean().optional().describe("show all columns"),
@@ -118,6 +121,18 @@ const verboseStatusColumns: TableColumn<ProjectStatus>[] = [
   { header: "POSITION", value: (s) => String(s.position), width: 10 },
   { header: "INDEFINITE", value: (s) => s.indefinite ? "yes" : "no", width: 10 },
   { header: "DESCRIPTION", value: (s) => truncate(s.description ?? "-", 40), width: 40 },
+];
+
+const linkColumns: TableColumn<EntityExternalLink>[] = [
+  { header: "LABEL", value: (l) => truncate(l.label, 30), width: 30 },
+  { header: "URL", value: (l) => truncate(l.url, 50), width: 50 },
+];
+
+const verboseLinkColumns: TableColumn<EntityExternalLink>[] = [
+  { header: "ID", value: (l) => l.id, width: 36 },
+  { header: "LABEL", value: (l) => truncate(l.label, 30), width: 30 },
+  { header: "URL", value: (l) => truncate(l.url, 50), width: 50 },
+  { header: "CREATOR", value: (l) => l.creatorName ?? "-", width: 20 },
 ];
 
 type Operation = "create" | "read" | "update" | "delete";
@@ -238,6 +253,23 @@ async function handleShowProject(
       } else {
         const cols = outputOpts.verbose ? verboseStatusColumns : statusColumns;
         outputTable([status], cols, outputOpts);
+      }
+      return;
+    }
+
+    if (input.links) {
+      const links = await getProjectExternalLinks(client, project.id);
+      if (format === "json") {
+        outputJson(links);
+      } else if (format === "quiet") {
+        outputQuiet(links.map((l) => l.id));
+      } else {
+        if (links.length === 0) {
+          console.log("no external links");
+          return;
+        }
+        const cols = outputOpts.verbose ? verboseLinkColumns : linkColumns;
+        outputTable(links, cols, outputOpts);
       }
       return;
     }

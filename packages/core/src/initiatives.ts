@@ -1,5 +1,5 @@
 import type { LinearClient } from "@linear/sdk";
-import type { Initiative, InitiativeUpdate } from "./types";
+import type { Initiative, InitiativeUpdate, EntityExternalLink } from "./types";
 
 export async function listInitiatives(client: LinearClient): Promise<Initiative[]> {
   const initiativesConnection = await client.initiatives();
@@ -105,6 +105,35 @@ export async function getInitiativeUpdates(
         url: u.url,
         userId: user?.id,
         userName: user?.name,
+      };
+    })
+  );
+}
+
+export async function getInitiativeExternalLinks(
+  client: LinearClient,
+  initiativeId: string
+): Promise<EntityExternalLink[]> {
+  const initiative = await client.initiative(initiativeId);
+
+  if (!initiative) {
+    return [];
+  }
+
+  const linksConnection = await initiative.links();
+
+  return Promise.all(
+    linksConnection.nodes.map(async (l) => {
+      const creator = await l.creator;
+      return {
+        id: l.id,
+        label: l.label,
+        url: l.url,
+        sortOrder: l.sortOrder,
+        createdAt: l.createdAt,
+        updatedAt: l.updatedAt,
+        creatorId: creator?.id,
+        creatorName: creator?.name,
       };
     })
   );

@@ -1,5 +1,5 @@
 import type { LinearClient } from "@linear/sdk";
-import type { Issue, Project, CreateProjectInput, UpdateProjectInput, ProjectUpdate, ProjectLabel, ProjectStatus } from "./types";
+import type { Issue, Project, CreateProjectInput, UpdateProjectInput, ProjectUpdate, ProjectLabel, ProjectStatus, EntityExternalLink } from "./types";
 
 export async function listProjects(
   client: LinearClient,
@@ -264,4 +264,33 @@ export async function getProjectStatus(
     createdAt: status.createdAt,
     updatedAt: status.updatedAt,
   };
+}
+
+export async function getProjectExternalLinks(
+  client: LinearClient,
+  projectId: string
+): Promise<EntityExternalLink[]> {
+  const project = await client.project(projectId);
+
+  if (!project) {
+    return [];
+  }
+
+  const linksConnection = await project.externalLinks();
+
+  return Promise.all(
+    linksConnection.nodes.map(async (l) => {
+      const creator = await l.creator;
+      return {
+        id: l.id,
+        label: l.label,
+        url: l.url,
+        sortOrder: l.sortOrder,
+        createdAt: l.createdAt,
+        updatedAt: l.updatedAt,
+        creatorId: creator?.id,
+        creatorName: creator?.name,
+      };
+    })
+  );
 }

@@ -5,8 +5,10 @@ import {
   getInitiative,
   findInitiativeByName,
   getInitiativeUpdates,
+  getInitiativeExternalLinks,
   type Initiative,
   type InitiativeUpdate,
+  type EntityExternalLink,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "./trpc";
 import { exitWithError, handleApiError, EXIT_CODES } from "../lib/error";
@@ -31,6 +33,7 @@ export const initiativeInput = z.object({
   quiet: z.boolean().optional().describe("output id only"),
   verbose: z.boolean().optional().describe("show all columns"),
   updates: z.boolean().optional().describe("show initiative updates"),
+  links: z.boolean().optional().describe("show initiative external links"),
 });
 
 const initiativeColumns: TableColumn<Initiative>[] = [
@@ -56,6 +59,17 @@ const updateColumns: TableColumn<InitiativeUpdate>[] = [
 const verboseUpdateColumns: TableColumn<InitiativeUpdate>[] = [
   ...updateColumns,
   { header: "ID", value: (u) => u.id, width: 36 },
+];
+
+const linkColumns: TableColumn<EntityExternalLink>[] = [
+  { header: "LABEL", value: (l) => l.label.slice(0, 30), width: 30 },
+  { header: "URL", value: (l) => l.url.slice(0, 50), width: 50 },
+];
+
+const verboseLinkColumns: TableColumn<EntityExternalLink>[] = [
+  ...linkColumns,
+  { header: "ID", value: (l) => l.id, width: 36 },
+  { header: "CREATOR", value: (l) => l.creatorName ?? "-", width: 20 },
 ];
 
 export const initiativesRouter = router({
@@ -136,6 +150,29 @@ export const initiativesRouter = router({
 
           const columns = input.verbose ? verboseUpdateColumns : updateColumns;
           outputTable(updates, columns, outputOpts);
+          return;
+        }
+
+        if (input.links) {
+          const links = await getInitiativeExternalLinks(client, initiative.id);
+
+          if (format === "json") {
+            outputJson(links);
+            return;
+          }
+
+          if (format === "quiet") {
+            outputQuiet(links.map((l) => l.id));
+            return;
+          }
+
+          if (links.length === 0) {
+            console.log("no external links");
+            return;
+          }
+
+          const columns = input.verbose ? verboseLinkColumns : linkColumns;
+          outputTable(links, columns, outputOpts);
           return;
         }
 
