@@ -693,3 +693,30 @@ Task ID: 0027
 - Verification tasks are valid ralph tasks — not all tasks require code changes
 
 ---
+
+## 2026-01-30 - Update entity-config.ts with all categorized entities
+Thread: https://ampcode.com/threads/T-019c1144-4c4d-73c8-9c41-93e55f73bc4b
+Task ID: 0024
+
+**What was implemented:**
+- Restructured entity-config.ts with categorized entity arrays per ADR-0005
+- Added CORE_ENTITIES (6): Issue, Project, ProjectMilestone, Comment, Document, IssueLabel
+- Added READ_ONLY_ENTITIES (6): Template, User, Notification, Initiative, Roadmap, AgentSession
+- Added CRUD_ENTITIES (2): Cycle, CustomView
+- Added SCOPED_ENTITIES (7): ProjectUpdate, InitiativeUpdate, ProjectLabel, ProjectStatus, ViewPreferences, AgentActivity, RoadmapToProject
+- Added FLAG_ENTITIES (3): Reaction, NotificationSubscription, EntityExternalLink
+- Added SUBCOMMAND_ENTITIES (1): IssueBatch
+- Added GIT_AUTOMATION_ENTITIES (2): GitAutomationState, GitAutomationTargetBranch
+- Updated EXCLUDED_ENTITIES with admin, CRM, alpha entities
+- Added getEntityCategory() helper for category lookup
+- SUPPORTED_ENTITIES now aggregates all category arrays
+
+**Files changed:**
+- packages/codegen/entity-config.ts
+
+**Learnings:**
+- Categorization matches ADR-0005 tiers plus git-automation tier 4 and agent tier 5
+- Team is excluded from codegen (read-only via hand-crafted router/teams.ts)
+- 27 total supported entities across categories
+
+---
