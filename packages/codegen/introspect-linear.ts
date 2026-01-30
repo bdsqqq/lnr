@@ -7,6 +7,11 @@
  * Usage: LINEAR_API_KEY=xxx bun run packages/codegen/introspect-linear.ts
  */
 
+import { getSupportedEntityNames } from "./entity-config";
+
+// Get base entity types from config
+const supportedEntities = getSupportedEntityNames();
+
 // Linear API limits query complexity to 10000, so we fetch schema in batches
 // First get all type names, then fetch details for specific types we need
 
@@ -134,34 +139,41 @@ async function main() {
   console.log(`found ${relevantTypes.length} relevant types, fetching details...`);
 
   // Prioritize types we need for CLI generation
+  // Start with supported entities from config, then add related input types
   const priorityTypes = [
-    "IssueUpdateInput",
-    "IssueCreateInput",
-    "Issue",
-    "ProjectUpdateInput",
-    "ProjectCreateInput",
-    "Project",
-    "ProjectMilestoneUpdateInput",
-    "ProjectMilestoneCreateInput",
-    "ProjectMilestone",
-    "CommentUpdateInput",
-    "CommentCreateInput",
-    "Comment",
-    "DocumentUpdateInput",
-    "DocumentCreateInput",
-    "Document",
-    "IssueLabelUpdateInput",
-    "IssueLabelCreateInput",
-    "IssueLabel",
-    "Template",
-    "WorkflowState",
-    "User",
+    // Base entity types from config
+    ...supportedEntities,
+    // Additional related types not in config but needed for introspection
     "Team",
+    "WorkflowState",
     "Label",
-    "Cycle",
-    "CustomView",
+    // Input types for CRUD operations
+    "IssueCreateInput",
+    "IssueUpdateInput",
+    "ProjectCreateInput",
+    "ProjectUpdateInput",
+    "ProjectMilestoneCreateInput",
+    "ProjectMilestoneUpdateInput",
+    "CommentCreateInput",
+    "CommentUpdateInput",
+    "DocumentCreateInput",
+    "DocumentUpdateInput",
+    "IssueLabelCreateInput",
+    "IssueLabelUpdateInput",
+    "CycleCreateInput",
+    "CycleUpdateInput",
     "CustomViewCreateInput",
     "CustomViewUpdateInput",
+    "GitAutomationStateCreateInput",
+    "GitAutomationStateUpdateInput",
+    "GitAutomationTargetBranchCreateInput",
+    "GitAutomationTargetBranchUpdateInput",
+    "ReactionCreateInput",
+    "NotificationSubscriptionCreateInput",
+    "EntityExternalLinkCreateInput",
+    "EntityExternalLinkUpdateInput",
+    "IssueBatchPayload",
+    "AgentSessionUpdateInput",
   ];
 
   // Also get all enums

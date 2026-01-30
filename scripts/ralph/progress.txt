@@ -720,3 +720,25 @@ Task ID: 0024
 - 27 total supported entities across categories
 
 ---
+
+## 2026-01-30 - Update introspect-linear.ts to fetch all supported entity types
+Thread: https://ampcode.com/threads/T-019c1144-4c4d-73c8-9c41-93e55f73bc4b
+Task ID: 0025
+
+**What was implemented:**
+- Imported getSupportedEntityNames() from entity-config.ts
+- Updated priorityTypes array to spread supportedEntities as base types
+- Added Team, WorkflowState, Label as additional related types (not in config but needed)
+- Added all input types for CRUD operations: CycleCreateInput, CycleUpdateInput, GitAutomation*Input, etc.
+- Added input types for flag entities: ReactionCreateInput, NotificationSubscriptionCreateInput, EntityExternalLink*Input
+- Added IssueBatchPayload and AgentSessionUpdateInput
+
+**Files changed:**
+- packages/codegen/introspect-linear.ts
+
+**Learnings:**
+- introspect-linear.ts now derives entity list from entity-config.ts (single source of truth)
+- Input types still manually listed (no automatic derivation from entity names yet)
+- Future enhancement: auto-generate *CreateInput/*UpdateInput from entity names
+
+---
