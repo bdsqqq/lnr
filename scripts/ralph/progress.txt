@@ -42,3 +42,37 @@ Task ID: 0002
 - For read-only entities, simpler hand-crafted CLI commands work better than full codegen
 
 ---
+
+## 2026-01-30 - Add Cycle entity support
+Thread: https://ampcode.com/threads/T-019c10f6-01f3-7113-a0c6-1f775409c22d
+Task ID: 0003
+
+**What was implemented:**
+- Extended Cycle type with description, completedAt, progress fields
+- Added CreateCycleInput, UpdateCycleInput types
+- Added core functions: getCycle, getCycleById, createCycle, updateCycle, deleteCycle
+- Exported new functions and types from core index.ts
+- Upgraded router/cycles.ts with full CRUD pattern:
+  - `lnr cycles --team <key>` - list cycles
+  - `lnr cycle <name|number> --team <key>` - show specific cycle
+  - `lnr cycle new --team <key> --starts-at <date> --ends-at <date>` - create
+  - `lnr cycle <name> --team <key> --name <new-name>` - update
+  - `lnr cycle <name> --team <key> --delete` - archive
+  - `lnr cycle <name> --team <key> --current` - show active cycle
+  - `lnr cycle <name> --team <key> --issues` - list cycle issues
+- Updated contract tests for new cycle input schema
+
+**Files changed:**
+- packages/core/src/types.ts
+- packages/core/src/cycles.ts
+- packages/core/src/index.ts
+- packages/cli/src/router/cycles.ts
+- packages/cli/src/router/contract.test.ts
+
+**Learnings:**
+- Cycle is Tier 2 full CRUD (has createCycle, updateCycle, archiveCycle in Linear SDK)
+- Cycles scoped to teams via team.cycles() connection
+- Linear uses archiveCycle for deletion (not deleteCycle)
+- Existing cycles.ts router was basic; upgraded to match doc.ts CRUD pattern
+
+---

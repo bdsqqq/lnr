@@ -45,8 +45,27 @@ export interface Cycle {
   id: string;
   number: number;
   name?: string | null;
+  description?: string | null;
   startsAt: Date;
   endsAt: Date;
+  completedAt?: Date | null;
+  progress?: number | null;
+}
+
+export interface CreateCycleInput {
+  teamId: string;
+  name?: string;
+  description?: string;
+  startsAt: string;
+  endsAt: string;
+}
+
+export interface UpdateCycleInput {
+  name?: string;
+  description?: string;
+  startsAt?: string;
+  endsAt?: string;
+  completedAt?: string;
 }
 
 export interface User {

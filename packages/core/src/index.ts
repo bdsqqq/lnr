@@ -70,7 +70,17 @@ export {
 } from "./teams";
 
 // cycles
-export { listCycles, getCurrentCycle, getCycleIssues } from "./cycles";
+export type { CreateCycleInput, UpdateCycleInput } from "./types";
+export {
+  listCycles,
+  getCycle,
+  getCycleById,
+  getCurrentCycle,
+  getCycleIssues,
+  createCycle,
+  updateCycle,
+  deleteCycle,
+} from "./cycles";
 
 // me
 export { getViewer, getMyIssues, getMyCreatedIssues, getMyActivity } from "./me";

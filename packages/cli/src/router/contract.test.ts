@@ -110,13 +110,28 @@ describe("cycles", () => {
 
   describe("cycle", () => {
     test("valid input parses", () => {
-      const result = cycleInput.safeParse({"team":"test-value"});
+      const result = cycleInput.safeParse({"nameOrNumber":"1","team":"test-value"});
       expect(result.success).toBe(true);
     });
 
     test("rejects missing required flags", () => {
       const result = cycleInput.safeParse({});
       expect(result.success).toBe(false);
+    });
+
+    test("infers CREATE when nameOrNumber='new'", () => {
+      const result = cycleInput.safeParse({"nameOrNumber":"new","team":"ENG"});
+      expect(result.success).toBe(true);
+    });
+
+    test("infers DELETE when --delete", () => {
+      const result = cycleInput.safeParse({"nameOrNumber":"1","team":"ENG","delete":true});
+      expect(result.success).toBe(true);
+    });
+
+    test("infers SHOW with no mutation flags", () => {
+      const result = cycleInput.safeParse({"nameOrNumber":"Sprint 1","team":"ENG"});
+      expect(result.success).toBe(true);
     });
 
   });
