@@ -73,6 +73,7 @@ api key from: https://linear.app/settings/account/security
 - `lnr me` - show my info
 - `lnr labels` - list labels
 - `lnr docs` - list documents
+- `lnr milestones` - list milestones
 
 see SPEC.md for full command reference.
 
@@ -121,13 +122,14 @@ translate human-friendly inputs to Linear API IDs:
 | `MyProject` | `resolveProjectByName` | project UUID |
 | `ENG` | `resolveTeamByKey` | team UUID |
 | `Sprint 1` | `resolveCycleByName` | cycle UUID |
+| `v1.0` | `resolveMilestoneByName` | milestone UUID |
 
 resolvers live in `packages/core/src/resolvers.ts` and throw typed errors with available options.
 
 ### regenerating commands
 
 ```bash
-# regenerate all entity commands (issue, project, label, doc)
+# regenerate all entity commands (issue, project, label, doc, milestone)
 bun run packages/codegen/generate-commands.ts
 
 # refresh schema from Linear API (requires LINEAR_API_KEY)
@@ -139,7 +141,7 @@ generated files live in `packages/cli/src/generated/`.
 
 ### CLI-only flags
 
-flags not in Linear's schema (like `--branch`, `--pr`) are declared in `cli-spec.json` and handled in `packages/cli/src/hand-crafted/`.
+flags not in Linear's schema (like `--branch`, `--pr`) are handled in `packages/cli/src/hand-crafted/`.
 
 ### ADRs
 
