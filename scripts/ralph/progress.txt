@@ -186,3 +186,34 @@ Task ID: 0007
 - Follows scoped entity pattern per ADR-0004: `lnr project <name> --updates`
 
 ---
+
+## 2026-01-30 - Add Notification read-only support
+Thread: https://ampcode.com/threads/T-019c1105-c34a-7234-a7db-0332401fd16e
+Task ID: 0008
+
+**What was implemented:**
+- Added Notification type to core/types.ts with id, type, category, createdAt, readAt, snoozedUntilAt, archivedAt, actorId, actorName
+- Created packages/core/src/notifications.ts with listNotifications, getNotification, markNotificationRead, archiveNotification
+- Exported Notification type and notification functions from core/index.ts
+- Created packages/cli/src/router/notifications.ts with:
+  - `lnr notifications` - list notifications (alias: `lnr n`)
+  - `lnr notification <id>` - show specific notification
+  - --json, --quiet, --verbose, --unread flags
+  - --read flag to mark as read
+  - --archive flag to archive notification
+- Wired up notificationsRouter in router/index.ts
+
+**Files changed:**
+- packages/core/src/types.ts
+- packages/core/src/notifications.ts (new)
+- packages/core/src/index.ts
+- packages/cli/src/router/notifications.ts (new)
+- packages/cli/src/router/index.ts
+
+**Learnings:**
+- Notification is user-scoped, accessed via client.notifications()
+- Notification has many subtypes (IssueNotification, ProjectNotification, etc.) but base properties work for CLI
+- Linear has updateNotification for marking read (readAt field), archiveNotification for archiving
+- Actor info requires async fetch via n.actor promise when actorId exists
+
+---

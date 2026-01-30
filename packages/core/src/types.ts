@@ -195,3 +195,15 @@ export interface ProjectUpdate {
   userId?: string;
   userName?: string;
 }
+
+export interface Notification {
+  id: string;
+  type: string;
+  category: string;
+  createdAt: Date;
+  readAt?: Date | null;
+  snoozedUntilAt?: Date | null;
+  archivedAt?: Date | null;
+  actorId?: string | null;
+  actorName?: string | null;
+}

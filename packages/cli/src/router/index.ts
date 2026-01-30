@@ -12,6 +12,7 @@ import { meRouter } from "./me";
 import { searchRouter } from "./search";
 import { teamsRouter } from "./teams";
 import { usersRouter } from "./users";
+import { notificationsRouter } from "./notifications";
 
 export const appRouter = router({
   ...authRouter._def.procedures,
@@ -27,6 +28,7 @@ export const appRouter = router({
   ...searchRouter._def.procedures,
   ...teamsRouter._def.procedures,
   ...usersRouter._def.procedures,
+  ...notificationsRouter._def.procedures,
 });
 
 export type AppRouter = typeof appRouter;

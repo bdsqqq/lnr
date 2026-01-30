@@ -203,3 +203,12 @@ export {
   findUserByEmail,
   findUserByNameOrEmail,
 } from "./users";
+
+// notifications
+export type { Notification } from "./types";
+export {
+  listNotifications,
+  getNotification,
+  markNotificationRead,
+  archiveNotification,
+} from "./notifications";
