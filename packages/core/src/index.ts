@@ -51,10 +51,12 @@ export {
 } from "./issues";
 
 // projects
+export type { ProjectUpdate } from "./types";
 export {
   listProjects,
   getProject,
   getProjectIssues,
+  getProjectUpdates,
   createProject,
   deleteProject,
   updateProject,

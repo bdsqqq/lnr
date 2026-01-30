@@ -184,3 +184,14 @@ export interface UpdateCustomViewInput {
   filterData?: Record<string, unknown>;
   shared?: boolean;
 }
+
+export interface ProjectUpdate {
+  id: string;
+  body: string;
+  health: "onTrack" | "atRisk" | "offTrack";
+  createdAt: Date;
+  updatedAt: Date;
+  url: string;
+  userId?: string;
+  userName?: string;
+}

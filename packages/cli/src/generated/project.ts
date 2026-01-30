@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-01-30T20:18:37.130Z
+ * Generated from extracted-schema.json at 2026-01-30T20:56:20.013Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -11,6 +11,7 @@ import {
   listProjects,
   getProject,
   getProjectIssues,
+  getProjectUpdates,
   createProject,
   deleteProject,
   updateProject,
@@ -18,9 +19,8 @@ import {
   getAvailableTeamKeys,
   resolveAssignee,
   resolveTeamByKey,
-  listMilestones,
   type Project,
-  type ProjectMilestone,
+  type ProjectUpdate,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
@@ -48,7 +48,7 @@ export const listProjectsInput = z.object({
 export const projectInput = z.object({
   name: z.string().meta({ positional: true }).describe("project name or 'new'"),
   issues: z.boolean().optional().describe("list issues in project"),
-  milestones: z.boolean().optional().describe("list milestones in project"),
+  updates: z.boolean().optional().describe("list project updates"),
   json: z.boolean().optional().describe("output as json"),
   quiet: z.boolean().optional().describe("output ids only"),
   verbose: z.boolean().optional().describe("show all columns"),
@@ -71,6 +71,18 @@ const projectColumns: TableColumn<Project>[] = [
   { header: "STATE", value: (p) => p.state ?? "-", width: 12 },
   { header: "PROGRESS", value: (p) => `${Math.round((p.progress ?? 0) * 100)}%`, width: 10 },
   { header: "TARGET", value: (p) => formatDate(p.targetDate), width: 12 },
+];
+
+const updateColumns: TableColumn<ProjectUpdate>[] = [
+  { header: "DATE", value: (u) => formatDate(u.createdAt), width: 12 },
+  { header: "HEALTH", value: (u) => u.health, width: 10 },
+  { header: "AUTHOR", value: (u) => u.userName ?? "-", width: 20 },
+  { header: "CONTENT", value: (u) => truncate(u.body.replace(/\n/g, " "), 40), width: 40 },
+];
+
+const verboseUpdateColumns: TableColumn<ProjectUpdate>[] = [
+  { header: "ID", value: (u) => u.id, width: 36 },
+  ...updateColumns,
 ];
 
 type Operation = "create" | "read" | "update" | "delete";
@@ -152,17 +164,15 @@ async function handleShowProject(
       return;
     }
 
-    if (input.milestones) {
-      const milestones = await listMilestones(client, { projectId: project.id });
+    if (input.updates) {
+      const updates = await getProjectUpdates(client, project.id);
       if (format === "json") {
-        outputJson(milestones);
+        outputJson(updates);
       } else if (format === "quiet") {
-        outputQuiet(milestones.map((m) => m.id));
+        outputQuiet(updates.map((u) => u.id));
       } else {
-        for (const milestone of milestones) {
-          const target = milestone.targetDate ? ` (target: ${formatDate(milestone.targetDate)})` : "";
-          console.log(`${milestone.name}${target}`);
-        }
+        const cols = outputOpts.verbose ? verboseUpdateColumns : updateColumns;
+        outputTable(updates, cols, outputOpts);
       }
       return;
     }

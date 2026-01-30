@@ -160,3 +160,29 @@ Task ID: 0006
 - User lookup by email uses filter: { email: { eq: email.toLowerCase() } }
 
 ---
+
+## 2026-01-30 - Add ProjectUpdate scoped to project
+Thread: https://ampcode.com/threads/T-019c1101-51a2-74ad-87df-ea68f5789d2c
+Task ID: 0007
+
+**What was implemented:**
+- Added ProjectUpdate type to core/types.ts with id, body, health, createdAt, updatedAt, url, userId, userName
+- Added getProjectUpdates(client, projectId) to projects.ts - fetches updates via project.projectUpdates()
+- Exported ProjectUpdate type and getProjectUpdates from core/index.ts
+- Added --updates flag to project command in generated/project.ts
+- Display updates as table with date, health, author, content columns
+- Supports --json, --quiet, --verbose flags
+
+**Files changed:**
+- packages/core/src/types.ts
+- packages/core/src/projects.ts
+- packages/core/src/index.ts
+- packages/cli/src/generated/project.ts
+
+**Learnings:**
+- ProjectUpdate accessed via project.projectUpdates() connection (like milestones)
+- health field uses ProjectUpdateHealthType enum: onTrack, atRisk, offTrack
+- User info requires async fetch via u.user promise
+- Follows scoped entity pattern per ADR-0004: `lnr project <name> --updates`
+
+---

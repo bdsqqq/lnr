@@ -1,5 +1,5 @@
 import type { LinearClient } from "@linear/sdk";
-import type { Issue, Project, CreateProjectInput, UpdateProjectInput } from "./types";
+import type { Issue, Project, CreateProjectInput, UpdateProjectInput, ProjectUpdate } from "./types";
 
 export async function listProjects(
   client: LinearClient,
@@ -183,4 +183,33 @@ export async function updateProject(
     startDate: projectData.startDate,
     createdAt: projectData.createdAt,
   };
+}
+
+export async function getProjectUpdates(
+  client: LinearClient,
+  projectId: string
+): Promise<ProjectUpdate[]> {
+  const project = await client.project(projectId);
+
+  if (!project) {
+    return [];
+  }
+
+  const updatesConnection = await project.projectUpdates();
+
+  return Promise.all(
+    updatesConnection.nodes.map(async (u) => {
+      const user = await u.user;
+      return {
+        id: u.id,
+        body: u.body,
+        health: u.health as "onTrack" | "atRisk" | "offTrack",
+        createdAt: u.createdAt,
+        updatedAt: u.updatedAt,
+        url: u.url,
+        userId: user?.id,
+        userName: user?.name,
+      };
+    })
+  );
 }
