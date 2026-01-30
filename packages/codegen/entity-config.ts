@@ -15,6 +15,7 @@ export interface EntityConfig {
 export const SUPPORTED_ENTITIES: EntityConfig[] = [
   { name: "Issue", reason: "core entity - primary workflow object" },
   { name: "Project", reason: "core entity - project management" },
+  { name: "ProjectMilestone", reason: "project milestones for tracking deliverables" },
   { name: "Comment", reason: "core entity - issue discussion" },
   { name: "Document", reason: "core entity - documentation" },
   { name: "IssueLabel", reason: "core entity - issue categorization" },
