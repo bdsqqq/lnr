@@ -33,6 +33,8 @@ import {
   getIssueComments,
   getSubIssues,
   getTeamStates,
+  subscribeToIssue,
+  unsubscribeFromIssue,
   type Issue,
   type ListIssuesFilter,
 } from "@bdsqqq/lnr-core";
@@ -96,6 +98,8 @@ export const issueInput = z.object({
   emoji: z.string().optional().describe("emoji for --react"),
   unreact: z.string().optional().describe("reaction id to remove"),
   subIssues: z.boolean().optional().describe("list sub-issues"),
+  subscribe: z.boolean().optional().describe("subscribe to issue notifications"),
+  unsubscribe: z.boolean().optional().describe("unsubscribe from issue notifications"),
 });
 
 type IssueInput = z.infer<typeof issueInput>;
@@ -119,6 +123,7 @@ function inferOperation(input: IssueInput): Operation {
     "editComment", "replyTo", "deleteComment", "react", "unreact",
     "parent", "blocks", "blockedBy", "relatesTo", "title", "description",
     "project", "cycle", "estimate", "dueDate", "milestone",
+    "subscribe", "unsubscribe",
   ];
   for (const flag of mutationFlags) {
     if (input[flag] !== undefined) return "update";
@@ -436,6 +441,26 @@ async function handleUpdateIssue(
         exitWithError(`reaction ${input.unreact.slice(0, 8)} not found`, undefined, EXIT_CODES.NOT_FOUND);
       }
       console.log(`removed reaction ${input.unreact.slice(0, 8)}`);
+    }
+
+    if (input.subscribe && input.unsubscribe) {
+      exitWithError("cannot use --subscribe and --unsubscribe together");
+    }
+
+    if (input.subscribe) {
+      const success = await subscribeToIssue(client, issue.id);
+      if (!success) {
+        exitWithError(`failed to subscribe to ${identifier}`);
+      }
+      console.log(`subscribed to ${identifier}`);
+    }
+
+    if (input.unsubscribe) {
+      const success = await unsubscribeFromIssue(client, issue.id);
+      if (!success) {
+        exitWithError(`failed to unsubscribe from ${identifier}`);
+      }
+      console.log(`unsubscribed from ${identifier}`);
     }
   } catch (error) {
     handleApiError(error);

@@ -24,6 +24,8 @@ import {
   resolveTeamByKey,
   createReaction,
   deleteReaction,
+  createSubscription,
+  deleteSubscription,
   type Project,
   type ProjectUpdate,
   type ProjectLabel,
@@ -76,6 +78,8 @@ export const projectInput = z.object({
   react: z.string().optional().describe("project update id to add reaction (requires --emoji)"),
   emoji: z.string().optional().describe("emoji for --react"),
   unreact: z.string().optional().describe("reaction id to remove"),
+  subscribe: z.boolean().optional().describe("subscribe to project notifications"),
+  unsubscribe: z.string().optional().describe("subscription id to unsubscribe from"),
 });
 
 type ProjectInput = z.infer<typeof projectInput>;
@@ -148,7 +152,7 @@ function inferOperation(input: ProjectInput): Operation {
 
   const mutationFlags: (keyof ProjectInput)[] = [
     "newName", "description", "content", "status", "startDate", "targetDate", "priority", "lead", "team",
-    "react", "unreact",
+    "react", "unreact", "subscribe", "unsubscribe",
   ];
   for (const flag of mutationFlags) {
     if (input[flag] !== undefined) return "update";
@@ -361,6 +365,19 @@ async function handleUpdateProject(
         exitWithError(`reaction ${input.unreact.slice(0, 8)} not found`, undefined, EXIT_CODES.NOT_FOUND);
       }
       console.log(`removed reaction ${input.unreact.slice(0, 8)}`);
+    }
+
+    if (input.subscribe) {
+      const subscriptionId = await createSubscription(client, { type: "project", projectId: project.id });
+      console.log(`subscribed to ${name} (subscription: ${subscriptionId.slice(0, 8)})`);
+    }
+
+    if (input.unsubscribe) {
+      const success = await deleteSubscription(client, input.unsubscribe);
+      if (!success) {
+        exitWithError(`subscription ${input.unsubscribe.slice(0, 8)} not found`, undefined, EXIT_CODES.NOT_FOUND);
+      }
+      console.log(`unsubscribed (removed subscription ${input.unsubscribe.slice(0, 8)})`);
     }
   } catch (error) {
     handleApiError(error);

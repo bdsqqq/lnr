@@ -8,6 +8,8 @@ import {
   getInitiativeExternalLinks,
   createReaction,
   deleteReaction,
+  createSubscription,
+  deleteSubscription,
   type Initiative,
   type InitiativeUpdate,
   type EntityExternalLink,
@@ -39,6 +41,8 @@ export const initiativeInput = z.object({
   react: z.string().optional().describe("initiative update id to add reaction (requires --emoji)"),
   emoji: z.string().optional().describe("emoji for --react"),
   unreact: z.string().optional().describe("reaction id to remove"),
+  subscribe: z.boolean().optional().describe("subscribe to initiative notifications"),
+  unsubscribe: z.string().optional().describe("subscription id to unsubscribe from"),
 });
 
 const initiativeColumns: TableColumn<Initiative>[] = [
@@ -153,6 +157,21 @@ export const initiativesRouter = router({
             exitWithError(`reaction ${input.unreact.slice(0, 8)} not found`, undefined, EXIT_CODES.NOT_FOUND);
           }
           console.log(`removed reaction ${input.unreact.slice(0, 8)}`);
+          return;
+        }
+
+        if (input.subscribe) {
+          const subscriptionId = await createSubscription(client, { type: "initiative", initiativeId: initiative.id });
+          console.log(`subscribed to ${initiative.name} (subscription: ${subscriptionId.slice(0, 8)})`);
+          return;
+        }
+
+        if (input.unsubscribe) {
+          const success = await deleteSubscription(client, input.unsubscribe);
+          if (!success) {
+            exitWithError(`subscription ${input.unsubscribe.slice(0, 8)} not found`, undefined, EXIT_CODES.NOT_FOUND);
+          }
+          console.log(`unsubscribed (removed subscription ${input.unsubscribe.slice(0, 8)})`);
           return;
         }
 

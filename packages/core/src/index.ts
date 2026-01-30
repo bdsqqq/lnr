@@ -234,3 +234,12 @@ export {
 // roadmaps
 export type { Roadmap } from "./types";
 export { listRoadmaps, getRoadmap, findRoadmapByName, getRoadmapProjects } from "./roadmaps";
+
+// subscriptions
+export type { SubscriptionTarget } from "./subscriptions";
+export {
+  createSubscription,
+  deleteSubscription,
+  subscribeToIssue,
+  unsubscribeFromIssue,
+} from "./subscriptions";

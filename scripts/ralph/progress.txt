@@ -459,3 +459,30 @@ Task ID: 0017
 - Legacy createCommentReaction wrapper maintains backward compatibility
 
 ---
+
+## 2026-01-30 - Add NotificationSubscription as --subscribe/--unsubscribe flags
+Thread: https://ampcode.com/threads/T-019c111f-037d-7257-93b9-df79a09f67aa
+Task ID: 0018
+
+**What was implemented:**
+- Created packages/core/src/subscriptions.ts with createSubscription, deleteSubscription, subscribeToIssue, unsubscribeFromIssue
+- Added SubscriptionTarget discriminated union type for project, team, initiative, cycle, label, customView, user
+- Exported subscription functions and type from core/index.ts
+- Added --subscribe/--unsubscribe flags to issue command (uses subscriberIds manipulation via updateIssue)
+- Added --subscribe/--unsubscribe flags to project command (uses createNotificationSubscription/deleteNotificationSubscription)
+- Added --subscribe/--unsubscribe flags to initiative command (uses createNotificationSubscription/deleteNotificationSubscription)
+
+**Files changed:**
+- packages/core/src/subscriptions.ts (new)
+- packages/core/src/index.ts
+- packages/cli/src/generated/issue.ts
+- packages/cli/src/generated/project.ts
+- packages/cli/src/router/initiatives.ts
+
+**Learnings:**
+- Issues use subscriberIds field in IssueUpdateInput (not a separate subscription API)
+- Projects, initiatives, teams, etc. use createNotificationSubscription/deleteNotificationSubscription mutations
+- NotificationSubscriptionCreateInput supports: projectId, initiativeId, teamId, cycleId, labelId, customViewId, userId
+- Issue.subscribe/unsubscribe methods don't exist in SDK; must manipulate subscriberIds directly
+
+---
