@@ -679,7 +679,7 @@ function inferOperation(input: MilestoneInput): Operation {
   hasDeleteFlag: true,
 };
 
-const entityConfigs: EntityConfig[] = [issueConfig, projectConfig, labelConfig, docConfig, milestoneConfig];
+const entityConfigs: EntityConfig[] = [issueConfig, projectConfig, labelConfig, docConfig];
 
 function generateEntityFile(config: EntityConfig): string {
   const timestamp = new Date().toISOString();
