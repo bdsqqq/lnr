@@ -161,6 +161,21 @@ export {
   getIssueTemplates,
 } from "./templates";
 
+// views
+export type {
+  CustomView,
+  CreateCustomViewInput,
+  UpdateCustomViewInput,
+} from "./types";
+export {
+  listViews,
+  getView,
+  getViewById,
+  createView,
+  updateView,
+  deleteView,
+} from "./views";
+
 // resolvers
 export {
   resolveIssueIdentifier,

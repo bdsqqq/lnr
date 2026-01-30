@@ -154,3 +154,33 @@ export interface UpdateProjectMilestoneInput {
   targetDate?: string;
   sortOrder?: number;
 }
+
+export interface CustomView {
+  id: string;
+  name: string;
+  description?: string | null;
+  icon?: string | null;
+  color?: string | null;
+  filterData: Record<string, unknown>;
+  shared: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateCustomViewInput {
+  name: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  filterData: Record<string, unknown>;
+  shared?: boolean;
+}
+
+export interface UpdateCustomViewInput {
+  name?: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  filterData?: Record<string, unknown>;
+  shared?: boolean;
+}

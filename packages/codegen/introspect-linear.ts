@@ -159,6 +159,9 @@ async function main() {
     "Team",
     "Label",
     "Cycle",
+    "CustomView",
+    "CustomViewCreateInput",
+    "CustomViewUpdateInput",
   ];
 
   // Also get all enums

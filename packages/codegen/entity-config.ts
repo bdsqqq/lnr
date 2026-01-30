@@ -20,6 +20,7 @@ export const SUPPORTED_ENTITIES: EntityConfig[] = [
   { name: "Document", reason: "core entity - documentation" },
   { name: "IssueLabel", reason: "core entity - issue categorization" },
   { name: "Template", reason: "issue templates for standardized creation" },
+  { name: "CustomView", reason: "saved filters for workflow automation" },
 ];
 
 /**

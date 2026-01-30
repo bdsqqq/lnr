@@ -2,6 +2,7 @@ import { router } from "./trpc";
 import { authRouter } from "./auth";
 import { configRouter } from "./config";
 import { cyclesRouter } from "./cycles";
+import { viewsRouter } from "./views";
 import { generatedDocsRouter } from "../generated/doc";
 import { generatedIssuesRouter } from "../generated/issue";
 import { generatedProjectsRouter } from "../generated/project";
@@ -15,6 +16,7 @@ export const appRouter = router({
   ...authRouter._def.procedures,
   ...configRouter._def.procedures,
   ...cyclesRouter._def.procedures,
+  ...viewsRouter._def.procedures,
   ...generatedDocsRouter._def.procedures,
   ...generatedIssuesRouter._def.procedures,
   ...generatedProjectsRouter._def.procedures,
