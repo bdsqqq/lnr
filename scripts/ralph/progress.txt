@@ -111,3 +111,25 @@ Task ID: 0004
 - filterData is a JSON object containing view filter configuration
 
 ---
+
+## 2026-01-30 - Enhance Team entity CLI support
+Thread: https://ampcode.com/threads/T-019c10fd-9020-775d-a058-745d20e6fa91
+Task ID: 0005
+
+**What was implemented:**
+- Enhanced router/teams.ts with --verbose flag for extended columns
+- Added --quiet flag to `lnr team <key>` command (already existed on `lnr teams`)
+- Created reusable column definitions: teamColumns, verboseTeamColumns, memberColumns, verboseMemberColumns
+- Refactored to use OutputOptions/getOutputFormat pattern (consistent with template.ts)
+- Added --quiet support for members output
+- Shows ID in verbose mode for both teams list and single team
+
+**Files changed:**
+- packages/cli/src/router/teams.ts
+
+**Learnings:**
+- Team was already Tier 1 read-only with working commands; just needed enhancement
+- Existing teams.ts had good structure, only missing verbose mode and consistent output handling
+- No core changes needed - Team type and functions were already complete
+
+---
