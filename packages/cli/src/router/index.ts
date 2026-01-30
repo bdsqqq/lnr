@@ -14,6 +14,7 @@ import { teamsRouter } from "./teams";
 import { usersRouter } from "./users";
 import { notificationsRouter } from "./notifications";
 import { initiativesRouter } from "./initiatives";
+import { roadmapsRouter } from "./roadmaps";
 
 export const appRouter = router({
   ...authRouter._def.procedures,
@@ -31,6 +32,7 @@ export const appRouter = router({
   ...usersRouter._def.procedures,
   ...notificationsRouter._def.procedures,
   ...initiativesRouter._def.procedures,
+  ...roadmapsRouter._def.procedures,
 });
 
 export type AppRouter = typeof appRouter;

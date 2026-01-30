@@ -221,3 +221,7 @@ export {
   findInitiativeByName,
   getInitiativeUpdates,
 } from "./initiatives";
+
+// roadmaps
+export type { Roadmap } from "./types";
+export { listRoadmaps, getRoadmap, findRoadmapByName } from "./roadmaps";

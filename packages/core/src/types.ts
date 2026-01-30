@@ -235,3 +235,16 @@ export interface InitiativeUpdate {
   userId?: string;
   userName?: string;
 }
+
+export interface Roadmap {
+  id: string;
+  name: string;
+  slugId: string;
+  description?: string | null;
+  color?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  url: string;
+  ownerId?: string | null;
+  ownerName?: string | null;
+}
