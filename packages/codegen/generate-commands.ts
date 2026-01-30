@@ -59,7 +59,7 @@ const issueConfig: EntityConfig = {
   fieldsToExclude: [
     "id", "slaBreachesAt", "slaStartedAt", "snoozedUntilAt", "snoozedById", "slaType",
     "autoClosedByParentClosing", "descriptionData", "lastAppliedTemplateId",
-    "addedLabelIds", "removedLabelIds", "subscriberIds", "projectMilestoneId", "trashed",
+    "addedLabelIds", "removedLabelIds", "subscriberIds", "trashed",
     "sortOrder", "subIssueSortOrder", "boardOrder", "previousIdentifiers", "delegateId",
     "labelIds",
   ],
@@ -79,6 +79,7 @@ const issueConfig: EntityConfig = {
     "resolveIssueIdentifier",
     "resolveProjectByName",
     "resolveCycleByName",
+    "resolveMilestoneByName",
     "createIssueRelation",
     "addComment",
     "updateComment",
@@ -132,6 +133,10 @@ const issueConfig: EntityConfig = {
         zodType = 'z.string().optional().describe("set project name")';
       } else if (cliName === "cycle") {
         zodType = 'z.string().optional().describe("set cycle")';
+      } else if (field.name === "projectMilestoneId") {
+        zodType = 'z.string().optional().describe("set milestone name (requires --project)")';
+        lines.push(`  milestone: ${zodType},`);
+        continue;
       } else if (cliName === "estimate") {
         zodType = 'z.number().optional().describe("set estimate points")';
       } else if (cliName === "dueDate") {
@@ -180,7 +185,7 @@ function inferOperation(input: IssueInput): Operation {
     "state", "assignee", "priority", "label", "comment",
     "editComment", "replyTo", "deleteComment", "react", "unreact",
     "parent", "blocks", "blockedBy", "relatesTo", "title", "description",
-    "project", "cycle", "estimate", "dueDate",
+    "project", "cycle", "estimate", "dueDate", "milestone",
   ];
   for (const flag of mutationFlags) {
     if (input[flag] !== undefined) return "update";
@@ -1015,6 +1020,14 @@ function generateIssueUpdateHandler(): string {
       updatePayload.parentId = parentIssue.id;
     }
 
+    if (input.milestone) {
+      if (!input.project) {
+        exitWithError("--project is required when using --milestone");
+      }
+      const projectId = await resolveProjectByName(client, input.project);
+      updatePayload.projectMilestoneId = await resolveMilestoneByName(client, projectId, input.milestone);
+    }
+
     if (Object.keys(updatePayload).length > 0) {
       await updateIssue(client, issue.id, updatePayload);
       console.log(\`updated \${identifier}\`);
@@ -1125,6 +1138,7 @@ function generateIssueCreateHandler(): string {
       labelIds?: string[];
       parentId?: string;
       projectId?: string;
+      projectMilestoneId?: string;
       cycleId?: string;
       stateId?: string;
       estimate?: number;
@@ -1152,6 +1166,12 @@ function generateIssueCreateHandler(): string {
 
     if (input.parent) createPayload.parentId = await resolveIssueIdentifier(client, input.parent);
     if (input.project) createPayload.projectId = await resolveProjectByName(client, input.project);
+    if (input.milestone) {
+      if (!createPayload.projectId) {
+        exitWithError("--project is required when using --milestone");
+      }
+      createPayload.projectMilestoneId = await resolveMilestoneByName(client, createPayload.projectId, input.milestone);
+    }
     if (input.cycle) createPayload.cycleId = await resolveCycleByName(client, team.id, input.cycle);
     if (input.state) createPayload.stateId = await resolveStateName(client, team.id, input.state);
     if (input.estimate !== undefined) createPayload.estimate = input.estimate;

@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-01-30T20:18:37.129Z
+ * Generated from extracted-schema.json at 2026-01-30T20:56:20.013Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -22,6 +22,7 @@ import {
   resolveIssueIdentifier,
   resolveProjectByName,
   resolveCycleByName,
+  resolveMilestoneByName,
   createIssueRelation,
   addComment,
   updateComment,
@@ -76,6 +77,7 @@ export const issueInput = z.object({
   team: z.string().optional().describe("team key (required for new)"),
   cycle: z.string().optional().describe("set cycle"),
   project: z.string().optional().describe("set project name"),
+  milestone: z.string().optional().describe("set milestone name (requires --project)"),
   state: z.string().optional().describe("set workflow state"),
   prioritySortOrder: z.number().optional().describe("The position of the issue related to other issues, when ordered by priority."),
   dueDate: z.string().optional().describe("set due date (YYYY-MM-DD)"),
@@ -116,7 +118,7 @@ function inferOperation(input: IssueInput): Operation {
     "state", "assignee", "priority", "label", "comment",
     "editComment", "replyTo", "deleteComment", "react", "unreact",
     "parent", "blocks", "blockedBy", "relatesTo", "title", "description",
-    "project", "cycle", "estimate", "dueDate",
+    "project", "cycle", "estimate", "dueDate", "milestone",
   ];
   for (const flag of mutationFlags) {
     if (input[flag] !== undefined) return "update";
@@ -351,6 +353,14 @@ async function handleUpdateIssue(
       updatePayload.parentId = parentIssue.id;
     }
 
+    if (input.milestone) {
+      if (!input.project) {
+        exitWithError("--project is required when using --milestone");
+      }
+      const projectId = await resolveProjectByName(client, input.project);
+      updatePayload.projectMilestoneId = await resolveMilestoneByName(client, projectId, input.milestone);
+    }
+
     if (Object.keys(updatePayload).length > 0) {
       await updateIssue(client, issue.id, updatePayload);
       console.log(`updated ${identifier}`);
@@ -459,6 +469,7 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
       labelIds?: string[];
       parentId?: string;
       projectId?: string;
+      projectMilestoneId?: string;
       cycleId?: string;
       stateId?: string;
       estimate?: number;
@@ -486,6 +497,12 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
 
     if (input.parent) createPayload.parentId = await resolveIssueIdentifier(client, input.parent);
     if (input.project) createPayload.projectId = await resolveProjectByName(client, input.project);
+    if (input.milestone) {
+      if (!createPayload.projectId) {
+        exitWithError("--project is required when using --milestone");
+      }
+      createPayload.projectMilestoneId = await resolveMilestoneByName(client, createPayload.projectId, input.milestone);
+    }
     if (input.cycle) createPayload.cycleId = await resolveCycleByName(client, team.id, input.cycle);
     if (input.state) createPayload.stateId = await resolveStateName(client, team.id, input.state);
     if (input.estimate !== undefined) createPayload.estimate = input.estimate;
