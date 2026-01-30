@@ -390,3 +390,37 @@ export interface UpdateAgentSessionInput {
   externalLink?: string;
   plan?: Record<string, unknown>;
 }
+
+export type AgentActivityType =
+  | "action"
+  | "elicitation"
+  | "error"
+  | "prompt"
+  | "response"
+  | "thought";
+
+export type AgentActivitySignal = "auth" | "continue" | "select" | "stop";
+
+export interface AgentActivityContent {
+  type: AgentActivityType;
+  body?: string;
+  action?: string;
+  parameter?: string;
+  result?: string;
+}
+
+export interface AgentActivity {
+  id: string;
+  type: AgentActivityType;
+  content: AgentActivityContent;
+  ephemeral: boolean;
+  signal?: AgentActivitySignal | null;
+  signalMetadata?: Record<string, unknown> | null;
+  sourceMetadata?: Record<string, unknown> | null;
+  createdAt: Date;
+  updatedAt: Date;
+  archivedAt?: Date | null;
+  userId?: string | null;
+  userName?: string | null;
+  agentSessionId: string;
+}

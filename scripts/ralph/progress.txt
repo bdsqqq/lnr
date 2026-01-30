@@ -611,3 +611,32 @@ Task ID: 0022
 - Task 0023 (AgentActivity) should use session.activities() connection
 
 ---
+
+## 2026-01-30 - Add AgentActivity embedded in session
+Thread: https://ampcode.com/threads/T-019c1131-10bb-73fe-a5cb-03b1c14561c8
+Task ID: 0023
+
+**What was implemented:**
+- Added AgentActivity, AgentActivityType, AgentActivitySignal, AgentActivityContent types to core/types.ts
+- Added getAgentSessionActivities(client, sessionId) to agent-sessions.ts - fetches activities via session.activities()
+- Exported types and function from core/index.ts
+- Added --activities flag to agent-session command in router/agent-sessions.ts
+- Display activities as table with type, content, user, date columns
+- Verbose mode shows signal, ephemeral, id columns
+- Supports --json, --quiet, --verbose flags
+
+**Files changed:**
+- packages/core/src/types.ts
+- packages/core/src/agent-sessions.ts
+- packages/core/src/index.ts
+- packages/cli/src/router/agent-sessions.ts
+
+**Learnings:**
+- AgentActivity accessed via session.activities() connection
+- Content is a discriminated union: AgentActivityActionContent | AgentActivityElicitationContent | AgentActivityErrorContent | AgentActivityPromptContent | AgentActivityResponseContent | AgentActivityThoughtContent
+- Action type has action/parameter/result, other types have body field
+- Type enum: action, elicitation, error, prompt, response, thought
+- Signal enum: auth, continue, select, stop (optional modifier for activity)
+- Follows embedded entity pattern: `lnr agent-session <id> --activities`
+
+---

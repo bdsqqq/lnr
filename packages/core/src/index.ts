@@ -284,9 +284,14 @@ export type {
   AgentSessionStatus,
   AgentSessionType,
   UpdateAgentSessionInput,
+  AgentActivity,
+  AgentActivityType,
+  AgentActivitySignal,
+  AgentActivityContent,
 } from "./types";
 export {
   listAgentSessions,
   getAgentSession,
   updateAgentSession,
+  getAgentSessionActivities,
 } from "./agent-sessions";

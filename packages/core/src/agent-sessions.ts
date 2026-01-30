@@ -1,5 +1,12 @@
 import type { LinearClient } from "@linear/sdk";
-import type { AgentSession, UpdateAgentSessionInput } from "./types";
+import type {
+  AgentSession,
+  UpdateAgentSessionInput,
+  AgentActivity,
+  AgentActivityContent,
+  AgentActivityType,
+  AgentActivitySignal,
+} from "./types";
 
 export async function listAgentSessions(
   client: LinearClient,
@@ -96,4 +103,52 @@ export async function updateAgentSession(
   } catch {
     return false;
   }
+}
+
+export async function getAgentSessionActivities(
+  client: LinearClient,
+  sessionId: string
+): Promise<AgentActivity[]> {
+  const session = await client.agentSession(sessionId);
+  const connection = await session.activities();
+
+  const results: AgentActivity[] = [];
+  for (const a of connection.nodes) {
+    const user = a.userId ? await a.user : null;
+
+    const content: AgentActivityContent = {
+      type: a.content.type as AgentActivityType,
+    };
+
+    if ("body" in a.content && a.content.body) {
+      content.body = a.content.body;
+    }
+    if ("action" in a.content && a.content.action) {
+      content.action = a.content.action;
+    }
+    if ("parameter" in a.content && a.content.parameter) {
+      content.parameter = a.content.parameter;
+    }
+    if ("result" in a.content && a.content.result) {
+      content.result = a.content.result;
+    }
+
+    results.push({
+      id: a.id,
+      type: a.content.type as AgentActivityType,
+      content,
+      ephemeral: a.ephemeral,
+      signal: (a.signal as AgentActivitySignal) ?? null,
+      signalMetadata: a.signalMetadata ?? null,
+      sourceMetadata: a.sourceMetadata ?? null,
+      createdAt: a.createdAt,
+      updatedAt: a.updatedAt,
+      archivedAt: a.archivedAt ?? null,
+      userId: a.userId ?? null,
+      userName: user?.name ?? null,
+      agentSessionId: sessionId,
+    });
+  }
+
+  return results;
 }

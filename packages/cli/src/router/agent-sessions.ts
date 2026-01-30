@@ -4,7 +4,9 @@ import {
   listAgentSessions,
   getAgentSession,
   updateAgentSession,
+  getAgentSessionActivities,
   type AgentSession,
+  type AgentActivity,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "./trpc";
 import { exitWithError, handleApiError, EXIT_CODES } from "../lib/error";
@@ -33,6 +35,7 @@ export const agentSessionInput = z.object({
   quiet: z.boolean().optional().describe("output id only"),
   verbose: z.boolean().optional().describe("show all fields"),
   externalLink: z.string().optional().describe("set external link url"),
+  activities: z.boolean().optional().describe("show session activities"),
 });
 
 const sessionColumns: TableColumn<AgentSession>[] = [
@@ -63,6 +66,33 @@ const verboseSessionColumns: TableColumn<AgentSession>[] = [
     width: 12,
   },
   { header: "ID", value: (s) => s.id, width: 36 },
+];
+
+const activityColumns: TableColumn<AgentActivity>[] = [
+  { header: "TYPE", value: (a) => a.type, width: 12 },
+  {
+    header: "CONTENT",
+    value: (a) => {
+      if (a.content.action) {
+        return `${a.content.action}: ${a.content.parameter ?? ""}`.slice(0, 40);
+      }
+      return (a.content.body ?? "").slice(0, 40);
+    },
+    width: 42,
+  },
+  { header: "USER", value: (a) => a.userName ?? "-", width: 16 },
+  {
+    header: "DATE",
+    value: (a) => a.createdAt.toISOString().split("T")[0] ?? "",
+    width: 12,
+  },
+];
+
+const verboseActivityColumns: TableColumn<AgentActivity>[] = [
+  ...activityColumns,
+  { header: "SIGNAL", value: (a) => a.signal ?? "-", width: 10 },
+  { header: "EPHEMERAL", value: (a) => (a.ephemeral ? "yes" : "no"), width: 10 },
+  { header: "ID", value: (a) => a.id, width: 36 },
 ];
 
 export const agentSessionsRouter = router({
@@ -121,6 +151,32 @@ export const agentSessionsRouter = router({
             );
           }
           console.log("updated");
+          return;
+        }
+
+        if (input.activities) {
+          const activities = await getAgentSessionActivities(client, input.id);
+
+          const outputOpts: OutputOptions = {
+            format: input.json ? "json" : input.quiet ? "quiet" : undefined,
+            verbose: input.verbose,
+          };
+          const format = getOutputFormat(outputOpts);
+
+          if (format === "json") {
+            outputJson(activities);
+            return;
+          }
+
+          if (format === "quiet") {
+            outputQuiet(activities.map((a) => a.id));
+            return;
+          }
+
+          const columns = input.verbose
+            ? verboseActivityColumns
+            : activityColumns;
+          outputTable(activities, columns, outputOpts);
           return;
         }
 
