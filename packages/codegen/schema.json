@@ -1115,6 +1115,18 @@
             "args": []
           },
           {
+            "name": "summary",
+            "description": "[Internal] AI-generated activity summary for this issue.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "OBJECT",
+              "name": "Summary",
+              "ofType": null
+            },
+            "args": []
+          },
+          {
             "name": "labelIds",
             "description": "Id of the labels associated with this issue.",
             "isDeprecated": false,
@@ -2763,7 +2775,7 @@
           },
           {
             "name": "stateHistory",
-            "description": "[ALPHA] The issue's workflow states over time.",
+            "description": "The issue's workflow states over time.",
             "isDeprecated": false,
             "deprecationReason": null,
             "type": {
@@ -5530,6 +5542,478 @@
       },
       {
         "kind": "INPUT_OBJECT",
+        "name": "ProjectMilestoneUpdateInput",
+        "description": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "name",
+            "description": "The name of the project milestone.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null
+          },
+          {
+            "name": "description",
+            "description": "The description of the project milestone in markdown format.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null
+          },
+          {
+            "name": "descriptionData",
+            "description": "[Internal] The description of the project milestone as a Prosemirror document.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
+            },
+            "defaultValue": null
+          },
+          {
+            "name": "targetDate",
+            "description": "The planned target date of the project milestone.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "TimelessDate",
+              "ofType": null
+            },
+            "defaultValue": null
+          },
+          {
+            "name": "sortOrder",
+            "description": "The sort order for the project milestone within a project.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Float",
+              "ofType": null
+            },
+            "defaultValue": null
+          },
+          {
+            "name": "projectId",
+            "description": "Related project for the project milestone.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null
+          }
+        ],
+        "enumValues": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "ProjectMilestoneCreateInput",
+        "description": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "id",
+            "description": "The identifier in UUID v4 format. If none is provided, the backend will generate one.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null
+          },
+          {
+            "name": "name",
+            "description": "The name of the project milestone.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null
+          },
+          {
+            "name": "description",
+            "description": "The description of the project milestone in markdown format.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null
+          },
+          {
+            "name": "descriptionData",
+            "description": "[Internal] The description of the project milestone as a Prosemirror document.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
+            },
+            "defaultValue": null
+          },
+          {
+            "name": "targetDate",
+            "description": "The planned target date of the project milestone.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "TimelessDate",
+              "ofType": null
+            },
+            "defaultValue": null
+          },
+          {
+            "name": "projectId",
+            "description": "Related project for the project milestone.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null
+          },
+          {
+            "name": "sortOrder",
+            "description": "The sort order for the project milestone within a project.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Float",
+              "ofType": null
+            },
+            "defaultValue": null
+          }
+        ],
+        "enumValues": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "ProjectMilestone",
+        "description": "A milestone for a project.",
+        "fields": [
+          {
+            "name": "id",
+            "description": "The unique identifier of the entity.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "createdAt",
+            "description": "The time at which the entity was created.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "DateTime",
+                "ofType": null
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "updatedAt",
+            "description": "The last time at which the entity was meaningfully updated. This is the same as the creation time if the entity hasn't\n    been updated after creation.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "DateTime",
+                "ofType": null
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "archivedAt",
+            "description": "The time at which the entity was archived. Null if the entity has not been archived.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "DateTime",
+              "ofType": null
+            },
+            "args": []
+          },
+          {
+            "name": "name",
+            "description": "The name of the project milestone.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "documentContent",
+            "description": "The content of the project milestone description.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "OBJECT",
+              "name": "DocumentContent",
+              "ofType": null
+            },
+            "args": []
+          },
+          {
+            "name": "targetDate",
+            "description": "The planned completion date of the milestone.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "TimelessDate",
+              "ofType": null
+            },
+            "args": []
+          },
+          {
+            "name": "project",
+            "description": "The project of the milestone.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Project",
+                "ofType": null
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "progressHistory",
+            "description": "[Internal] The progress history of the project milestone.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "JSONObject",
+                "ofType": null
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "currentProgress",
+            "description": "[Internal] The current progress of the project milestone.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "JSONObject",
+                "ofType": null
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "sortOrder",
+            "description": "The order of the milestone in relation to other milestones within a project.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Float",
+                "ofType": null
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "description",
+            "description": "The project milestone's description in markdown format.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "args": []
+          },
+          {
+            "name": "status",
+            "description": "The status of the project milestone.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "ProjectMilestoneStatus",
+                "ofType": null
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "progress",
+            "description": "The progress % of the project milestone.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Float",
+                "ofType": null
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "descriptionState",
+            "description": "[Internal] The project milestone's description as YJS state.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "args": []
+          },
+          {
+            "name": "issues",
+            "description": "Issues associated with the project milestone.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "IssueConnection",
+                "ofType": null
+              }
+            },
+            "args": [
+              {
+                "name": "filter",
+                "description": "Filter returned issues.",
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "IssueFilter",
+                  "ofType": null
+                },
+                "defaultValue": null
+              },
+              {
+                "name": "before",
+                "description": "A cursor to be used with last for backward pagination.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null
+              },
+              {
+                "name": "after",
+                "description": "A cursor to be used with first for forward pagination",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null
+              },
+              {
+                "name": "first",
+                "description": "The number of items to forward paginate (used with after). Defaults to 50.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": null
+              },
+              {
+                "name": "last",
+                "description": "The number of items to backward paginate (used with before). Defaults to 50.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": null
+              },
+              {
+                "name": "includeArchived",
+                "description": "Should archived resources be included (default: false)",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null
+              },
+              {
+                "name": "orderBy",
+                "description": "By which field should the pagination order by. Available options are createdAt (default) and updatedAt.",
+                "type": {
+                  "kind": "ENUM",
+                  "name": "PaginationOrderBy",
+                  "ofType": null
+                },
+                "defaultValue": null
+              }
+            ]
+          }
+        ],
+        "inputFields": null,
+        "enumValues": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
         "name": "CommentUpdateInput",
         "description": null,
         "fields": null,
@@ -6142,6 +6626,22 @@
               "kind": "SCALAR",
               "name": "JSONObject",
               "ofType": null
+            },
+            "args": []
+          },
+          {
+            "name": "isArtificialAgentSessionRoot",
+            "description": "[Internal] Whether the comment is an artificial placeholder for an agent session thread created without a comment mention.",
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
             },
             "args": []
           },
@@ -12045,6 +12545,33 @@
       },
       {
         "kind": "ENUM",
+        "name": "SummaryGenerationStatus",
+        "description": "The generation status of a summary.",
+        "fields": null,
+        "inputFields": null,
+        "enumValues": [
+          {
+            "name": "pending",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "completed",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "failed",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ]
+      },
+      {
+        "kind": "ENUM",
         "name": "CyclePeriod",
         "description": null,
         "fields": null,
@@ -13144,6 +13671,12 @@
           },
           {
             "name": "mcpServer",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "microsoftTeams",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null
@@ -14328,6 +14861,12 @@
             "deprecationReason": null
           },
           {
+            "name": "releasePipelines",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "roadmapAll",
             "description": null,
             "isDeprecated": false,
@@ -15040,6 +15579,8 @@
       "Issue",
       "TimelessDate",
       "JSONObject",
+      "Summary",
+      "SummaryGenerationStatus",
       "Cycle",
       "IssueFilter",
       "IssueIDComparator",
@@ -15212,6 +15753,7 @@
       "PullRequestMergeSettings",
       "PullRequestMergeMethod",
       "PullRequestCommit",
+      "AgentSessionExternalLink",
       "AgentSessionConnection",
       "AgentSessionEdge",
       "ActorBot",
@@ -15615,6 +16157,9 @@
       "ReleaseCompleteInput",
       "ReleaseUpdateByPipelineInput",
       "ReleaseArchivePayload",
+      "ReleaseSyncInputBase",
+      "ReleaseCompleteInputBase",
+      "ReleaseUpdateByPipelineInputBase",
       "ReleasePipelinePayload",
       "ReleasePipelineCreateInput",
       "ReleasePipelineUpdateInput",
@@ -15726,6 +16271,7 @@
       "FrontSettingsInput",
       "GongSettingsInput",
       "GongRecordingImportConfigInput",
+      "MicrosoftTeamsSettingsInput",
       "JiraSettingsInput",
       "JiraLinearMappingInput",
       "JiraProjectDataInput",

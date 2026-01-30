@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-01-29T16:44:42.519Z
+ * Generated from extracted-schema.json at 2026-01-30T20:18:37.129Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -73,13 +73,13 @@ export const issueInput = z.object({
   parent: z.string().optional().describe("set parent issue identifier"),
   priority: z.string().optional().describe("set priority (urgent, high, medium, low, none)"),
   estimate: z.number().optional().describe("set estimate points"),
-  label: z.string().optional().describe("set label (+name to add, -name to remove)"),
   team: z.string().optional().describe("team key (required for new)"),
   cycle: z.string().optional().describe("set cycle"),
   project: z.string().optional().describe("set project name"),
   state: z.string().optional().describe("set workflow state"),
   prioritySortOrder: z.number().optional().describe("The position of the issue related to other issues, when ordered by priority."),
   dueDate: z.string().optional().describe("set due date (YYYY-MM-DD)"),
+  label: z.string().optional().describe("set label (+name to add, -name to remove)"),
   comment: z.string().optional().describe("add comment to issue"),
   blocks: z.string().optional().describe("add blocks relation to issue"),
   blockedBy: z.string().optional().describe("add blocked-by relation to issue"),

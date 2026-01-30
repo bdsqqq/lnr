@@ -61,6 +61,7 @@ const issueConfig: EntityConfig = {
     "autoClosedByParentClosing", "descriptionData", "lastAppliedTemplateId",
     "addedLabelIds", "removedLabelIds", "subscriberIds", "projectMilestoneId", "trashed",
     "sortOrder", "subIssueSortOrder", "boardOrder", "previousIdentifiers", "delegateId",
+    "labelIds",
   ],
   imports: [
     "getClient",
@@ -143,6 +144,7 @@ const issueConfig: EntityConfig = {
       lines.push(`  ${cliName}: ${zodType},`);
     }
 
+    lines.push('  label: z.string().optional().describe("set label (+name to add, -name to remove)"),');
     lines.push('  comment: z.string().optional().describe("add comment to issue"),');
     lines.push('  blocks: z.string().optional().describe("add blocks relation to issue"),');
     lines.push('  blockedBy: z.string().optional().describe("add blocked-by relation to issue"),');
@@ -442,7 +444,242 @@ function inferOperation(input: DocInput): Operation {
   hasDeleteFlag: true,
 };
 
-const entityConfigs: EntityConfig[] = [issueConfig, projectConfig, labelConfig, docConfig];
+function generateMilestoneListHandler(): string {
+  return `async function handleListMilestones(
+  input: z.infer<typeof listMilestonesInput>
+): Promise<void> {
+  try {
+    const client = getClient();
+
+    const outputOpts: OutputOptions = {
+      format: input.json ? "json" : input.quiet ? "quiet" : undefined,
+      verbose: input.verbose,
+    };
+    const format = getOutputFormat(outputOpts);
+
+    let projectId: string | undefined;
+    if (input.project) {
+      projectId = await resolveProjectByName(client, input.project);
+    }
+
+    const milestones = await listMilestones(client, projectId ? { projectId } : undefined);
+
+    if (format === "json") {
+      outputJson(milestones);
+      return;
+    }
+
+    if (format === "quiet") {
+      outputQuiet(milestones.map((m) => m.id));
+      return;
+    }
+
+    outputTable(milestones, milestoneColumns, outputOpts);
+  } catch (error) {
+    handleApiError(error);
+  }
+}`;
+}
+
+function generateMilestoneShowHandler(): string {
+  return `async function handleShowMilestone(name: string, input: MilestoneInput): Promise<void> {
+  try {
+    const client = getClient();
+
+    const outputOpts: OutputOptions = {
+      format: input.json ? "json" : input.quiet ? "quiet" : undefined,
+      verbose: input.verbose,
+    };
+    const format = getOutputFormat(outputOpts);
+
+    if (!input.project) {
+      exitWithError("--project is required to find milestone", 'usage: lnr milestone "name" --project "..."');
+    }
+
+    const projectId = await resolveProjectByName(client, input.project);
+    const milestoneId = await resolveMilestoneByName(client, projectId, name);
+    const milestone = await getMilestone(client, milestoneId);
+
+    if (!milestone) {
+      exitWithError(\`milestone "\${name}" not found\`, undefined, EXIT_CODES.NOT_FOUND);
+    }
+
+    if (format === "json") {
+      outputJson(milestone);
+      return;
+    }
+
+    if (format === "quiet") {
+      console.log(milestone.id);
+      return;
+    }
+
+    console.log(\`\${milestone.name}\`);
+    console.log(\`id: \${milestone.id}\`);
+    console.log(\`target date: \${milestone.targetDate ?? "-"}\`);
+    if (milestone.description) {
+      console.log(\`description: \${milestone.description}\`);
+    }
+  } catch (error) {
+    handleApiError(error);
+  }
+}`;
+}
+
+function generateMilestoneUpdateHandler(): string {
+  return `async function handleUpdateMilestone(name: string, input: MilestoneInput): Promise<void> {
+  try {
+    const client = getClient();
+
+    if (!input.project) {
+      exitWithError("--project is required to find milestone", 'usage: lnr milestone "name" --project "..."');
+    }
+
+    const projectId = await resolveProjectByName(client, input.project);
+    const milestoneId = await resolveMilestoneByName(client, projectId, name);
+
+    const updatePayload: {
+      name?: string;
+      description?: string;
+      targetDate?: string;
+    } = {};
+
+    if (input.newName !== undefined) updatePayload.name = input.newName;
+    if (input.description !== undefined) updatePayload.description = input.description;
+    if (input.targetDate !== undefined) updatePayload.targetDate = input.targetDate;
+
+    if (Object.keys(updatePayload).length > 0) {
+      const result = await updateMilestone(client, milestoneId, updatePayload);
+      if (!result) {
+        exitWithError(\`milestone "\${name}" not found\`, undefined, EXIT_CODES.NOT_FOUND);
+      }
+      console.log(\`updated milestone: \${result.name}\`);
+    }
+  } catch (error) {
+    handleApiError(error);
+  }
+}`;
+}
+
+function generateMilestoneCreateHandler(): string {
+  return `async function handleCreateMilestone(input: MilestoneInput): Promise<void> {
+  if (!input.newName) {
+    exitWithError("--new-name is required", 'usage: lnr milestone new --new-name "..." --project "..."');
+  }
+
+  if (!input.project) {
+    exitWithError("--project is required", 'usage: lnr milestone new --new-name "..." --project "..."');
+  }
+
+  try {
+    const client = getClient();
+
+    const projectId = await resolveProjectByName(client, input.project);
+
+    const milestone = await createMilestone(client, {
+      name: input.newName,
+      projectId,
+      description: input.description,
+      targetDate: input.targetDate,
+    });
+
+    if (milestone) {
+      console.log(\`created milestone: \${milestone.name}\`);
+    } else {
+      exitWithError("failed to create milestone");
+    }
+  } catch (error) {
+    handleApiError(error);
+  }
+}`;
+}
+
+function generateMilestoneDeleteHandler(): string {
+  return `async function handleDeleteMilestone(name: string, _input: MilestoneInput): Promise<void> {
+  try {
+    const client = getClient();
+
+    if (!_input.project) {
+      exitWithError("--project is required to find milestone", 'usage: lnr milestone "name" --project "..." --delete');
+    }
+
+    const projectId = await resolveProjectByName(client, _input.project);
+    const milestoneId = await resolveMilestoneByName(client, projectId, name);
+    const success = await deleteMilestone(client, milestoneId);
+
+    if (!success) {
+      exitWithError(\`milestone "\${name}" not found\`, undefined, EXIT_CODES.NOT_FOUND);
+    }
+
+    console.log(\`deleted milestone: \${name}\`);
+  } catch (error) {
+    handleApiError(error);
+  }
+}`;
+}
+
+const milestoneConfig: EntityConfig = {
+  entityKey: "ProjectMilestone",
+  singularCommand: "milestone",
+  pluralCommand: "milestones",
+  outputFile: "milestone.ts",
+  positionalArg: { name: "name", description: "milestone name or 'new'" },
+  fieldsToExclude: ["id", "sortOrder", "descriptionData"],
+  imports: [
+    "getClient",
+    "listMilestones",
+    "getMilestone",
+    "createMilestone",
+    "updateMilestone",
+    "deleteMilestone",
+    "resolveProjectByName",
+    "resolveMilestoneByName",
+  ],
+  coreTypes: ["ProjectMilestone"],
+  listInputSchema: () => `export const listMilestonesInput = z.object({
+  project: z.string().optional().describe("filter by project name"),
+  json: z.boolean().optional().describe("output as json"),
+  quiet: z.boolean().optional().describe("output ids only"),
+  verbose: z.boolean().optional().describe("show all columns"),
+});`,
+  inputSchema: () => `export const milestoneInput = z.object({
+  name: z.string().meta({ positional: true }).describe("milestone name or 'new'"),
+  project: z.string().optional().describe("project name (required for new)"),
+  newName: z.string().optional().describe("new name for the milestone"),
+  description: z.string().optional().describe("milestone description"),
+  targetDate: z.string().optional().describe("target date (YYYY-MM-DD)"),
+  delete: z.boolean().optional().describe("delete the milestone"),
+  json: z.boolean().optional().describe("output as json"),
+  quiet: z.boolean().optional().describe("output ids only"),
+  verbose: z.boolean().optional().describe("show all columns"),
+});`,
+  columns: `const milestoneColumns: TableColumn<ProjectMilestone>[] = [
+  { header: "ID", value: (m) => m.id.slice(0, 8), width: 10 },
+  { header: "NAME", value: (m) => truncate(m.name, 30), width: 30 },
+  { header: "TARGET_DATE", value: (m) => m.targetDate ? formatDate(m.targetDate) : "-", width: 12 },
+];`,
+  inferOperation: `type Operation = "create" | "read" | "update" | "delete";
+
+function inferOperation(input: MilestoneInput): Operation {
+  if (input.name === "new") return "create";
+  if (input.delete) return "delete";
+
+  const mutationFlags: (keyof MilestoneInput)[] = ["newName", "description", "targetDate"];
+  for (const flag of mutationFlags) {
+    if (input[flag] !== undefined) return "update";
+  }
+
+  return "read";
+}`,
+  listHandler: generateMilestoneListHandler(),
+  showHandler: generateMilestoneShowHandler(),
+  updateHandler: generateMilestoneUpdateHandler(),
+  createHandler: generateMilestoneCreateHandler(),
+  deleteHandler: generateMilestoneDeleteHandler(),
+  hasDeleteFlag: true,
+};
+
+const entityConfigs: EntityConfig[] = [issueConfig, projectConfig, labelConfig, docConfig, milestoneConfig];
 
 function generateEntityFile(config: EntityConfig): string {
   const timestamp = new Date().toISOString();
