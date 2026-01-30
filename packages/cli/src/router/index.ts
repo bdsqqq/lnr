@@ -6,6 +6,7 @@ import { generatedDocsRouter } from "../generated/doc";
 import { generatedIssuesRouter } from "../generated/issue";
 import { generatedProjectsRouter } from "../generated/project";
 import { generatedLabelsRouter } from "../generated/label";
+import { generatedTemplatesRouter } from "../generated/template";
 import { meRouter } from "./me";
 import { searchRouter } from "./search";
 import { teamsRouter } from "./teams";
@@ -18,6 +19,7 @@ export const appRouter = router({
   ...generatedIssuesRouter._def.procedures,
   ...generatedProjectsRouter._def.procedures,
   ...generatedLabelsRouter._def.procedures,
+  ...generatedTemplatesRouter._def.procedures,
   ...meRouter._def.procedures,
   ...searchRouter._def.procedures,
   ...teamsRouter._def.procedures,

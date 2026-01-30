@@ -142,6 +142,15 @@ export {
   deleteMilestone,
 } from "./milestones";
 
+// templates
+export type { Template } from "./templates";
+export {
+  listTemplates,
+  getTemplate,
+  findTemplateByName,
+  getIssueTemplates,
+} from "./templates";
+
 // resolvers
 export {
   resolveIssueIdentifier,

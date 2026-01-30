@@ -19,6 +19,7 @@ export const SUPPORTED_ENTITIES: EntityConfig[] = [
   { name: "Comment", reason: "core entity - issue discussion" },
   { name: "Document", reason: "core entity - documentation" },
   { name: "IssueLabel", reason: "core entity - issue categorization" },
+  { name: "Template", reason: "issue templates for standardized creation" },
 ];
 
 /**

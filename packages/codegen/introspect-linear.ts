@@ -153,6 +153,7 @@ async function main() {
     "IssueLabelUpdateInput",
     "IssueLabelCreateInput",
     "IssueLabel",
+    "Template",
     "WorkflowState",
     "User",
     "Team",
