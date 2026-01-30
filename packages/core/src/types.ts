@@ -224,3 +224,14 @@ export interface Initiative {
   updatedAt: Date;
   url: string;
 }
+
+export interface InitiativeUpdate {
+  id: string;
+  body: string;
+  health: "onTrack" | "atRisk" | "offTrack";
+  createdAt: Date;
+  updatedAt: Date;
+  url: string;
+  userId?: string;
+  userName?: string;
+}

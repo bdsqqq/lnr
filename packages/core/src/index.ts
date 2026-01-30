@@ -214,9 +214,10 @@ export {
 } from "./notifications";
 
 // initiatives
-export type { Initiative } from "./types";
+export type { Initiative, InitiativeUpdate } from "./types";
 export {
   listInitiatives,
   getInitiative,
   findInitiativeByName,
+  getInitiativeUpdates,
 } from "./initiatives";

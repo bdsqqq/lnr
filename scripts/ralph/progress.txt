@@ -246,3 +246,29 @@ Task ID: 0009
 - targetDate is a TimelessDate string (not Date)
 
 ---
+
+## 2026-01-30 - Add InitiativeUpdate scoped to initiative
+Thread: https://ampcode.com/threads/T-019c110a-b0a6-702c-826d-41072e7ebdc8
+Task ID: 0010
+
+**What was implemented:**
+- Added InitiativeUpdate type to core/types.ts with id, body, health, createdAt, updatedAt, url, userId, userName
+- Added getInitiativeUpdates(client, initiativeId) to initiatives.ts - fetches updates via initiative.initiativeUpdates()
+- Exported InitiativeUpdate type and getInitiativeUpdates from core/index.ts
+- Added --updates flag to initiative command in router/initiatives.ts
+- Display updates as table with date, health, author, content columns
+- Supports --json, --quiet, --verbose flags
+
+**Files changed:**
+- packages/core/src/types.ts
+- packages/core/src/initiatives.ts
+- packages/core/src/index.ts
+- packages/cli/src/router/initiatives.ts
+
+**Learnings:**
+- InitiativeUpdate accessed via initiative.initiativeUpdates() connection (like ProjectUpdate via project.projectUpdates())
+- health field uses InitiativeUpdateHealthType enum: onTrack, atRisk, offTrack
+- User info requires async fetch via u.user promise
+- Follows scoped entity pattern per ADR-0004: `lnr initiative <name> --updates`
+
+---

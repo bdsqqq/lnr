@@ -4,7 +4,9 @@ import {
   listInitiatives,
   getInitiative,
   findInitiativeByName,
+  getInitiativeUpdates,
   type Initiative,
+  type InitiativeUpdate,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "./trpc";
 import { exitWithError, handleApiError, EXIT_CODES } from "../lib/error";
@@ -28,6 +30,7 @@ export const initiativeInput = z.object({
   json: z.boolean().optional().describe("output as json"),
   quiet: z.boolean().optional().describe("output id only"),
   verbose: z.boolean().optional().describe("show all columns"),
+  updates: z.boolean().optional().describe("show initiative updates"),
 });
 
 const initiativeColumns: TableColumn<Initiative>[] = [
@@ -41,6 +44,18 @@ const verboseInitiativeColumns: TableColumn<Initiative>[] = [
   ...initiativeColumns,
   { header: "SLUG", value: (i) => i.slugId, width: 16 },
   { header: "ID", value: (i) => i.id, width: 36 },
+];
+
+const updateColumns: TableColumn<InitiativeUpdate>[] = [
+  { header: "DATE", value: (u) => u.createdAt.toISOString().slice(0, 10), width: 12 },
+  { header: "HEALTH", value: (u) => u.health, width: 10 },
+  { header: "AUTHOR", value: (u) => u.userName ?? "-", width: 20 },
+  { header: "CONTENT", value: (u) => u.body.slice(0, 50).replace(/\n/g, " "), width: 52 },
+];
+
+const verboseUpdateColumns: TableColumn<InitiativeUpdate>[] = [
+  ...updateColumns,
+  { header: "ID", value: (u) => u.id, width: 36 },
 ];
 
 export const initiativesRouter = router({
@@ -100,6 +115,29 @@ export const initiativesRouter = router({
           verbose: input.verbose,
         };
         const format = getOutputFormat(outputOpts);
+
+        if (input.updates) {
+          const updates = await getInitiativeUpdates(client, initiative.id);
+
+          if (format === "json") {
+            outputJson(updates);
+            return;
+          }
+
+          if (format === "quiet") {
+            outputQuiet(updates.map((u) => u.id));
+            return;
+          }
+
+          if (updates.length === 0) {
+            console.log("no updates");
+            return;
+          }
+
+          const columns = input.verbose ? verboseUpdateColumns : updateColumns;
+          outputTable(updates, columns, outputOpts);
+          return;
+        }
 
         if (format === "json") {
           outputJson(initiative);

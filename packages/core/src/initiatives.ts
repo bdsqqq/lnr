@@ -1,5 +1,5 @@
 import type { LinearClient } from "@linear/sdk";
-import type { Initiative } from "./types";
+import type { Initiative, InitiativeUpdate } from "./types";
 
 export async function listInitiatives(client: LinearClient): Promise<Initiative[]> {
   const initiativesConnection = await client.initiatives();
@@ -79,4 +79,33 @@ export async function findInitiativeByName(
     updatedAt: initiative.updatedAt,
     url: initiative.url,
   };
+}
+
+export async function getInitiativeUpdates(
+  client: LinearClient,
+  initiativeId: string
+): Promise<InitiativeUpdate[]> {
+  const initiative = await client.initiative(initiativeId);
+
+  if (!initiative) {
+    return [];
+  }
+
+  const updatesConnection = await initiative.initiativeUpdates();
+
+  return Promise.all(
+    updatesConnection.nodes.map(async (u) => {
+      const user = await u.user;
+      return {
+        id: u.id,
+        body: u.body,
+        health: u.health as "onTrack" | "atRisk" | "offTrack",
+        createdAt: u.createdAt,
+        updatedAt: u.updatedAt,
+        url: u.url,
+        userId: user?.id,
+        userName: user?.name,
+      };
+    })
+  );
 }
