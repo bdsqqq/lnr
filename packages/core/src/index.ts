@@ -212,3 +212,11 @@ export {
   markNotificationRead,
   archiveNotification,
 } from "./notifications";
+
+// initiatives
+export type { Initiative } from "./types";
+export {
+  listInitiatives,
+  getInitiative,
+  findInitiativeByName,
+} from "./initiatives";

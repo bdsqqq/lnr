@@ -207,3 +207,20 @@ export interface Notification {
   actorId?: string | null;
   actorName?: string | null;
 }
+
+export interface Initiative {
+  id: string;
+  name: string;
+  slugId: string;
+  description?: string | null;
+  status: string;
+  health?: string | null;
+  color?: string | null;
+  icon?: string | null;
+  targetDate?: string | null;
+  startedAt?: Date | null;
+  completedAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  url: string;
+}
