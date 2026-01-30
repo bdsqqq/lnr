@@ -171,7 +171,10 @@ export type {
   CustomView,
   CreateCustomViewInput,
   UpdateCustomViewInput,
+  ViewPreferences,
+  ViewPreferencesValues,
 } from "./types";
+export type { ViewPreferencesResult } from "./views";
 export {
   listViews,
   getView,
@@ -179,6 +182,7 @@ export {
   createView,
   updateView,
   deleteView,
+  getViewPreferences,
 } from "./views";
 
 // resolvers

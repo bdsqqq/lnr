@@ -1,5 +1,5 @@
 import type { LinearClient } from "@linear/sdk";
-import type { CustomView, CreateCustomViewInput, UpdateCustomViewInput } from "./types";
+import type { CustomView, CreateCustomViewInput, UpdateCustomViewInput, ViewPreferences, ViewPreferencesValues } from "./types";
 
 export async function listViews(client: LinearClient): Promise<CustomView[]> {
   try {
@@ -131,5 +131,59 @@ export async function deleteView(
     return payload.success;
   } catch {
     return false;
+  }
+}
+
+function mapPreferencesValues(
+  values: { issueGrouping?: string; showCompletedIssues?: string; viewOrdering?: string } | undefined
+): ViewPreferencesValues {
+  return {
+    issueGrouping: values?.issueGrouping ?? null,
+    showCompletedIssues: values?.showCompletedIssues ?? null,
+    viewOrdering: values?.viewOrdering ?? null,
+  };
+}
+
+export interface ViewPreferencesResult {
+  user?: ViewPreferences | null;
+  organization?: ViewPreferences | null;
+  effective: ViewPreferencesValues;
+}
+
+export async function getViewPreferences(
+  client: LinearClient,
+  viewId: string
+): Promise<ViewPreferencesResult | null> {
+  try {
+    const view = await client.customView(viewId);
+    if (!view) return null;
+
+    const [userPrefs, orgPrefs, effectiveValues] = await Promise.all([
+      view.userViewPreferences,
+      view.organizationViewPreferences,
+      view.viewPreferencesValues,
+    ]);
+
+    const mapPreferences = (
+      prefs: Awaited<typeof userPrefs> | undefined
+    ): ViewPreferences | null => {
+      if (!prefs) return null;
+      return {
+        id: prefs.id,
+        type: prefs.type,
+        viewType: prefs.viewType,
+        createdAt: prefs.createdAt,
+        updatedAt: prefs.updatedAt,
+        preferences: mapPreferencesValues(prefs.preferences),
+      };
+    };
+
+    return {
+      user: mapPreferences(userPrefs),
+      organization: mapPreferences(orgPrefs),
+      effective: mapPreferencesValues(effectiveValues),
+    };
+  } catch {
+    return null;
   }
 }

@@ -6,7 +6,9 @@ import {
   createView,
   updateView,
   deleteView,
+  getViewPreferences,
   type CustomView,
+  type ViewPreferencesResult,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "./trpc";
 import { exitWithError, handleApiError, EXIT_CODES } from "../lib/error";
@@ -41,6 +43,7 @@ export const viewInput = z
     color: z.string().optional().describe("view color"),
     shared: z.boolean().optional().describe("make view shared"),
     delete: z.boolean().optional().describe("delete the view"),
+    preferences: z.boolean().optional().describe("show view preferences"),
   })
   .merge(outputOptions);
 
@@ -64,11 +67,12 @@ const verboseViewColumns: TableColumn<CustomView>[] = [
   { header: "ID", value: (v) => v.id, width: 36 },
 ];
 
-type Operation = "create" | "read" | "update" | "delete";
+type Operation = "create" | "read" | "update" | "delete" | "preferences";
 
 function inferOperation(input: ViewInput): Operation {
   if (input.nameOrId === "new") return "create";
   if (input.delete) return "delete";
+  if (input.preferences) return "preferences";
   if (
     input.name !== undefined ||
     input.description !== undefined ||
@@ -266,6 +270,91 @@ async function handleDeleteView(
   }
 }
 
+async function handleShowPreferences(
+  nameOrId: string,
+  input: ViewInput
+): Promise<void> {
+  try {
+    const client = getClient();
+
+    const outputOpts: OutputOptions = {
+      format: input.json ? "json" : input.quiet ? "quiet" : undefined,
+      verbose: input.verbose,
+    };
+    const format = getOutputFormat(outputOpts);
+
+    const view = await getView(client, nameOrId);
+
+    if (!view) {
+      exitWithError(
+        `view "${nameOrId}" not found`,
+        "try: lnr views",
+        EXIT_CODES.NOT_FOUND
+      );
+    }
+
+    const prefs = await getViewPreferences(client, view.id);
+
+    if (!prefs) {
+      exitWithError(`no preferences found for view "${nameOrId}"`);
+    }
+
+    if (format === "json") {
+      outputJson(prefs);
+      return;
+    }
+
+    if (format === "quiet") {
+      const ids: string[] = [];
+      if (prefs.user) ids.push(prefs.user.id);
+      if (prefs.organization) ids.push(prefs.organization.id);
+      outputQuiet(ids);
+      return;
+    }
+
+    console.log(`preferences for view: ${view.name}`);
+    console.log();
+
+    console.log("effective preferences:");
+    console.log(`  grouping: ${prefs.effective.issueGrouping ?? "-"}`);
+    console.log(`  ordering: ${prefs.effective.viewOrdering ?? "-"}`);
+    console.log(
+      `  show completed: ${prefs.effective.showCompletedIssues ?? "-"}`
+    );
+
+    if (input.verbose) {
+      if (prefs.user) {
+        console.log();
+        console.log("user preferences:");
+        console.log(`  id: ${prefs.user.id}`);
+        console.log(`  type: ${prefs.user.type}`);
+        console.log(`  grouping: ${prefs.user.preferences.issueGrouping ?? "-"}`);
+        console.log(`  ordering: ${prefs.user.preferences.viewOrdering ?? "-"}`);
+        console.log(
+          `  show completed: ${prefs.user.preferences.showCompletedIssues ?? "-"}`
+        );
+      }
+      if (prefs.organization) {
+        console.log();
+        console.log("organization preferences:");
+        console.log(`  id: ${prefs.organization.id}`);
+        console.log(`  type: ${prefs.organization.type}`);
+        console.log(
+          `  grouping: ${prefs.organization.preferences.issueGrouping ?? "-"}`
+        );
+        console.log(
+          `  ordering: ${prefs.organization.preferences.viewOrdering ?? "-"}`
+        );
+        console.log(
+          `  show completed: ${prefs.organization.preferences.showCompletedIssues ?? "-"}`
+        );
+      }
+    }
+  } catch (error) {
+    handleApiError(error);
+  }
+}
+
 export const viewsRouter = router({
   views: procedure
     .meta({
@@ -291,6 +380,9 @@ export const viewsRouter = router({
           break;
         case "delete":
           await handleDeleteView(input.nameOrId, input);
+          break;
+        case "preferences":
+          await handleShowPreferences(input.nameOrId, input);
           break;
         case "update":
           await handleUpdateView(input.nameOrId, input);

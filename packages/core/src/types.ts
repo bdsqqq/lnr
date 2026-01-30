@@ -281,3 +281,18 @@ export interface EntityExternalLink {
   creatorId?: string;
   creatorName?: string;
 }
+
+export interface ViewPreferencesValues {
+  issueGrouping?: string | null;
+  showCompletedIssues?: string | null;
+  viewOrdering?: string | null;
+}
+
+export interface ViewPreferences {
+  id: string;
+  type: string;
+  viewType: string;
+  createdAt: Date;
+  updatedAt: Date;
+  preferences: ViewPreferencesValues;
+}

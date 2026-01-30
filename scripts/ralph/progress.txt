@@ -405,3 +405,31 @@ Task ID: 0015
 - Follows scoped entity pattern: `lnr project <name> --links`, `lnr initiative <name> --links`
 
 ---
+
+## 2026-01-30 - Add ViewPreferences embedded in view command
+Thread: https://ampcode.com/threads/T-019c1119-5cce-7063-af5d-45f7bdb63063
+Task ID: 0016
+
+**What was implemented:**
+- Added ViewPreferences, ViewPreferencesValues types to core/types.ts
+- Added ViewPreferencesResult interface and getViewPreferences(client, viewId) to views.ts
+- Fetches userViewPreferences, organizationViewPreferences, and viewPreferencesValues from view
+- Exported types and function from core/index.ts
+- Added --preferences flag to view command in router/views.ts
+- Display shows effective preferences (grouping, ordering, show completed)
+- Verbose mode shows separate user and organization preferences with IDs
+- Supports --json, --quiet, --verbose flags
+
+**Files changed:**
+- packages/core/src/types.ts
+- packages/core/src/views.ts
+- packages/core/src/index.ts
+- packages/cli/src/router/views.ts
+
+**Learnings:**
+- ViewPreferences accessed via view.userViewPreferences, view.organizationViewPreferences, view.viewPreferencesValues
+- viewPreferencesValues is the "effective" merged preferences (user overrides org)
+- ViewPreferences has nested preferences object containing issueGrouping, showCompletedIssues, viewOrdering
+- Follows embedded entity pattern: `lnr view <name> --preferences`
+
+---
