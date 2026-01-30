@@ -4,6 +4,7 @@ import { getViewer } from "./me";
 import { findTeamByKeyOrName } from "./teams";
 import { listProjects } from "./projects";
 import { listCycles } from "./cycles";
+import { listMilestones } from "./milestones";
 
 export class IssueNotFoundError extends Error {
   constructor(identifier: string) {
@@ -184,6 +185,40 @@ export async function resolveCycleByName(
     throw new CycleNotFoundError(
       name,
       cycles.map((c) => c.name ?? `#${c.number}`)
+    );
+  }
+
+  return match.id;
+}
+
+// === milestone resolver ===
+
+export class MilestoneNotFoundError extends Error {
+  constructor(name: string, availableMilestones: string[]) {
+    const milestoneList = availableMilestones.length > 0
+      ? availableMilestones.join(", ")
+      : "none";
+    super(`milestone not found: "${name}". available milestones: ${milestoneList}`);
+    this.name = "MilestoneNotFoundError";
+  }
+}
+
+export async function resolveMilestoneByName(
+  client: LinearClient,
+  projectId: string,
+  name: string
+): Promise<string> {
+  const milestones = await listMilestones(client, { projectId });
+  const normalizedInput = name.toLowerCase();
+
+  const match = milestones.find(
+    (m) => m.name.toLowerCase() === normalizedInput
+  );
+
+  if (!match) {
+    throw new MilestoneNotFoundError(
+      name,
+      milestones.map((m) => m.name)
     );
   }
 
