@@ -11,6 +11,7 @@ import { generatedTemplatesRouter } from "../generated/template";
 import { meRouter } from "./me";
 import { searchRouter } from "./search";
 import { teamsRouter } from "./teams";
+import { usersRouter } from "./users";
 
 export const appRouter = router({
   ...authRouter._def.procedures,
@@ -25,6 +26,7 @@ export const appRouter = router({
   ...meRouter._def.procedures,
   ...searchRouter._def.procedures,
   ...teamsRouter._def.procedures,
+  ...usersRouter._def.procedures,
 });
 
 export type AppRouter = typeof appRouter;

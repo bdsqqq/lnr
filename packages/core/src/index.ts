@@ -193,3 +193,11 @@ export {
   resolveMilestoneByName,
   MilestoneNotFoundError,
 } from "./resolvers";
+
+// users
+export {
+  listUsers,
+  getUser,
+  findUserByEmail,
+  findUserByNameOrEmail,
+} from "./users";

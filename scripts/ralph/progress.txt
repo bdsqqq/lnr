@@ -133,3 +133,30 @@ Task ID: 0005
 - No core changes needed - Team type and functions were already complete
 
 ---
+
+## 2026-01-30 - Add User read-only support
+Thread: https://ampcode.com/threads/T-019c10ff-5e15-7129-bd2e-f7f26dbaca69
+Task ID: 0006
+
+**What was implemented:**
+- Created packages/core/src/users.ts with listUsers, getUser, findUserByEmail, findUserByNameOrEmail
+- Exported user functions from core/index.ts
+- Created packages/cli/src/router/users.ts with:
+  - `lnr users` - list users (table with name, email, active, admin columns)
+  - `lnr user <email|name>` - show specific user
+  - --json, --quiet, --verbose flags
+  - Alias `lnr u` for users list
+- Wired up usersRouter in router/index.ts
+
+**Files changed:**
+- packages/core/src/users.ts (new)
+- packages/core/src/index.ts
+- packages/cli/src/router/users.ts (new)
+- packages/cli/src/router/index.ts
+
+**Learnings:**
+- User type already existed in core/types.ts but no users.ts functions existed
+- Linear SDK has client.users() and client.user(id) for fetching users
+- User lookup by email uses filter: { email: { eq: email.toLowerCase() } }
+
+---
