@@ -258,3 +258,15 @@ export interface ProjectLabel {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface ProjectStatus {
+  id: string;
+  name: string;
+  color: string;
+  description?: string | null;
+  type: "backlog" | "planned" | "started" | "paused" | "completed" | "canceled";
+  position: number;
+  indefinite: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}

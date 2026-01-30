@@ -1,5 +1,5 @@
 import type { LinearClient } from "@linear/sdk";
-import type { Issue, Project, CreateProjectInput, UpdateProjectInput, ProjectUpdate, ProjectLabel } from "./types";
+import type { Issue, Project, CreateProjectInput, UpdateProjectInput, ProjectUpdate, ProjectLabel, ProjectStatus } from "./types";
 
 export async function listProjects(
   client: LinearClient,
@@ -235,4 +235,33 @@ export async function getProjectLabels(
     createdAt: l.createdAt,
     updatedAt: l.updatedAt,
   }));
+}
+
+export async function getProjectStatus(
+  client: LinearClient,
+  projectId: string
+): Promise<ProjectStatus | null> {
+  const project = await client.project(projectId);
+
+  if (!project) {
+    return null;
+  }
+
+  const status = await project.status;
+
+  if (!status) {
+    return null;
+  }
+
+  return {
+    id: status.id,
+    name: status.name,
+    color: status.color,
+    description: status.description,
+    type: status.type as ProjectStatus["type"],
+    position: status.position,
+    indefinite: status.indefinite,
+    createdAt: status.createdAt,
+    updatedAt: status.updatedAt,
+  };
 }

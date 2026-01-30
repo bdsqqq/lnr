@@ -13,6 +13,7 @@ import {
   getProjectIssues,
   getProjectUpdates,
   getProjectLabels,
+  getProjectStatus,
   createProject,
   deleteProject,
   updateProject,
@@ -23,6 +24,7 @@ import {
   type Project,
   type ProjectUpdate,
   type ProjectLabel,
+  type ProjectStatus,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
@@ -52,6 +54,7 @@ export const projectInput = z.object({
   issues: z.boolean().optional().describe("list issues in project"),
   updates: z.boolean().optional().describe("list project updates"),
   labels: z.boolean().optional().describe("list project labels"),
+  showStatus: z.boolean().optional().describe("show project status details"),
   json: z.boolean().optional().describe("output as json"),
   quiet: z.boolean().optional().describe("output ids only"),
   verbose: z.boolean().optional().describe("show all columns"),
@@ -99,6 +102,22 @@ const verboseLabelColumns: TableColumn<ProjectLabel>[] = [
   { header: "COLOR", value: (l) => l.color, width: 10 },
   { header: "GROUP", value: (l) => l.isGroup ? "yes" : "no", width: 6 },
   { header: "DESCRIPTION", value: (l) => truncate(l.description ?? "-", 40), width: 40 },
+];
+
+const statusColumns: TableColumn<ProjectStatus>[] = [
+  { header: "NAME", value: (s) => s.name, width: 20 },
+  { header: "TYPE", value: (s) => s.type, width: 12 },
+  { header: "COLOR", value: (s) => s.color, width: 10 },
+];
+
+const verboseStatusColumns: TableColumn<ProjectStatus>[] = [
+  { header: "ID", value: (s) => s.id, width: 36 },
+  { header: "NAME", value: (s) => s.name, width: 20 },
+  { header: "TYPE", value: (s) => s.type, width: 12 },
+  { header: "COLOR", value: (s) => s.color, width: 10 },
+  { header: "POSITION", value: (s) => String(s.position), width: 10 },
+  { header: "INDEFINITE", value: (s) => s.indefinite ? "yes" : "no", width: 10 },
+  { header: "DESCRIPTION", value: (s) => truncate(s.description ?? "-", 40), width: 40 },
 ];
 
 type Operation = "create" | "read" | "update" | "delete";
@@ -202,6 +221,23 @@ async function handleShowProject(
       } else {
         const cols = outputOpts.verbose ? verboseLabelColumns : labelColumns;
         outputTable(labels, cols, outputOpts);
+      }
+      return;
+    }
+
+    if (input.showStatus) {
+      const status = await getProjectStatus(client, project.id);
+      if (!status) {
+        console.log("no status set");
+        return;
+      }
+      if (format === "json") {
+        outputJson(status);
+      } else if (format === "quiet") {
+        console.log(status.id);
+      } else {
+        const cols = outputOpts.verbose ? verboseStatusColumns : statusColumns;
+        outputTable([status], cols, outputOpts);
       }
       return;
     }
