@@ -18,7 +18,9 @@ import {
   getAvailableTeamKeys,
   resolveAssignee,
   resolveTeamByKey,
+  listMilestones,
   type Project,
+  type ProjectMilestone,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
@@ -46,6 +48,7 @@ export const listProjectsInput = z.object({
 export const projectInput = z.object({
   name: z.string().meta({ positional: true }).describe("project name or 'new'"),
   issues: z.boolean().optional().describe("list issues in project"),
+  milestones: z.boolean().optional().describe("list milestones in project"),
   json: z.boolean().optional().describe("output as json"),
   quiet: z.boolean().optional().describe("output ids only"),
   verbose: z.boolean().optional().describe("show all columns"),
@@ -144,6 +147,21 @@ async function handleShowProject(
       } else {
         for (const issue of issues) {
           console.log(`${issue.identifier}: ${issue.title}`);
+        }
+      }
+      return;
+    }
+
+    if (input.milestones) {
+      const milestones = await listMilestones(client, { projectId: project.id });
+      if (format === "json") {
+        outputJson(milestones);
+      } else if (format === "quiet") {
+        outputQuiet(milestones.map((m) => m.id));
+      } else {
+        for (const milestone of milestones) {
+          const target = milestone.targetDate ? ` (target: ${formatDate(milestone.targetDate)})` : "";
+          console.log(`${milestone.name}${target}`);
         }
       }
       return;
