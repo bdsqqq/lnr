@@ -330,3 +330,25 @@ export interface UpdateGitAutomationStateInput {
   stateId?: string;
   targetBranchId?: string;
 }
+
+export interface GitAutomationTargetBranch {
+  id: string;
+  branchPattern: string;
+  isRegex: boolean;
+  teamId: string;
+  teamKey?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  archivedAt?: Date | null;
+}
+
+export interface CreateGitAutomationTargetBranchInput {
+  teamId: string;
+  branchPattern: string;
+  isRegex?: boolean;
+}
+
+export interface UpdateGitAutomationTargetBranchInput {
+  branchPattern?: string;
+  isRegex?: boolean;
+}

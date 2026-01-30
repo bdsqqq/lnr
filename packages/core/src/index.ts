@@ -262,3 +262,18 @@ export {
   updateGitAutomationState,
   deleteGitAutomationState,
 } from "./git-automation-states";
+
+// git automation target branches
+export type {
+  GitAutomationTargetBranch,
+  CreateGitAutomationTargetBranchInput,
+  UpdateGitAutomationTargetBranchInput,
+} from "./types";
+export {
+  listGitAutomationTargetBranches,
+  getGitAutomationTargetBranch,
+  findGitAutomationTargetBranchByPattern,
+  createGitAutomationTargetBranch,
+  updateGitAutomationTargetBranch,
+  deleteGitAutomationTargetBranch,
+} from "./git-automation-target-branches";
