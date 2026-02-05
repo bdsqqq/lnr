@@ -1,11 +1,12 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-05T18:16:19.701Z
+ * Generated from extracted-schema.json at 2026-02-05T18:55:41.728Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
 
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import {
   getClient,
   listLabels,
@@ -34,24 +35,24 @@ import {
 } from "../lib/output";
 
 
-export const listLabelsInput = z.object({
-  team: z.string().optional().describe("filter by team key"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+export const listLabelsInput = type({
+  "team?": type("string").describe("filter by team key"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });
 
-export const labelInput = z.object({
-  id: z.string().meta({ positional: true }).describe("label id or 'new'"),
-  json: z.boolean().optional().describe("output as json"),
-  delete: z.boolean().optional().describe("delete the label"),
-  team: z.string().optional().describe("team key (required for new)"),
-  name: z.string().optional().describe("label name (required for new)"),
-  description: z.string().optional().describe("label description"),
-  color: z.string().optional().describe("hex color code"),
+export const labelInput = type({
+  id: type("string").configure({ positional: true }).describe("label id or 'new'"),
+  "json?": type("boolean").describe("output as json"),
+  "delete?": type("boolean").describe("delete the label"),
+  "team?": type("string").describe("team key (required for new)"),
+  "name?": type("string").describe("label name (required for new)"),
+  "description?": type("string").describe("label description"),
+  "color?": type("string").describe("hex color code"),
 });
 
-type LabelInput = z.infer<typeof labelInput>;
+type LabelInput = typeof labelInput.infer;
 
 
 
@@ -77,7 +78,7 @@ function inferOperation(input: LabelInput): Operation {
 }
 
 async function handleListLabels(
-  input: z.infer<typeof listLabelsInput>
+  input: typeof listLabelsInput.infer
 ): Promise<void> {
   try {
     const client = getClient();

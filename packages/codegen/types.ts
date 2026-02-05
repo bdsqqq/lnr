@@ -59,28 +59,32 @@ export interface CLISpec {
   commands: CLICommand[];
 }
 
-export function graphqlTypeToZod(field: SchemaField): string {
-  let zodType: string;
+/**
+ * maps GraphQL types to arktype string syntax for CLI generation.
+ * returns the base type string (e.g., "string", "number") for use in type() calls.
+ */
+export function graphqlTypeToArktype(field: SchemaField): string {
+  let arktypeStr: string;
   switch (field.type) {
     case "String":
     case "ID":
     case "DateTime":
     case "TimelessDate":
     case "JSON":
-      zodType = "z.string()";
+      arktypeStr = "string";
       break;
     case "Int":
     case "Float":
-      zodType = "z.number()";
+      arktypeStr = "number";
       break;
     case "Boolean":
-      zodType = "z.boolean()";
+      arktypeStr = "boolean";
       break;
     default:
-      zodType = "z.string()";
+      arktypeStr = "string";
   }
   if (field.isList) {
-    zodType = `z.array(${zodType})`;
+    arktypeStr = `${arktypeStr}[]`;
   }
-  return zodType;
+  return arktypeStr;
 }

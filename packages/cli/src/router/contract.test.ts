@@ -5,6 +5,7 @@
  */
 
 import { describe, test, expect } from "bun:test";
+import { type } from "arktype";
 
 // import schemas directly from router files
 import { listIssuesInput, issueInput } from "../generated/issue";
@@ -17,6 +18,27 @@ import { meInput } from "../router/me";
 import { searchInput } from "../router/search";
 import { authInput } from "../router/auth";
 import { getInput as configGetInput, setInput as configSetInput } from "../router/config";
+
+/**
+ * unified validation helper that works with both zod and arktype schemas.
+ * provides consistent safeParse-like interface during migration.
+ */
+function safeParse<T>(schema: unknown, data: unknown): { success: boolean; data?: T; error?: unknown } {
+  // zod schema check
+  if (typeof schema === "object" && schema !== null && "safeParse" in schema) {
+    const zodResult = (schema as { safeParse: (d: unknown) => { success: boolean; data?: T; error?: unknown } }).safeParse(data);
+    return zodResult;
+  }
+  // arktype schema (callable)
+  if (typeof schema === "function") {
+    const result = (schema as (d: unknown) => unknown)(data);
+    if (result instanceof type.errors) {
+      return { success: false, error: result };
+    }
+    return { success: true, data: result as T };
+  }
+  throw new Error("unknown schema type");
+}
 
 // operation inference - mirrors router logic
 function inferOperation(command: string, input: Record<string, unknown>): "create" | "update" | "delete" | "show" {
@@ -41,7 +63,7 @@ function inferOperation(command: string, input: Record<string, unknown>): "creat
 describe("projects", () => {
   describe("projects", () => {
     test("valid input parses", () => {
-      const result = listProjectsInput.safeParse({});
+      const result = safeParse(listProjectsInput, {});
       expect(result.success).toBe(true);
     });
 
@@ -53,12 +75,12 @@ describe("projects", () => {
 
   describe("project", () => {
     test("valid input parses", () => {
-      const result = projectInput.safeParse({"name":"test-value"});
+      const result = safeParse(projectInput, {"name":"test-value"});
       expect(result.success).toBe(true);
     });
 
     test("rejects missing required flags", () => {
-      const result = projectInput.safeParse({});
+      const result = safeParse(projectInput, {});
       expect(result.success).toBe(false);
     });
 
@@ -141,7 +163,7 @@ describe("cycles", () => {
 describe("docs", () => {
   describe("docs", () => {
     test("valid input parses", () => {
-      const result = listDocsInput.safeParse({});
+      const result = safeParse(listDocsInput, {});
       expect(result.success).toBe(true);
     });
 
@@ -153,12 +175,12 @@ describe("docs", () => {
 
   describe("doc", () => {
     test("valid input parses", () => {
-      const result = docInput.safeParse({"id":"test-value"});
+      const result = safeParse(docInput, {"id":"test-value"});
       expect(result.success).toBe(true);
     });
 
     test("rejects missing required flags", () => {
-      const result = docInput.safeParse({});
+      const result = safeParse(docInput, {});
       expect(result.success).toBe(false);
     });
 
@@ -245,7 +267,7 @@ describe("me", () => {
 describe("labels", () => {
   describe("labels", () => {
     test("valid input parses", () => {
-      const result = listLabelsInput.safeParse({});
+      const result = safeParse(listLabelsInput, {});
       expect(result.success).toBe(true);
     });
 
@@ -257,12 +279,12 @@ describe("labels", () => {
 
   describe("label", () => {
     test("valid input parses", () => {
-      const result = labelInput.safeParse({"id":"test-value"});
+      const result = safeParse(labelInput, {"id":"test-value"});
       expect(result.success).toBe(true);
     });
 
     test("rejects missing required flags", () => {
-      const result = labelInput.safeParse({});
+      const result = safeParse(labelInput, {});
       expect(result.success).toBe(false);
     });
 
@@ -296,7 +318,7 @@ describe("auth", () => {
 describe("issues", () => {
   describe("issues", () => {
     test("valid input parses", () => {
-      const result = listIssuesInput.safeParse({});
+      const result = safeParse(listIssuesInput, {});
       expect(result.success).toBe(true);
     });
 
@@ -312,12 +334,12 @@ describe("issues", () => {
 
   describe("issue", () => {
     test("valid input parses", () => {
-      const result = issueInput.safeParse({"idOrNew":"test-value"});
+      const result = safeParse(issueInput, {"idOrNew":"test-value"});
       expect(result.success).toBe(true);
     });
 
     test("rejects missing required flags", () => {
-      const result = issueInput.safeParse({});
+      const result = safeParse(issueInput, {});
       expect(result.success).toBe(false);
     });
 

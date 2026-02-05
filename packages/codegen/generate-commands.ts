@@ -13,7 +13,7 @@ import { join } from "node:path";
 import {
   type SchemaField,
   type ExtractedSchema,
-  graphqlTypeToZod,
+  graphqlTypeToArktype,
 } from "./types";
 import { getCliFlagForField } from "./field-resolvers";
 import {
@@ -41,18 +41,18 @@ const schema: ExtractedSchema = JSON.parse(readFileSync(schemaPath, "utf-8"));
 // === flag/scoped injection helpers ===
 
 /**
- * generates zod field declarations for injected flag operations.
+ * generates arktype field declarations for injected flag operations.
  * called by inputSchema functions to add flags from entity-definitions.
  */
-function generateFlagZodFields(commandName: string): string[] {
+function generateFlagArktypeFields(commandName: string): string[] {
   const flags = getFlagsForCommand(ENTITY_DEFINITIONS, commandName);
   const lines: string[] = [];
 
   for (const flagEntity of flags) {
     for (const op of flagEntity.flags.operations) {
-      const zodType = op.inputType === "boolean" ? "z.boolean()" : "z.string()";
+      const arktypeBase = op.inputType === "boolean" ? "boolean" : "string";
       const desc = op.description.replace(/"/g, '\\"');
-      lines.push(`  ${op.flag}: ${zodType}.optional().describe("${desc}"),`);
+      lines.push(`  "${op.flag}?": type("${arktypeBase}").describe("${desc}"),`);
     }
   }
 
@@ -60,15 +60,15 @@ function generateFlagZodFields(commandName: string): string[] {
 }
 
 /**
- * generates zod field declarations for scoped entities (accessed via flags).
+ * generates arktype field declarations for scoped entities (accessed via flags).
  */
-function generateScopedZodFields(commandName: string): string[] {
+function generateScopedArktypeFields(commandName: string): string[] {
   const scoped = getScopedForCommand(ENTITY_DEFINITIONS, commandName);
   const lines: string[] = [];
 
   for (const s of scoped) {
     const desc = s.scoped.description.replace(/"/g, '\\"');
-    lines.push(`  ${s.scoped.flag}: z.boolean().optional().describe("${desc}"),`);
+    lines.push(`  "${s.scoped.flag}?": type("boolean").describe("${desc}"),`);
   }
 
   return lines;
@@ -217,83 +217,84 @@ const issueConfig: EntityConfig = {
     "unsubscribeFromIssue",
   ],
   coreTypes: ["Issue", "ListIssuesFilter"],
-  listInputSchema: () => `export const listIssuesInput = z.object({
-  team: z.string().optional().describe("filter by team key"),
-  project: z.string().optional().describe("filter by project name"),
-  assignee: z.string().optional().describe("filter by assignee email or @me"),
-  state: z.string().optional().describe("filter by state name"),
-  priority: z.string().optional().describe("filter by priority"),
-  label: z.string().optional().describe("filter by label name"),
-  cycle: z.string().optional().describe("filter by cycle"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+  listInputSchema: () => `export const listIssuesInput = type({
+  "team?": type("string").describe("filter by team key"),
+  "project?": type("string").describe("filter by project name"),
+  "assignee?": type("string").describe("filter by assignee email or @me"),
+  "state?": type("string").describe("filter by state name"),
+  "priority?": type("string").describe("filter by priority"),
+  "label?": type("string").describe("filter by label name"),
+  "cycle?": type("string").describe("filter by cycle"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });`,
   inputSchema: (fields: SchemaField[]) => {
     const lines: string[] = [];
-    lines.push("export const issueInput = z.object({");
-    lines.push('  idOrNew: z.string().meta({ positional: true }).describe("issue identifier (e.g. ENG-123) or \'new\'"),');
-    lines.push('  json: z.boolean().optional().describe("output as json"),');
-    lines.push('  open: z.boolean().optional().describe("open issue in browser"),');
+    lines.push("export const issueInput = type({");
+    lines.push('  idOrNew: type("string").configure({ positional: true }).describe("issue identifier (e.g. ENG-123) or \'new\'"),');
+    lines.push('  "json?": type("boolean").describe("output as json"),');
+    lines.push('  "open?": type("boolean").describe("open issue in browser"),');
 
     const filteredFields = fields.filter(f => !f.isDeprecated && !issueConfig.fieldsToExclude.includes(f.name) && !f.description.includes("[Internal]"));
 
     for (const field of filteredFields) {
       const cliName = getCliFlagForField(field.name);
-      let zodType: string;
+      let arktypeExpr: string;
       
       if (cliName === "priority") {
-        zodType = 'z.string().optional().describe("set priority (urgent, high, medium, low, none)")';
+        arktypeExpr = 'type("string").describe("set priority (urgent, high, medium, low, none)")';
       } else if (cliName === "state") {
-        zodType = 'z.string().optional().describe("set workflow state")';
+        arktypeExpr = 'type("string").describe("set workflow state")';
       } else if (cliName === "assignee") {
-        zodType = 'z.string().optional().describe("set assignee by email or @me")';
+        arktypeExpr = 'type("string").describe("set assignee by email or @me")';
       } else if (cliName === "label") {
-        zodType = 'z.string().optional().describe("set label (+name to add, -name to remove)")';
+        arktypeExpr = 'type("string").describe("set label (+name to add, -name to remove)")';
       } else if (cliName === "parent") {
-        zodType = 'z.string().optional().describe("set parent issue identifier")';
+        arktypeExpr = 'type("string").describe("set parent issue identifier")';
       } else if (cliName === "team") {
-        zodType = 'z.string().optional().describe("team key (required for new)")';
+        arktypeExpr = 'type("string").describe("team key (required for new)")';
       } else if (cliName === "project") {
-        zodType = 'z.string().optional().describe("set project name")';
+        arktypeExpr = 'type("string").describe("set project name")';
       } else if (cliName === "cycle") {
-        zodType = 'z.string().optional().describe("set cycle")';
+        arktypeExpr = 'type("string").describe("set cycle")';
       } else if (field.name === "projectMilestoneId") {
-        zodType = 'z.string().optional().describe("set milestone name (requires --project)")';
-        lines.push(`  milestone: ${zodType},`);
+        arktypeExpr = 'type("string").describe("set milestone name (requires --project)")';
+        lines.push(`  "milestone?": ${arktypeExpr},`);
         continue;
       } else if (cliName === "estimate") {
-        zodType = 'z.number().optional().describe("set estimate points")';
+        arktypeExpr = 'type("number").describe("set estimate points")';
       } else if (cliName === "dueDate") {
-        zodType = 'z.string().optional().describe("set due date (YYYY-MM-DD)")';
+        arktypeExpr = 'type("string").describe("set due date (YYYY-MM-DD)")';
       } else {
         const desc = field.description.replace(/"/g, '\\"');
-        zodType = `${graphqlTypeToZod(field)}.optional().describe("${desc}")`;
+        const baseType = graphqlTypeToArktype(field);
+        arktypeExpr = `type("${baseType}").describe("${desc}")`;
       }
 
-      lines.push(`  ${cliName}: ${zodType},`);
+      lines.push(`  "${cliName}?": ${arktypeExpr},`);
     }
 
-    lines.push('  label: z.string().optional().describe("set label (+name to add, -name to remove)"),');
-    lines.push('  comment: z.string().optional().describe("add comment to issue"),');
-    lines.push('  blocks: z.string().optional().describe("add blocks relation to issue"),');
-    lines.push('  blockedBy: z.string().optional().describe("add blocked-by relation to issue"),');
-    lines.push('  relatesTo: z.string().optional().describe("add relates-to relation to issue"),');
-    lines.push('  editComment: z.string().optional().describe("comment id to edit (requires --text)"),');
-    lines.push('  text: z.string().optional().describe("text for --edit-comment or --reply-to"),');
-    lines.push('  replyTo: z.string().optional().describe("comment id to reply to (requires --text)"),');
-    lines.push('  deleteComment: z.string().optional().describe("comment id to delete"),');
-    lines.push('  archive: z.boolean().optional().describe("archive the issue"),');
+    lines.push('  "label?": type("string").describe("set label (+name to add, -name to remove)"),');
+    lines.push('  "comment?": type("string").describe("add comment to issue"),');
+    lines.push('  "blocks?": type("string").describe("add blocks relation to issue"),');
+    lines.push('  "blockedBy?": type("string").describe("add blocked-by relation to issue"),');
+    lines.push('  "relatesTo?": type("string").describe("add relates-to relation to issue"),');
+    lines.push('  "editComment?": type("string").describe("comment id to edit (requires --text)"),');
+    lines.push('  "text?": type("string").describe("text for --edit-comment or --reply-to"),');
+    lines.push('  "replyTo?": type("string").describe("comment id to reply to (requires --text)"),');
+    lines.push('  "deleteComment?": type("string").describe("comment id to delete"),');
+    lines.push('  "archive?": type("boolean").describe("archive the issue"),');
 
     // inject scoped entity flags (--comments, --subIssues)
-    lines.push(...generateScopedZodFields("issue"));
+    lines.push(...generateScopedArktypeFields("issue"));
 
     // inject flag entity fields (--react, --emoji, --unreact)
-    lines.push(...generateFlagZodFields("issue"));
+    lines.push(...generateFlagArktypeFields("issue"));
 
     // issue-specific subscription flags (uses subscriberIds, not NotificationSubscription)
-    lines.push('  subscribe: z.boolean().optional().describe("subscribe to issue notifications"),');
-    lines.push('  unsubscribe: z.boolean().optional().describe("unsubscribe from issue notifications"),');
+    lines.push('  "subscribe?": type("boolean").describe("subscribe to issue notifications"),');
+    lines.push('  "unsubscribe?": type("boolean").describe("unsubscribe from issue notifications"),');
 
     lines.push("});");
 
@@ -341,17 +342,17 @@ function inferOperation(input: IssueInput): Operation {
   archiveHandler: generateIssueArchiveHandler(),
   hasArchiveFlag: true,
   extraHandlers: generateIssueExtraImports(),
-  subcommandInputSchemas: () => `export const batchUpdateInput = z.object({
-  issues: z.string().meta({ positional: true }).describe("comma-separated issue identifiers (e.g. ENG-1,ENG-2,ENG-3)"),
-  state: z.string().optional().describe("set workflow state for all issues"),
-  assignee: z.string().optional().describe("set assignee by email or @me for all issues"),
-  priority: z.string().optional().describe("set priority for all issues (urgent, high, medium, low, none)"),
-  label: z.string().optional().describe("set label for all issues (+name to add)"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
+  subcommandInputSchemas: () => `export const batchUpdateInput = type({
+  issues: type("string").configure({ positional: true }).describe("comma-separated issue identifiers (e.g. ENG-1,ENG-2,ENG-3)"),
+  "state?": type("string").describe("set workflow state for all issues"),
+  "assignee?": type("string").describe("set assignee by email or @me for all issues"),
+  "priority?": type("string").describe("set priority for all issues (urgent, high, medium, low, none)"),
+  "label?": type("string").describe("set label for all issues (+name to add)"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
 });
 
-type BatchUpdateInput = z.infer<typeof batchUpdateInput>;`,
+type BatchUpdateInput = typeof batchUpdateInput.infer;`,
   subcommandHandlers: generateIssueBatchHandler,
   subcommandRouterEntries: () => `"issue batch": procedure
     .meta({
@@ -393,62 +394,63 @@ const projectConfig: EntityConfig = {
     "resolveTeamByKey",
   ],
   coreTypes: ["Project"],
-  listInputSchema: () => `export const listProjectsInput = z.object({
-  team: z.string().optional().describe("filter by team key"),
-  status: z.string().optional().describe("filter by status (planned, started, completed, etc)"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+  listInputSchema: () => `export const listProjectsInput = type({
+  "team?": type("string").describe("filter by team key"),
+  "status?": type("string").describe("filter by status (planned, started, completed, etc)"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });`,
   inputSchema: (fields: SchemaField[]) => {
     const lines: string[] = [];
-    lines.push("export const projectInput = z.object({");
-    lines.push('  name: z.string().meta({ positional: true }).describe("project name or \'new\'"),');
-    lines.push('  issues: z.boolean().optional().describe("list issues in project"),');
-    lines.push('  json: z.boolean().optional().describe("output as json"),');
-    lines.push('  quiet: z.boolean().optional().describe("output ids only"),');
-    lines.push('  verbose: z.boolean().optional().describe("show all columns"),');
-    lines.push('  delete: z.boolean().optional().describe("delete the project"),');
+    lines.push("export const projectInput = type({");
+    lines.push('  name: type("string").configure({ positional: true }).describe("project name or \'new\'"),');
+    lines.push('  "issues?": type("boolean").describe("list issues in project"),');
+    lines.push('  "json?": type("boolean").describe("output as json"),');
+    lines.push('  "quiet?": type("boolean").describe("output ids only"),');
+    lines.push('  "verbose?": type("boolean").describe("show all columns"),');
+    lines.push('  "delete?": type("boolean").describe("delete the project"),');
 
     const filteredFields = fields.filter(f => !f.isDeprecated && !projectConfig.fieldsToExclude.includes(f.name) && !f.description.includes("[Internal]"));
 
     for (const field of filteredFields) {
       const cliName = getCliFlagForField(field.name);
 
-      let zodType: string;
+      let arktypeExpr: string;
       if (cliName === "status") {
-        zodType = 'z.string().optional().describe("set project status")';
+        arktypeExpr = 'type("string").describe("set project status")';
       } else if (cliName === "lead") {
-        zodType = 'z.string().optional().describe("set lead by email or @me")';
+        arktypeExpr = 'type("string").describe("set lead by email or @me")';
       } else if (cliName === "team") {
-        zodType = 'z.string().optional().describe("team key to associate project with")';
+        arktypeExpr = 'type("string").describe("team key to associate project with")';
       } else if (cliName === "priority") {
-        zodType = 'z.number().optional().describe("set priority (0=none, 1=urgent, 2=high, 3=normal, 4=low)")';
+        arktypeExpr = 'type("number").describe("set priority (0=none, 1=urgent, 2=high, 3=normal, 4=low)")';
       } else if (cliName === "startDate") {
-        zodType = 'z.string().optional().describe("set start date (YYYY-MM-DD)")';
+        arktypeExpr = 'type("string").describe("set start date (YYYY-MM-DD)")';
       } else if (cliName === "targetDate") {
-        zodType = 'z.string().optional().describe("set target date (YYYY-MM-DD)")';
+        arktypeExpr = 'type("string").describe("set target date (YYYY-MM-DD)")';
       } else if (cliName === "content") {
-        zodType = 'z.string().optional().describe("set project content as markdown")';
+        arktypeExpr = 'type("string").describe("set project content as markdown")';
       } else if (cliName === "description") {
-        zodType = 'z.string().optional().describe("project description")';
+        arktypeExpr = 'type("string").describe("project description")';
       } else if (field.name === "name") {
-        zodType = 'z.string().optional().describe("new name for the project")';
-        lines.push(`  newName: ${zodType},`);
+        arktypeExpr = 'type("string").describe("new name for the project")';
+        lines.push(`  "newName?": ${arktypeExpr},`);
         continue;
       } else {
         const desc = field.description.replace(/"/g, '\\"');
-        zodType = `${graphqlTypeToZod(field)}.optional().describe("${desc}")`;
+        const baseType = graphqlTypeToArktype(field);
+        arktypeExpr = `type("${baseType}").describe("${desc}")`;
       }
 
-      lines.push(`  ${cliName}: ${zodType},`);
+      lines.push(`  "${cliName}?": ${arktypeExpr},`);
     }
 
     // inject scoped entity flags (--updates, --labels, --showStatus, --milestones)
-    lines.push(...generateScopedZodFields("project"));
+    lines.push(...generateScopedArktypeFields("project"));
 
     // inject flag entity fields (--react, --emoji, --unreact, --subscribe, --unsubscribe, --link)
-    lines.push(...generateFlagZodFields("project"));
+    lines.push(...generateFlagArktypeFields("project"));
 
     lines.push("});");
     return lines.join("\n");
@@ -488,17 +490,17 @@ function inferOperation(input: ProjectInput): Operation {
   createHandler: generateProjectCreateHandler(),
   deleteHandler: generateProjectDeleteHandler(),
   hasDeleteFlag: true,
-  subcommandInputSchemas: () => `export const projectMilestoneInput = z.object({
-  nameOrNew: z.string().meta({ positional: true }).describe("milestone name or 'new'"),
-  project: z.string().describe("project name (required)"),
-  newName: z.string().optional().describe("new name for the milestone"),
-  description: z.string().optional().describe("milestone description"),
-  targetDate: z.string().optional().describe("target date (YYYY-MM-DD)"),
-  delete: z.boolean().optional().describe("delete the milestone"),
-  json: z.boolean().optional().describe("output as json"),
+  subcommandInputSchemas: () => `export const projectMilestoneInput = type({
+  nameOrNew: type("string").configure({ positional: true }).describe("milestone name or 'new'"),
+  project: type("string").describe("project name (required)"),
+  "newName?": type("string").describe("new name for the milestone"),
+  "description?": type("string").describe("milestone description"),
+  "targetDate?": type("string").describe("target date (YYYY-MM-DD)"),
+  "delete?": type("boolean").describe("delete the milestone"),
+  "json?": type("boolean").describe("output as json"),
 });
 
-type ProjectMilestoneInput = z.infer<typeof projectMilestoneInput>;`,
+type ProjectMilestoneInput = typeof projectMilestoneInput.infer;`,
   subcommandHandlers: generateProjectMilestoneHandler,
   subcommandRouterEntries: () => `"project milestone": procedure
     .meta({
@@ -527,38 +529,39 @@ const labelConfig: EntityConfig = {
     "resolveTeamByKey",
   ],
   coreTypes: ["Label"],
-  listInputSchema: () => `export const listLabelsInput = z.object({
-  team: z.string().optional().describe("filter by team key"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+  listInputSchema: () => `export const listLabelsInput = type({
+  "team?": type("string").describe("filter by team key"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });`,
   inputSchema: (fields: SchemaField[]) => {
     const lines: string[] = [];
-    lines.push("export const labelInput = z.object({");
-    lines.push('  id: z.string().meta({ positional: true }).describe("label id or \'new\'"),');
-    lines.push('  json: z.boolean().optional().describe("output as json"),');
-    lines.push('  delete: z.boolean().optional().describe("delete the label"),');
-    lines.push('  team: z.string().optional().describe("team key (required for new)"),');
+    lines.push("export const labelInput = type({");
+    lines.push('  id: type("string").configure({ positional: true }).describe("label id or \'new\'"),');
+    lines.push('  "json?": type("boolean").describe("output as json"),');
+    lines.push('  "delete?": type("boolean").describe("delete the label"),');
+    lines.push('  "team?": type("string").describe("team key (required for new)"),');
 
     const filteredFields = fields.filter(f => !f.isDeprecated && !labelConfig.fieldsToExclude.includes(f.name));
 
     for (const field of filteredFields) {
       const cliName = getCliFlagForField(field.name);
 
-      let zodType: string;
+      let arktypeExpr: string;
       if (cliName === "color") {
-        zodType = 'z.string().optional().describe("hex color code")';
+        arktypeExpr = 'type("string").describe("hex color code")';
       } else if (cliName === "name") {
-        zodType = 'z.string().optional().describe("label name (required for new)")';
+        arktypeExpr = 'type("string").describe("label name (required for new)")';
       } else if (cliName === "description") {
-        zodType = 'z.string().optional().describe("label description")';
+        arktypeExpr = 'type("string").describe("label description")';
       } else {
         const desc = field.description.replace(/"/g, '\\"');
-        zodType = `${graphqlTypeToZod(field)}.optional().describe("${desc}")`;
+        const baseType = graphqlTypeToArktype(field);
+        arktypeExpr = `type("${baseType}").describe("${desc}")`;
       }
 
-      lines.push(`  ${cliName}: ${zodType},`);
+      lines.push(`  "${cliName}?": ${arktypeExpr},`);
     }
 
     lines.push("});");
@@ -608,21 +611,21 @@ const docConfig: EntityConfig = {
     "resolveProjectByName",
   ],
   coreTypes: ["Document"],
-  listInputSchema: () => `export const listDocsInput = z.object({
-  project: z.string().optional().describe("filter by project id"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+  listInputSchema: () => `export const listDocsInput = type({
+  "project?": type("string").describe("filter by project id"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });`,
-  inputSchema: () => `export const docInput = z.object({
-  id: z.string().meta({ positional: true }).describe("document id or 'new'"),
-  title: z.string().optional().describe("document title (required for new)"),
-  content: z.string().optional().describe("document content"),
-  project: z.string().optional().describe("project id to attach document to"),
-  delete: z.boolean().optional().describe("delete the document"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+  inputSchema: () => `export const docInput = type({
+  id: type("string").configure({ positional: true }).describe("document id or 'new'"),
+  "title?": type("string").describe("document title (required for new)"),
+  "content?": type("string").describe("document content"),
+  "project?": type("string").describe("project id to attach document to"),
+  "delete?": type("boolean").describe("delete the document"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });`,
   columns: `const docColumns: TableColumn<Document>[] = [
   { header: "ID", value: (d) => d.id, width: 20 },
@@ -646,7 +649,7 @@ function inferOperation(input: DocInput): Operation {
 
 function generateMilestoneListHandler(): string {
   return `async function handleListMilestones(
-  input: z.infer<typeof listMilestonesInput>
+  input: typeof listMilestonesInput.infer
 ): Promise<void> {
   try {
     const client = getClient();
@@ -836,22 +839,22 @@ const milestoneConfig: EntityConfig = {
     "resolveMilestoneByName",
   ],
   coreTypes: ["ProjectMilestone"],
-  listInputSchema: () => `export const listMilestonesInput = z.object({
-  project: z.string().optional().describe("filter by project name"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+  listInputSchema: () => `export const listMilestonesInput = type({
+  "project?": type("string").describe("filter by project name"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });`,
-  inputSchema: () => `export const milestoneInput = z.object({
-  name: z.string().meta({ positional: true }).describe("milestone name or 'new'"),
-  project: z.string().optional().describe("project name (required for new)"),
-  newName: z.string().optional().describe("new name for the milestone"),
-  description: z.string().optional().describe("milestone description"),
-  targetDate: z.string().optional().describe("target date (YYYY-MM-DD)"),
-  delete: z.boolean().optional().describe("delete the milestone"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+  inputSchema: () => `export const milestoneInput = type({
+  name: type("string").configure({ positional: true }).describe("milestone name or 'new'"),
+  "project?": type("string").describe("project name (required for new)"),
+  "newName?": type("string").describe("new name for the milestone"),
+  "description?": type("string").describe("milestone description"),
+  "targetDate?": type("string").describe("target date (YYYY-MM-DD)"),
+  "delete?": type("boolean").describe("delete the milestone"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });`,
   columns: `const milestoneColumns: TableColumn<ProjectMilestone>[] = [
   { header: "ID", value: (m) => m.id.slice(0, 8), width: 10 },
@@ -901,7 +904,8 @@ function generateEntityFile(config: EntityConfig): string {
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
 
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import {
   ${allImports.join(",\n  ")},
   type ${config.coreTypes.join(",\n  type ")},
@@ -925,7 +929,7 @@ ${config.listInputSchema()}
 
 ${config.inputSchema(updateFields)}
 
-type ${inputType} = z.infer<typeof ${config.singularCommand}Input>;
+type ${inputType} = typeof ${config.singularCommand}Input.infer;
 
 ${config.subcommandInputSchemas ? config.subcommandInputSchemas() : ""}
 
@@ -997,7 +1001,7 @@ function generateIssueExtraImports(): string {
 
 function generateIssueListHandler(): string {
   return `async function handleListIssues(
-  input: z.infer<typeof listIssuesInput>
+  input: typeof listIssuesInput.infer
 ): Promise<void> {
   try {
     const client = getClient();
@@ -1555,7 +1559,7 @@ function generateIssueBatchHandler(): string {
 
 function generateProjectListHandler(): string {
   return `async function handleListProjects(
-  input: z.infer<typeof listProjectsInput>
+  input: typeof listProjectsInput.infer
 ): Promise<void> {
   try {
     const client = getClient();
@@ -1989,7 +1993,7 @@ function generateProjectMilestoneHandler(): string {
 
 function generateLabelListHandler(): string {
   return `async function handleListLabels(
-  input: z.infer<typeof listLabelsInput>
+  input: typeof listLabelsInput.infer
 ): Promise<void> {
   try {
     const client = getClient();
@@ -2147,7 +2151,7 @@ function generateLabelDeleteHandler(): string {
 
 function generateDocListHandler(): string {
   return `async function handleListDocs(
-  input: z.infer<typeof listDocsInput>
+  input: typeof listDocsInput.infer
 ): Promise<void> {
   try {
     const client = getClient();

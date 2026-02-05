@@ -1,11 +1,12 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-05T18:16:19.701Z
+ * Generated from extracted-schema.json at 2026-02-05T18:55:41.727Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
 
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import {
   getClient,
   listProjects,
@@ -50,55 +51,55 @@ import {
 } from "../lib/output";
 
 
-export const listProjectsInput = z.object({
-  team: z.string().optional().describe("filter by team key"),
-  status: z.string().optional().describe("filter by status (planned, started, completed, etc)"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+export const listProjectsInput = type({
+  "team?": type("string").describe("filter by team key"),
+  "status?": type("string").describe("filter by status (planned, started, completed, etc)"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });
 
-export const projectInput = z.object({
-  name: z.string().meta({ positional: true }).describe("project name or 'new'"),
-  issues: z.boolean().optional().describe("list issues in project"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
-  delete: z.boolean().optional().describe("delete the project"),
-  status: z.string().optional().describe("set project status"),
-  newName: z.string().optional().describe("new name for the project"),
-  description: z.string().optional().describe("project description"),
-  content: z.string().optional().describe("set project content as markdown"),
-  team: z.string().optional().describe("team key to associate project with"),
-  lead: z.string().optional().describe("set lead by email or @me"),
-  startDate: z.string().optional().describe("set start date (YYYY-MM-DD)"),
-  targetDate: z.string().optional().describe("set target date (YYYY-MM-DD)"),
-  priority: z.number().optional().describe("set priority (0=none, 1=urgent, 2=high, 3=normal, 4=low)"),
-  updates: z.boolean().optional().describe("list project updates"),
-  labels: z.boolean().optional().describe("list project labels"),
-  showStatus: z.boolean().optional().describe("show project status details"),
-  links: z.boolean().optional().describe("list project external links"),
-  milestones: z.boolean().optional().describe("list project milestones"),
-  react: z.string().optional().describe("entity id to add reaction (requires --emoji)"),
-  emoji: z.string().optional().describe("emoji for --react"),
-  unreact: z.string().optional().describe("reaction id to remove"),
-  subscribe: z.boolean().optional().describe("subscribe to notifications"),
-  unsubscribe: z.boolean().optional().describe("unsubscribe from notifications"),
+export const projectInput = type({
+  name: type("string").configure({ positional: true }).describe("project name or 'new'"),
+  "issues?": type("boolean").describe("list issues in project"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
+  "delete?": type("boolean").describe("delete the project"),
+  "status?": type("string").describe("set project status"),
+  "newName?": type("string").describe("new name for the project"),
+  "description?": type("string").describe("project description"),
+  "content?": type("string").describe("set project content as markdown"),
+  "team?": type("string").describe("team key to associate project with"),
+  "lead?": type("string").describe("set lead by email or @me"),
+  "startDate?": type("string").describe("set start date (YYYY-MM-DD)"),
+  "targetDate?": type("string").describe("set target date (YYYY-MM-DD)"),
+  "priority?": type("number").describe("set priority (0=none, 1=urgent, 2=high, 3=normal, 4=low)"),
+  "updates?": type("boolean").describe("list project updates"),
+  "labels?": type("boolean").describe("list project labels"),
+  "showStatus?": type("boolean").describe("show project status details"),
+  "links?": type("boolean").describe("list project external links"),
+  "milestones?": type("boolean").describe("list project milestones"),
+  "react?": type("string").describe("entity id to add reaction (requires --emoji)"),
+  "emoji?": type("string").describe("emoji for --react"),
+  "unreact?": type("string").describe("reaction id to remove"),
+  "subscribe?": type("boolean").describe("subscribe to notifications"),
+  "unsubscribe?": type("boolean").describe("unsubscribe from notifications"),
 });
 
-type ProjectInput = z.infer<typeof projectInput>;
+type ProjectInput = typeof projectInput.infer;
 
-export const projectMilestoneInput = z.object({
-  nameOrNew: z.string().meta({ positional: true }).describe("milestone name or 'new'"),
-  project: z.string().describe("project name (required)"),
-  newName: z.string().optional().describe("new name for the milestone"),
-  description: z.string().optional().describe("milestone description"),
-  targetDate: z.string().optional().describe("target date (YYYY-MM-DD)"),
-  delete: z.boolean().optional().describe("delete the milestone"),
-  json: z.boolean().optional().describe("output as json"),
+export const projectMilestoneInput = type({
+  nameOrNew: type("string").configure({ positional: true }).describe("milestone name or 'new'"),
+  project: type("string").describe("project name (required)"),
+  "newName?": type("string").describe("new name for the milestone"),
+  "description?": type("string").describe("milestone description"),
+  "targetDate?": type("string").describe("target date (YYYY-MM-DD)"),
+  "delete?": type("boolean").describe("delete the milestone"),
+  "json?": type("boolean").describe("output as json"),
 });
 
-type ProjectMilestoneInput = z.infer<typeof projectMilestoneInput>;
+type ProjectMilestoneInput = typeof projectMilestoneInput.infer;
 
 const projectColumns: TableColumn<Project>[] = [
   { header: "NAME", value: (p) => truncate(p.name, 30), width: 30 },
@@ -124,7 +125,7 @@ function inferOperation(input: ProjectInput): Operation {
 }
 
 async function handleListProjects(
-  input: z.infer<typeof listProjectsInput>
+  input: typeof listProjectsInput.infer
 ): Promise<void> {
   try {
     const client = getClient();

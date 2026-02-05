@@ -1,11 +1,12 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-05T18:16:19.702Z
+ * Generated from extracted-schema.json at 2026-02-05T18:55:41.728Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
 
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import {
   getClient,
   listDocuments,
@@ -31,25 +32,25 @@ import {
 } from "../lib/output";
 
 
-export const listDocsInput = z.object({
-  project: z.string().optional().describe("filter by project id"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+export const listDocsInput = type({
+  "project?": type("string").describe("filter by project id"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });
 
-export const docInput = z.object({
-  id: z.string().meta({ positional: true }).describe("document id or 'new'"),
-  title: z.string().optional().describe("document title (required for new)"),
-  content: z.string().optional().describe("document content"),
-  project: z.string().optional().describe("project id to attach document to"),
-  delete: z.boolean().optional().describe("delete the document"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+export const docInput = type({
+  id: type("string").configure({ positional: true }).describe("document id or 'new'"),
+  "title?": type("string").describe("document title (required for new)"),
+  "content?": type("string").describe("document content"),
+  "project?": type("string").describe("project id to attach document to"),
+  "delete?": type("boolean").describe("delete the document"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });
 
-type DocInput = z.infer<typeof docInput>;
+type DocInput = typeof docInput.infer;
 
 
 
@@ -68,7 +69,7 @@ function inferOperation(input: DocInput): Operation {
 }
 
 async function handleListDocs(
-  input: z.infer<typeof listDocsInput>
+  input: typeof listDocsInput.infer
 ): Promise<void> {
   try {
     const client = getClient();

@@ -1,11 +1,12 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-05T18:16:19.701Z
+ * Generated from extracted-schema.json at 2026-02-05T18:55:41.727Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
 
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import {
   getClient,
   listIssues,
@@ -55,68 +56,68 @@ import {
 } from "../lib/output";
 
 
-export const listIssuesInput = z.object({
-  team: z.string().optional().describe("filter by team key"),
-  project: z.string().optional().describe("filter by project name"),
-  assignee: z.string().optional().describe("filter by assignee email or @me"),
-  state: z.string().optional().describe("filter by state name"),
-  priority: z.string().optional().describe("filter by priority"),
-  label: z.string().optional().describe("filter by label name"),
-  cycle: z.string().optional().describe("filter by cycle"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+export const listIssuesInput = type({
+  "team?": type("string").describe("filter by team key"),
+  "project?": type("string").describe("filter by project name"),
+  "assignee?": type("string").describe("filter by assignee email or @me"),
+  "state?": type("string").describe("filter by state name"),
+  "priority?": type("string").describe("filter by priority"),
+  "label?": type("string").describe("filter by label name"),
+  "cycle?": type("string").describe("filter by cycle"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });
 
-export const issueInput = z.object({
-  idOrNew: z.string().meta({ positional: true }).describe("issue identifier (e.g. ENG-123) or 'new'"),
-  json: z.boolean().optional().describe("output as json"),
-  open: z.boolean().optional().describe("open issue in browser"),
-  title: z.string().optional().describe("The issue title."),
-  description: z.string().optional().describe("The issue description in markdown format."),
-  assignee: z.string().optional().describe("set assignee by email or @me"),
-  parent: z.string().optional().describe("set parent issue identifier"),
-  priority: z.string().optional().describe("set priority (urgent, high, medium, low, none)"),
-  estimate: z.number().optional().describe("set estimate points"),
-  team: z.string().optional().describe("team key (required for new)"),
-  cycle: z.string().optional().describe("set cycle"),
-  project: z.string().optional().describe("set project name"),
-  milestone: z.string().optional().describe("set milestone name (requires --project)"),
-  state: z.string().optional().describe("set workflow state"),
-  prioritySortOrder: z.number().optional().describe("The position of the issue related to other issues, when ordered by priority."),
-  dueDate: z.string().optional().describe("set due date (YYYY-MM-DD)"),
-  label: z.string().optional().describe("set label (+name to add, -name to remove)"),
-  comment: z.string().optional().describe("add comment to issue"),
-  blocks: z.string().optional().describe("add blocks relation to issue"),
-  blockedBy: z.string().optional().describe("add blocked-by relation to issue"),
-  relatesTo: z.string().optional().describe("add relates-to relation to issue"),
-  editComment: z.string().optional().describe("comment id to edit (requires --text)"),
-  text: z.string().optional().describe("text for --edit-comment or --reply-to"),
-  replyTo: z.string().optional().describe("comment id to reply to (requires --text)"),
-  deleteComment: z.string().optional().describe("comment id to delete"),
-  archive: z.boolean().optional().describe("archive the issue"),
-  comments: z.boolean().optional().describe("list comments on issue"),
-  subIssues: z.boolean().optional().describe("list sub-issues"),
-  react: z.string().optional().describe("entity id to add reaction (requires --emoji)"),
-  emoji: z.string().optional().describe("emoji for --react"),
-  unreact: z.string().optional().describe("reaction id to remove"),
-  subscribe: z.boolean().optional().describe("subscribe to issue notifications"),
-  unsubscribe: z.boolean().optional().describe("unsubscribe from issue notifications"),
+export const issueInput = type({
+  idOrNew: type("string").configure({ positional: true }).describe("issue identifier (e.g. ENG-123) or 'new'"),
+  "json?": type("boolean").describe("output as json"),
+  "open?": type("boolean").describe("open issue in browser"),
+  "title?": type("string").describe("The issue title."),
+  "description?": type("string").describe("The issue description in markdown format."),
+  "assignee?": type("string").describe("set assignee by email or @me"),
+  "parent?": type("string").describe("set parent issue identifier"),
+  "priority?": type("string").describe("set priority (urgent, high, medium, low, none)"),
+  "estimate?": type("number").describe("set estimate points"),
+  "team?": type("string").describe("team key (required for new)"),
+  "cycle?": type("string").describe("set cycle"),
+  "project?": type("string").describe("set project name"),
+  "milestone?": type("string").describe("set milestone name (requires --project)"),
+  "state?": type("string").describe("set workflow state"),
+  "prioritySortOrder?": type("number").describe("The position of the issue related to other issues, when ordered by priority."),
+  "dueDate?": type("string").describe("set due date (YYYY-MM-DD)"),
+  "label?": type("string").describe("set label (+name to add, -name to remove)"),
+  "comment?": type("string").describe("add comment to issue"),
+  "blocks?": type("string").describe("add blocks relation to issue"),
+  "blockedBy?": type("string").describe("add blocked-by relation to issue"),
+  "relatesTo?": type("string").describe("add relates-to relation to issue"),
+  "editComment?": type("string").describe("comment id to edit (requires --text)"),
+  "text?": type("string").describe("text for --edit-comment or --reply-to"),
+  "replyTo?": type("string").describe("comment id to reply to (requires --text)"),
+  "deleteComment?": type("string").describe("comment id to delete"),
+  "archive?": type("boolean").describe("archive the issue"),
+  "comments?": type("boolean").describe("list comments on issue"),
+  "subIssues?": type("boolean").describe("list sub-issues"),
+  "react?": type("string").describe("entity id to add reaction (requires --emoji)"),
+  "emoji?": type("string").describe("emoji for --react"),
+  "unreact?": type("string").describe("reaction id to remove"),
+  "subscribe?": type("boolean").describe("subscribe to issue notifications"),
+  "unsubscribe?": type("boolean").describe("unsubscribe from issue notifications"),
 });
 
-type IssueInput = z.infer<typeof issueInput>;
+type IssueInput = typeof issueInput.infer;
 
-export const batchUpdateInput = z.object({
-  issues: z.string().meta({ positional: true }).describe("comma-separated issue identifiers (e.g. ENG-1,ENG-2,ENG-3)"),
-  state: z.string().optional().describe("set workflow state for all issues"),
-  assignee: z.string().optional().describe("set assignee by email or @me for all issues"),
-  priority: z.string().optional().describe("set priority for all issues (urgent, high, medium, low, none)"),
-  label: z.string().optional().describe("set label for all issues (+name to add)"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
+export const batchUpdateInput = type({
+  issues: type("string").configure({ positional: true }).describe("comma-separated issue identifiers (e.g. ENG-1,ENG-2,ENG-3)"),
+  "state?": type("string").describe("set workflow state for all issues"),
+  "assignee?": type("string").describe("set assignee by email or @me for all issues"),
+  "priority?": type("string").describe("set priority for all issues (urgent, high, medium, low, none)"),
+  "label?": type("string").describe("set label for all issues (+name to add)"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
 });
 
-type BatchUpdateInput = z.infer<typeof batchUpdateInput>;
+type BatchUpdateInput = typeof batchUpdateInput.infer;
 
 const issueColumns: TableColumn<Issue>[] = [
   { header: "ID", value: (i) => i.identifier, width: 10 },
@@ -143,7 +144,7 @@ function inferOperation(input: IssueInput): Operation {
 }
 
 async function handleListIssues(
-  input: z.infer<typeof listIssuesInput>
+  input: typeof listIssuesInput.infer
 ): Promise<void> {
   try {
     const client = getClient();
