@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-05T17:41:17.846Z
+ * Generated from extracted-schema.json at 2026-02-05T18:08:09.483Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -27,6 +27,11 @@ import {
   getProjectLabels,
   getProjectStatus,
   listMilestones,
+  createMilestone,
+  updateMilestone,
+  deleteMilestone,
+  resolveMilestoneByName,
+  resolveProjectByName,
   type Project,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
@@ -80,6 +85,18 @@ export const projectInput = z.object({
 });
 
 type ProjectInput = z.infer<typeof projectInput>;
+
+export const projectMilestoneInput = z.object({
+  nameOrNew: z.string().meta({ positional: true }).describe("milestone name or 'new'"),
+  project: z.string().describe("project name (required)"),
+  newName: z.string().optional().describe("new name for the milestone"),
+  description: z.string().optional().describe("milestone description"),
+  targetDate: z.string().optional().describe("target date (YYYY-MM-DD)"),
+  delete: z.boolean().optional().describe("delete the milestone"),
+  json: z.boolean().optional().describe("output as json"),
+});
+
+type ProjectMilestoneInput = z.infer<typeof projectMilestoneInput>;
 
 const projectColumns: TableColumn<Project>[] = [
   { header: "NAME", value: (p) => truncate(p.name, 30), width: 30 },
@@ -401,6 +418,115 @@ async function handleDeleteProject(
 
 
 
+async function handleProjectMilestone(input: ProjectMilestoneInput): Promise<void> {
+  try {
+    const client = getClient();
+
+    const outputOpts: OutputOptions = {
+      format: input.json ? "json" : undefined,
+    };
+    const format = getOutputFormat(outputOpts);
+
+    const projectId = await resolveProjectByName(client, input.project);
+
+    // determine operation
+    const isCreate = input.nameOrNew === "new";
+    const isDelete = input.delete === true;
+    const isUpdate = !isCreate && !isDelete && (
+      input.newName !== undefined ||
+      input.description !== undefined ||
+      input.targetDate !== undefined
+    );
+    const isRead = !isCreate && !isDelete && !isUpdate;
+
+    if (isCreate) {
+      if (!input.newName) {
+        exitWithError("--new-name is required", 'usage: lnr project milestone new --project "..." --new-name "v1.0"');
+      }
+
+      const milestone = await createMilestone(client, {
+        name: input.newName,
+        projectId,
+        description: input.description,
+        targetDate: input.targetDate,
+      });
+
+      if (!milestone) {
+        exitWithError("failed to create milestone");
+      }
+
+      if (format === "json") {
+        outputJson(milestone);
+      } else {
+        console.log(`created milestone: ${milestone.name}`);
+      }
+      return;
+    }
+
+    const milestoneId = await resolveMilestoneByName(client, projectId, input.nameOrNew);
+
+    if (isDelete) {
+      const success = await deleteMilestone(client, milestoneId);
+      if (!success) {
+        exitWithError(`milestone "${input.nameOrNew}" not found`, undefined, EXIT_CODES.NOT_FOUND);
+      }
+      console.log(`deleted milestone: ${input.nameOrNew}`);
+      return;
+    }
+
+    if (isUpdate) {
+      const updatePayload: {
+        name?: string;
+        description?: string;
+        targetDate?: string;
+      } = {};
+
+      if (input.newName !== undefined) updatePayload.name = input.newName;
+      if (input.description !== undefined) updatePayload.description = input.description;
+      if (input.targetDate !== undefined) updatePayload.targetDate = input.targetDate;
+
+      const updated = await updateMilestone(client, milestoneId, updatePayload);
+      if (!updated) {
+        exitWithError(`failed to update milestone "${input.nameOrNew}"`);
+      }
+
+      if (format === "json") {
+        outputJson(updated);
+      } else {
+        console.log(`updated milestone: ${updated.name}`);
+      }
+      return;
+    }
+
+    // read: show milestone details
+    const milestone = await client.projectMilestone(milestoneId);
+    if (!milestone) {
+      exitWithError(`milestone "${input.nameOrNew}" not found`, undefined, EXIT_CODES.NOT_FOUND);
+    }
+
+    if (format === "json") {
+      outputJson({
+        id: milestone.id,
+        name: milestone.name,
+        description: milestone.description,
+        targetDate: milestone.targetDate,
+        createdAt: milestone.createdAt,
+        updatedAt: milestone.updatedAt,
+      });
+    } else {
+      console.log(`${milestone.name}`);
+      if (milestone.description) {
+        console.log(`  ${milestone.description}`);
+      }
+      if (milestone.targetDate) {
+        console.log(`  target: ${formatDate(milestone.targetDate)}`);
+      }
+    }
+  } catch (error) {
+    handleApiError(error);
+  }
+}
+
 export const generatedProjectsRouter = router({
   projects: procedure
     .meta({
@@ -436,5 +562,14 @@ export const generatedProjectsRouter = router({
           await handleShowProject(input.name, input);
           break;
       }
+    }),
+
+  "project milestone": procedure
+    .meta({
+      description: "create, show, update, or delete a milestone",
+    })
+    .input(projectMilestoneInput)
+    .mutation(async ({ input }) => {
+      await handleProjectMilestone(input);
     }),
 });

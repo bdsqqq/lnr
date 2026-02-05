@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-05T17:36:40.059Z
+ * Generated from extracted-schema.json at 2026-02-05T18:08:09.483Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -52,6 +52,8 @@ export const labelInput = z.object({
 });
 
 type LabelInput = z.infer<typeof labelInput>;
+
+
 
 const labelColumns: TableColumn<Label>[] = [
   { header: "ID", value: (l) => l.id.slice(0, 8), width: 10 },
@@ -224,6 +226,8 @@ async function handleDeleteLabel(
 
 
 
+
+
 export const generatedLabelsRouter = router({
   labels: procedure
     .meta({
@@ -260,4 +264,5 @@ export const generatedLabelsRouter = router({
           break;
       }
     }),
+
 });

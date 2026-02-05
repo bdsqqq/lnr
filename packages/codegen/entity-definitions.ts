@@ -287,6 +287,16 @@ const definitions: EntityDefinition[] = [
       name: "batch",
     },
   },
+
+  {
+    name: "ProjectMilestoneCRUD",
+    exposure: "subcommand",
+    reason: "milestone CRUD via 'project milestone'",
+    subcommand: {
+      parent: "project",
+      name: "milestone",
+    },
+  },
 ];
 
 // === validate at module load ===

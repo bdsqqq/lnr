@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-05T17:36:40.059Z
+ * Generated from extracted-schema.json at 2026-02-05T18:08:09.483Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -50,6 +50,8 @@ export const docInput = z.object({
 });
 
 type DocInput = z.infer<typeof docInput>;
+
+
 
 const docColumns: TableColumn<Document>[] = [
   { header: "ID", value: (d) => d.id, width: 20 },
@@ -204,6 +206,8 @@ async function handleDeleteDoc(id: string, _input: DocInput): Promise<void> {
 
 
 
+
+
 export const generatedDocsRouter = router({
   docs: procedure
     .meta({
@@ -240,4 +244,5 @@ export const generatedDocsRouter = router({
           break;
       }
     }),
+
 });

@@ -20,13 +20,16 @@ import {
   ENTITY_DEFINITIONS,
   getFlagEntities,
   getScopedEntities,
+  getSubcommandEntities,
 } from "./entity-definitions";
 import {
   type FlagEntity,
   type ScopedEntity,
+  type SubcommandEntity,
   type FlagOperation,
   getFlagsForCommand,
   getScopedForCommand,
+  getSubcommandsForCommand,
 } from "./entity-schema";
 
 const rootDir = join(import.meta.dir, "../..");
@@ -116,6 +119,29 @@ function getInjectedMutationFlags(commandName: string): string[] {
   return mutationFlags;
 }
 
+/**
+ * gets imports needed for subcommands of this command.
+ */
+function getSubcommandImports(commandName: string): string[] {
+  const subcommands = getSubcommandsForCommand(ENTITY_DEFINITIONS, commandName);
+  const imports = new Set<string>();
+
+  for (const sub of subcommands) {
+    if (sub.name === "IssueBatch") {
+      imports.add("batchUpdateIssues");
+    }
+    if (sub.name === "ProjectMilestoneCRUD") {
+      imports.add("createMilestone");
+      imports.add("updateMilestone");
+      imports.add("deleteMilestone");
+      imports.add("resolveMilestoneByName");
+      imports.add("resolveProjectByName");
+    }
+  }
+
+  return Array.from(imports);
+}
+
 interface EntityConfig {
   entityKey: string;
   singularCommand: string;
@@ -140,6 +166,9 @@ interface EntityConfig {
   extraInputTypes?: string;
   hasDeleteFlag?: boolean;
   hasArchiveFlag?: boolean;
+  subcommandInputSchemas?: () => string;
+  subcommandHandlers?: () => string;
+  subcommandRouterEntries?: () => string;
 }
 
 const issueConfig: EntityConfig = {
@@ -247,16 +276,18 @@ const issueConfig: EntityConfig = {
     lines.push('  blocks: z.string().optional().describe("add blocks relation to issue"),');
     lines.push('  blockedBy: z.string().optional().describe("add blocked-by relation to issue"),');
     lines.push('  relatesTo: z.string().optional().describe("add relates-to relation to issue"),');
-    lines.push('  comments: z.boolean().optional().describe("list comments on issue"),');
     lines.push('  editComment: z.string().optional().describe("comment id to edit (requires --text)"),');
     lines.push('  text: z.string().optional().describe("text for --edit-comment or --reply-to"),');
     lines.push('  replyTo: z.string().optional().describe("comment id to reply to (requires --text)"),');
     lines.push('  deleteComment: z.string().optional().describe("comment id to delete"),');
     lines.push('  archive: z.boolean().optional().describe("archive the issue"),');
-    lines.push('  react: z.string().optional().describe("comment id to add reaction (requires --emoji)"),');
-    lines.push('  emoji: z.string().optional().describe("emoji for --react"),');
-    lines.push('  unreact: z.string().optional().describe("reaction id to remove"),');
-    lines.push('  subIssues: z.boolean().optional().describe("list sub-issues"),');
+
+    // inject scoped entity flags (--comments, --subIssues)
+    lines.push(...generateScopedZodFields("issue"));
+
+    // inject flag entity fields (--react, --emoji, --unreact, --subscribe, --unsubscribe)
+    lines.push(...generateFlagZodFields("issue"));
+
     lines.push("});");
 
     return lines.join("\n");
@@ -268,24 +299,32 @@ const issueConfig: EntityConfig = {
   { header: "ASSIGNEE", value: (i) => i.assignee ?? "-", width: 15 },
   { header: "PRIORITY", value: (i) => formatPriority(i.priority), width: 8 },
 ];`,
-  inferOperation: `type Operation = "create" | "read" | "update" | "archive";
+  inferOperation: (() => {
+    const baseMutationFlags = [
+      "state", "assignee", "priority", "label", "comment",
+      "editComment", "replyTo", "deleteComment",
+      "parent", "blocks", "blockedBy", "relatesTo", "title", "description",
+      "project", "cycle", "estimate", "dueDate", "milestone"
+    ];
+    const injectedFlags = getInjectedMutationFlags("issue");
+    const allFlags = [...baseMutationFlags, ...injectedFlags];
+
+    return `type Operation = "create" | "read" | "update" | "archive";
 
 function inferOperation(input: IssueInput): Operation {
   if (input.idOrNew === "new") return "create";
   if (input.archive) return "archive";
 
   const mutationFlags: (keyof IssueInput)[] = [
-    "state", "assignee", "priority", "label", "comment",
-    "editComment", "replyTo", "deleteComment", "react", "unreact",
-    "parent", "blocks", "blockedBy", "relatesTo", "title", "description",
-    "project", "cycle", "estimate", "dueDate", "milestone",
+    ${allFlags.map(f => `"${f}"`).join(", ")}
   ];
   for (const flag of mutationFlags) {
     if (input[flag] !== undefined) return "update";
   }
 
   return "read";
-}`,
+}`;
+  })(),
   listHandler: generateIssueListHandler(),
   showHandler: generateIssueShowHandler(),
   updateHandler: generateIssueUpdateHandler(),
@@ -293,6 +332,26 @@ function inferOperation(input: IssueInput): Operation {
   archiveHandler: generateIssueArchiveHandler(),
   hasArchiveFlag: true,
   extraHandlers: generateIssueExtraImports(),
+  subcommandInputSchemas: () => `export const batchUpdateInput = z.object({
+  issues: z.string().meta({ positional: true }).describe("comma-separated issue identifiers (e.g. ENG-1,ENG-2,ENG-3)"),
+  state: z.string().optional().describe("set workflow state for all issues"),
+  assignee: z.string().optional().describe("set assignee by email or @me for all issues"),
+  priority: z.string().optional().describe("set priority for all issues (urgent, high, medium, low, none)"),
+  label: z.string().optional().describe("set label for all issues (+name to add)"),
+  json: z.boolean().optional().describe("output as json"),
+  quiet: z.boolean().optional().describe("output ids only"),
+});
+
+type BatchUpdateInput = z.infer<typeof batchUpdateInput>;`,
+  subcommandHandlers: generateIssueBatchHandler,
+  subcommandRouterEntries: () => `"issue batch": procedure
+    .meta({
+      description: "batch update multiple issues at once",
+    })
+    .input(batchUpdateInput)
+    .mutation(async ({ input }) => {
+      await handleBatchUpdate(input);
+    }),`,
 };
 
 const projectConfig: EntityConfig = {
@@ -420,6 +479,26 @@ function inferOperation(input: ProjectInput): Operation {
   createHandler: generateProjectCreateHandler(),
   deleteHandler: generateProjectDeleteHandler(),
   hasDeleteFlag: true,
+  subcommandInputSchemas: () => `export const projectMilestoneInput = z.object({
+  nameOrNew: z.string().meta({ positional: true }).describe("milestone name or 'new'"),
+  project: z.string().describe("project name (required)"),
+  newName: z.string().optional().describe("new name for the milestone"),
+  description: z.string().optional().describe("milestone description"),
+  targetDate: z.string().optional().describe("target date (YYYY-MM-DD)"),
+  delete: z.boolean().optional().describe("delete the milestone"),
+  json: z.boolean().optional().describe("output as json"),
+});
+
+type ProjectMilestoneInput = z.infer<typeof projectMilestoneInput>;`,
+  subcommandHandlers: generateProjectMilestoneHandler,
+  subcommandRouterEntries: () => `"project milestone": procedure
+    .meta({
+      description: "create, show, update, or delete a milestone",
+    })
+    .input(projectMilestoneInput)
+    .mutation(async ({ input }) => {
+      await handleProjectMilestone(input);
+    }),`,
 };
 
 const labelConfig: EntityConfig = {
@@ -801,9 +880,10 @@ function generateEntityFile(config: EntityConfig): string {
   const TypeName = config.singularCommand.charAt(0).toUpperCase() + config.singularCommand.slice(1);
   const inputType = `${TypeName}Input`;
 
-  // merge base imports with injected imports from entity-definitions
+  // merge base imports with injected imports from entity-definitions and subcommands
   const injectedImports = getInjectedImports(config.singularCommand);
-  const allImports = [...new Set([...config.imports, ...injectedImports])];
+  const subcommandImports = getSubcommandImports(config.singularCommand);
+  const allImports = [...new Set([...config.imports, ...injectedImports, ...subcommandImports])];
 
   return `/**
  * GENERATED FILE - DO NOT EDIT
@@ -838,6 +918,8 @@ ${config.inputSchema(updateFields)}
 
 type ${inputType} = z.infer<typeof ${config.singularCommand}Input>;
 
+${config.subcommandInputSchemas ? config.subcommandInputSchemas() : ""}
+
 ${config.columns}
 
 ${config.inferOperation}
@@ -853,6 +935,8 @@ ${config.createHandler}
 ${config.deleteHandler || ""}
 
 ${config.archiveHandler || ""}
+
+${config.subcommandHandlers ? config.subcommandHandlers() : ""}
 
 export const generated${TypeName}sRouter = router({
   ${config.pluralCommand}: procedure
@@ -892,6 +976,8 @@ export const generated${TypeName}sRouter = router({
           break;
       }
     }),
+${config.subcommandRouterEntries ? `
+  ${config.subcommandRouterEntries()}` : ""}
 });
 `;
 }
@@ -1340,6 +1426,107 @@ function generateIssueArchiveHandler(): string {
 }`;
 }
 
+function generateIssueBatchHandler(): string {
+  return `async function handleBatchUpdate(input: BatchUpdateInput): Promise<void> {
+  try {
+    const client = getClient();
+
+    const outputOpts: OutputOptions = {
+      format: input.json ? "json" : input.quiet ? "quiet" : undefined,
+    };
+    const format = getOutputFormat(outputOpts);
+
+    const identifiers = input.issues.split(",").map((id) => id.trim()).filter(Boolean);
+    if (identifiers.length === 0) {
+      exitWithError("no issue identifiers provided", "usage: lnr issue batch ENG-1,ENG-2 --state done");
+    }
+
+    const firstIdentifier = identifiers[0] as string;
+
+    const ids: string[] = [];
+    const issueMap = new Map<string, string>();
+
+    for (const identifier of identifiers) {
+      const issue = await getIssue(client, identifier);
+      if (!issue) {
+        exitWithError(\`issue "\${identifier}" not found\`);
+      }
+      ids.push(issue.id);
+      issueMap.set(issue.id, identifier);
+    }
+
+    const updateInput: {
+      stateId?: string;
+      assigneeId?: string;
+      priority?: number;
+      labelIds?: string[];
+    } = {};
+
+    const firstIssue = await getIssue(client, firstIdentifier);
+    if (!firstIssue) {
+      exitWithError(\`issue "\${firstIdentifier}" not found\`);
+    }
+
+    const teamId = (await (await (await client.issue(firstIssue.id)).team))?.id;
+    if (!teamId) {
+      exitWithError(\`could not determine team for issue "\${firstIdentifier}"\`);
+    }
+
+    if (input.state) {
+      updateInput.stateId = await resolveStateName(client, teamId, input.state);
+    }
+
+    if (input.assignee) {
+      updateInput.assigneeId = await resolveAssignee(client, input.assignee);
+    }
+
+    if (input.priority) {
+      updateInput.priority = priorityFromString(input.priority);
+    }
+
+    if (input.label) {
+      const labels = await getTeamLabels(client, teamId);
+      const labelName = input.label.startsWith("+") ? input.label.slice(1) : input.label;
+      const targetLabel = labels.find(
+        (l) => l.name.toLowerCase() === labelName.toLowerCase()
+      );
+      if (!targetLabel) {
+        const available = labels.map((l) => l.name).join(", ");
+        exitWithError(\`label "\${labelName}" not found\`, \`available labels: \${available}\`);
+      }
+      updateInput.labelIds = [targetLabel.id];
+    }
+
+    if (Object.keys(updateInput).length === 0) {
+      exitWithError("no update flags provided", "usage: lnr issue batch ENG-1,ENG-2 --state done");
+    }
+
+    const result = await batchUpdateIssues(client, ids, updateInput);
+
+    if (!result.success) {
+      exitWithError("batch update failed");
+    }
+
+    if (format === "json") {
+      outputJson(result.issues);
+      return;
+    }
+
+    if (format === "quiet") {
+      outputQuiet(result.issues.map((i) => i.identifier));
+      return;
+    }
+
+    console.log(\`updated \${result.issues.length} issues:\`);
+    for (const issue of result.issues) {
+      console.log(\`  \${issue.identifier}: \${issue.title}\`);
+    }
+  } catch (error) {
+    handleApiError(error);
+  }
+}`;
+}
+
 function generateProjectListHandler(): string {
   return `async function handleListProjects(
   input: z.infer<typeof listProjectsInput>
@@ -1639,6 +1826,117 @@ function generateProjectDeleteHandler(): string {
     }
 
     console.log(\`deleted project: \${name}\`);
+  } catch (error) {
+    handleApiError(error);
+  }
+}`;
+}
+
+function generateProjectMilestoneHandler(): string {
+  return `async function handleProjectMilestone(input: ProjectMilestoneInput): Promise<void> {
+  try {
+    const client = getClient();
+
+    const outputOpts: OutputOptions = {
+      format: input.json ? "json" : undefined,
+    };
+    const format = getOutputFormat(outputOpts);
+
+    const projectId = await resolveProjectByName(client, input.project);
+
+    // determine operation
+    const isCreate = input.nameOrNew === "new";
+    const isDelete = input.delete === true;
+    const isUpdate = !isCreate && !isDelete && (
+      input.newName !== undefined ||
+      input.description !== undefined ||
+      input.targetDate !== undefined
+    );
+    const isRead = !isCreate && !isDelete && !isUpdate;
+
+    if (isCreate) {
+      if (!input.newName) {
+        exitWithError("--new-name is required", 'usage: lnr project milestone new --project "..." --new-name "v1.0"');
+      }
+
+      const milestone = await createMilestone(client, {
+        name: input.newName,
+        projectId,
+        description: input.description,
+        targetDate: input.targetDate,
+      });
+
+      if (!milestone) {
+        exitWithError("failed to create milestone");
+      }
+
+      if (format === "json") {
+        outputJson(milestone);
+      } else {
+        console.log(\`created milestone: \${milestone.name}\`);
+      }
+      return;
+    }
+
+    const milestoneId = await resolveMilestoneByName(client, projectId, input.nameOrNew);
+
+    if (isDelete) {
+      const success = await deleteMilestone(client, milestoneId);
+      if (!success) {
+        exitWithError(\`milestone "\${input.nameOrNew}" not found\`, undefined, EXIT_CODES.NOT_FOUND);
+      }
+      console.log(\`deleted milestone: \${input.nameOrNew}\`);
+      return;
+    }
+
+    if (isUpdate) {
+      const updatePayload: {
+        name?: string;
+        description?: string;
+        targetDate?: string;
+      } = {};
+
+      if (input.newName !== undefined) updatePayload.name = input.newName;
+      if (input.description !== undefined) updatePayload.description = input.description;
+      if (input.targetDate !== undefined) updatePayload.targetDate = input.targetDate;
+
+      const updated = await updateMilestone(client, milestoneId, updatePayload);
+      if (!updated) {
+        exitWithError(\`failed to update milestone "\${input.nameOrNew}"\`);
+      }
+
+      if (format === "json") {
+        outputJson(updated);
+      } else {
+        console.log(\`updated milestone: \${updated.name}\`);
+      }
+      return;
+    }
+
+    // read: show milestone details
+    const milestone = await client.projectMilestone(milestoneId);
+    if (!milestone) {
+      exitWithError(\`milestone "\${input.nameOrNew}" not found\`, undefined, EXIT_CODES.NOT_FOUND);
+    }
+
+    if (format === "json") {
+      outputJson({
+        id: milestone.id,
+        name: milestone.name,
+        description: milestone.description,
+        targetDate: milestone.targetDate,
+        createdAt: milestone.createdAt,
+        updatedAt: milestone.updatedAt,
+      });
+    } else {
+      console.log(\`\${milestone.name}\`);
+      if (milestone.description) {
+        console.log(\`  \${milestone.description}\`);
+      }
+      if (milestone.targetDate) {
+        console.log(\`  target: \${formatDate(milestone.targetDate)}\`);
+      }
+    }
   } catch (error) {
     handleApiError(error);
   }
