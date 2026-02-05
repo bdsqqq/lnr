@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-05T18:08:09.482Z
+ * Generated from extracted-schema.json at 2026-02-05T18:16:19.701Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -33,10 +33,9 @@ import {
   getIssueComments,
   getSubIssues,
   getTeamStates,
+  subscribeToIssue,
+  unsubscribeFromIssue,
   createReaction,
-  createSubscription,
-  deleteSubscription,
-  findUserSubscription,
   batchUpdateIssues,
   type Issue,
   type ListIssuesFilter,
@@ -101,8 +100,8 @@ export const issueInput = z.object({
   react: z.string().optional().describe("entity id to add reaction (requires --emoji)"),
   emoji: z.string().optional().describe("emoji for --react"),
   unreact: z.string().optional().describe("reaction id to remove"),
-  subscribe: z.boolean().optional().describe("subscribe to notifications"),
-  unsubscribe: z.boolean().optional().describe("unsubscribe from notifications"),
+  subscribe: z.boolean().optional().describe("subscribe to issue notifications"),
+  unsubscribe: z.boolean().optional().describe("unsubscribe from issue notifications"),
 });
 
 type IssueInput = z.infer<typeof issueInput>;
@@ -134,7 +133,7 @@ function inferOperation(input: IssueInput): Operation {
   if (input.archive) return "archive";
 
   const mutationFlags: (keyof IssueInput)[] = [
-    "state", "assignee", "priority", "label", "comment", "editComment", "replyTo", "deleteComment", "parent", "blocks", "blockedBy", "relatesTo", "title", "description", "project", "cycle", "estimate", "dueDate", "milestone", "react", "emoji", "unreact", "subscribe", "unsubscribe"
+    "state", "assignee", "priority", "label", "comment", "editComment", "replyTo", "deleteComment", "parent", "blocks", "blockedBy", "relatesTo", "title", "description", "project", "cycle", "estimate", "dueDate", "milestone", "subscribe", "unsubscribe", "react", "emoji", "unreact"
   ];
   for (const flag of mutationFlags) {
     if (input[flag] !== undefined) return "update";
@@ -452,6 +451,23 @@ async function handleUpdateIssue(
         exitWithError(`reaction ${input.unreact.slice(0, 8)} not found`, undefined, EXIT_CODES.NOT_FOUND);
       }
       console.log(`removed reaction ${input.unreact.slice(0, 8)}`);
+    }
+
+    // issue subscriptions use subscriberIds, not NotificationSubscription entity
+    if (input.subscribe) {
+      const success = await subscribeToIssue(client, issue.id);
+      if (!success) {
+        exitWithError(`failed to subscribe to ${identifier}`);
+      }
+      console.log(`subscribed to ${identifier}`);
+    }
+
+    if (input.unsubscribe) {
+      const success = await unsubscribeFromIssue(client, issue.id);
+      if (!success) {
+        exitWithError(`failed to unsubscribe from ${identifier}`);
+      }
+      console.log(`unsubscribed from ${identifier}`);
     }
   } catch (error) {
     handleApiError(error);

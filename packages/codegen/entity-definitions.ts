@@ -111,7 +111,9 @@ const definitions: EntityDefinition[] = [
     exposure: "flag",
     reason: "subscriptions via --subscribe/--unsubscribe",
     flags: {
-      parents: ["issue", "project", "initiative", "cycle", "label", "view"],
+      // issue excluded: uses subscriberIds API (subscribeToIssue/unsubscribeFromIssue)
+      // not NotificationSubscription entity. handled inline in generateIssueUpdateHandler.
+      parents: ["project", "initiative", "cycle", "label", "view"],
       operations: [
         {
           flag: "subscribe",
@@ -187,6 +189,18 @@ const definitions: EntityDefinition[] = [
       flag: "showStatus",
       description: "show project status details",
       getHandler: "getProjectStatus",
+    },
+  },
+
+  {
+    name: "ProjectExternalLink",
+    exposure: "scoped",
+    reason: "external links via --links (read-only, createEntityExternalLink not in core yet)",
+    scoped: {
+      parent: "project",
+      flag: "links",
+      description: "list project external links",
+      listHandler: "getProjectExternalLinks",
     },
   },
 

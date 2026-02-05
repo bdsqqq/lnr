@@ -212,6 +212,9 @@ const issueConfig: EntityConfig = {
     "getIssueComments",
     "getSubIssues",
     "getTeamStates",
+    // issue-specific subscriptions (not NotificationSubscription entity)
+    "subscribeToIssue",
+    "unsubscribeFromIssue",
   ],
   coreTypes: ["Issue", "ListIssuesFilter"],
   listInputSchema: () => `export const listIssuesInput = z.object({
@@ -285,8 +288,12 @@ const issueConfig: EntityConfig = {
     // inject scoped entity flags (--comments, --subIssues)
     lines.push(...generateScopedZodFields("issue"));
 
-    // inject flag entity fields (--react, --emoji, --unreact, --subscribe, --unsubscribe)
+    // inject flag entity fields (--react, --emoji, --unreact)
     lines.push(...generateFlagZodFields("issue"));
+
+    // issue-specific subscription flags (uses subscriberIds, not NotificationSubscription)
+    lines.push('  subscribe: z.boolean().optional().describe("subscribe to issue notifications"),');
+    lines.push('  unsubscribe: z.boolean().optional().describe("unsubscribe from issue notifications"),');
 
     lines.push("});");
 
@@ -304,7 +311,9 @@ const issueConfig: EntityConfig = {
       "state", "assignee", "priority", "label", "comment",
       "editComment", "replyTo", "deleteComment",
       "parent", "blocks", "blockedBy", "relatesTo", "title", "description",
-      "project", "cycle", "estimate", "dueDate", "milestone"
+      "project", "cycle", "estimate", "dueDate", "milestone",
+      // issue-specific subscriptions (not from NotificationSubscription entity)
+      "subscribe", "unsubscribe"
     ];
     const injectedFlags = getInjectedMutationFlags("issue");
     const allFlags = [...baseMutationFlags, ...injectedFlags];
@@ -1301,6 +1310,23 @@ function generateIssueUpdateHandler(): string {
       }
       console.log(\`removed reaction \${input.unreact.slice(0, 8)}\`);
     }
+
+    // issue subscriptions use subscriberIds, not NotificationSubscription entity
+    if (input.subscribe) {
+      const success = await subscribeToIssue(client, issue.id);
+      if (!success) {
+        exitWithError(\`failed to subscribe to \${identifier}\`);
+      }
+      console.log(\`subscribed to \${identifier}\`);
+    }
+
+    if (input.unsubscribe) {
+      const success = await unsubscribeFromIssue(client, issue.id);
+      if (!success) {
+        exitWithError(\`failed to unsubscribe from \${identifier}\`);
+      }
+      console.log(\`unsubscribed from \${identifier}\`);
+    }
   } catch (error) {
     handleApiError(error);
   }
@@ -1651,6 +1677,24 @@ function generateProjectShowHandler(): string {
         }
         for (const m of milestones) {
           console.log(\`\${m.name}\${m.targetDate ? \` (target: \${formatDate(m.targetDate)})\` : ""}\`);
+        }
+      }
+      return;
+    }
+
+    if (input.links) {
+      const links = await getProjectExternalLinks(client, project.id);
+      if (format === "json") {
+        outputJson(links);
+      } else if (format === "quiet") {
+        outputQuiet(links.map((l) => l.id));
+      } else {
+        if (links.length === 0) {
+          console.log("no external links");
+          return;
+        }
+        for (const l of links) {
+          console.log(\`\${l.label}: \${l.url}\`);
         }
       }
       return;

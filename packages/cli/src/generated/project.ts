@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-05T18:08:09.483Z
+ * Generated from extracted-schema.json at 2026-02-05T18:16:19.701Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -26,6 +26,7 @@ import {
   getProjectUpdates,
   getProjectLabels,
   getProjectStatus,
+  getProjectExternalLinks,
   listMilestones,
   createMilestone,
   updateMilestone,
@@ -76,6 +77,7 @@ export const projectInput = z.object({
   updates: z.boolean().optional().describe("list project updates"),
   labels: z.boolean().optional().describe("list project labels"),
   showStatus: z.boolean().optional().describe("show project status details"),
+  links: z.boolean().optional().describe("list project external links"),
   milestones: z.boolean().optional().describe("list project milestones"),
   react: z.string().optional().describe("entity id to add reaction (requires --emoji)"),
   emoji: z.string().optional().describe("emoji for --react"),
@@ -242,6 +244,24 @@ async function handleShowProject(
         }
         for (const m of milestones) {
           console.log(`${m.name}${m.targetDate ? ` (target: ${formatDate(m.targetDate)})` : ""}`);
+        }
+      }
+      return;
+    }
+
+    if (input.links) {
+      const links = await getProjectExternalLinks(client, project.id);
+      if (format === "json") {
+        outputJson(links);
+      } else if (format === "quiet") {
+        outputQuiet(links.map((l) => l.id));
+      } else {
+        if (links.length === 0) {
+          console.log("no external links");
+          return;
+        }
+        for (const l of links) {
+          console.log(`${l.label}: ${l.url}`);
         }
       }
       return;
