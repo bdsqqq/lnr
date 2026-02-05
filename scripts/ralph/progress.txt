@@ -102,3 +102,37 @@ Thread: https://ampcode.com/threads/T-019c2fe3-854e-720f-823c-61084b29c969
 - all routers now use arktype; zod fully removed from cli package
 
 ---
+
+## 2026-02-05 - Task 0050.5: verify trpc integration works with arktype schemas
+Thread: https://ampcode.com/threads/T-019c2fe3-854e-720f-823c-61084b29c969
+
+**What was verified:**
+- CLI help generation works (trpc-cli parses arktype schemas)
+- required argument validation works (search command)
+- enum union type validation works (config get rejects invalid keys)
+- actual API calls work (me, teams, issues commands)
+- positional args with .configure({ positional: true }) work
+
+**Evidence:**
+- `lnr me` returns authenticated user info
+- `lnr teams` lists teams
+- `lnr issues --team AXM --assignee @me` returns issues
+- `lnr search` without query shows "missing required argument"
+- `lnr config get invalid_key` shows "must be api_key, default_team, or output_format"
+
+**Result:**
+- trpc-cli integrates seamlessly with arktype via Standard Schema
+- no adapter or special configuration needed
+- arktype provides proper JSON Schema via `.toJsonSchema()` for CLI generation
+
+---
+
+## Migration Complete
+
+zod → arktype migration (task 0050) is COMPLETE:
+- all generated files use arktype (packages/cli/src/generated/*.ts)
+- all hand-crafted routers use arktype (14 routers migrated)
+- zod removed from cli package.json
+- trpc integration verified working
+
+---
