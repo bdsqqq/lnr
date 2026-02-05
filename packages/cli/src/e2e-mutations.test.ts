@@ -244,6 +244,17 @@ describe("e2e: mutations", () => {
         expect(e.message).toContain("already have an existing subscription");
       }
     });
+
+    test("unsubscribe from project", async () => {
+      // auto-finds subscription, no id required
+      try {
+        const out = await lnr("project", TEST_PROJECT_NAME, "--unsubscribe");
+        expect(out.toLowerCase()).toMatch(/unsubscrib/);
+      } catch (e: any) {
+        // may fail if not subscribed
+        expect(e.message).toMatch(/no subscription found|not subscribed/);
+      }
+    });
   });
 
   describe("git automation", () => {

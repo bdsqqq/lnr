@@ -109,6 +109,59 @@ export async function deleteSubscription(
   return result.success;
 }
 
+/**
+ * finds user's existing subscription for a target entity.
+ * returns subscription id if found, null otherwise.
+ */
+export async function findUserSubscription(
+  client: LinearClient,
+  target: SubscriptionTarget
+): Promise<string | null> {
+  const subscriptions = await client.notificationSubscriptions();
+  
+  for (const sub of subscriptions.nodes) {
+    switch (target.type) {
+      case "project": {
+        const project = await sub.project;
+        if (project?.id === target.projectId) return sub.id;
+        break;
+      }
+      case "team": {
+        const team = await sub.team;
+        if (team?.id === target.teamId) return sub.id;
+        break;
+      }
+      case "initiative": {
+        const initiative = await sub.initiative;
+        if (initiative?.id === target.initiativeId) return sub.id;
+        break;
+      }
+      case "cycle": {
+        const cycle = await sub.cycle;
+        if (cycle?.id === target.cycleId) return sub.id;
+        break;
+      }
+      case "label": {
+        const label = await sub.label;
+        if (label?.id === target.labelId) return sub.id;
+        break;
+      }
+      case "customView": {
+        const customView = await sub.customView;
+        if (customView?.id === target.customViewId) return sub.id;
+        break;
+      }
+      case "user": {
+        const user = await sub.user;
+        if (user?.id === target.userId) return sub.id;
+        break;
+      }
+    }
+  }
+  
+  return null;
+}
+
 export async function subscribeToIssue(
   client: LinearClient,
   issueId: string

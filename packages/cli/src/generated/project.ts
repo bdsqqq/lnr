@@ -26,6 +26,7 @@ import {
   deleteReaction,
   createSubscription,
   deleteSubscription,
+  findUserSubscription,
   type Project,
   type ProjectUpdate,
   type ProjectLabel,
@@ -79,7 +80,7 @@ export const projectInput = z.object({
   emoji: z.string().optional().describe("emoji for --react"),
   unreact: z.string().optional().describe("reaction id to remove"),
   subscribe: z.boolean().optional().describe("subscribe to project notifications"),
-  unsubscribe: z.string().optional().describe("subscription id to unsubscribe from"),
+  unsubscribe: z.boolean().optional().describe("unsubscribe from project notifications"),
 });
 
 type ProjectInput = z.infer<typeof projectInput>;
@@ -373,11 +374,15 @@ async function handleUpdateProject(
     }
 
     if (input.unsubscribe) {
-      const success = await deleteSubscription(client, input.unsubscribe);
-      if (!success) {
-        exitWithError(`subscription ${input.unsubscribe.slice(0, 8)} not found`, undefined, EXIT_CODES.NOT_FOUND);
+      const subscriptionId = await findUserSubscription(client, { type: "project", projectId: project.id });
+      if (!subscriptionId) {
+        exitWithError(`no subscription found for ${name}`, "you may not be subscribed to this project");
       }
-      console.log(`unsubscribed (removed subscription ${input.unsubscribe.slice(0, 8)})`);
+      const success = await deleteSubscription(client, subscriptionId);
+      if (!success) {
+        exitWithError(`failed to remove subscription`, undefined, EXIT_CODES.NOT_FOUND);
+      }
+      console.log(`unsubscribed from ${name}`);
     }
   } catch (error) {
     handleApiError(error);

@@ -243,6 +243,7 @@ export type { SubscriptionTarget } from "./subscriptions";
 export {
   createSubscription,
   deleteSubscription,
+  findUserSubscription,
   subscribeToIssue,
   unsubscribeFromIssue,
 } from "./subscriptions";
