@@ -16,12 +16,105 @@ import {
   graphqlTypeToZod,
 } from "./types";
 import { getCliFlagForField } from "./field-resolvers";
+import {
+  ENTITY_DEFINITIONS,
+  getFlagEntities,
+  getScopedEntities,
+} from "./entity-definitions";
+import {
+  type FlagEntity,
+  type ScopedEntity,
+  type FlagOperation,
+  getFlagsForCommand,
+  getScopedForCommand,
+} from "./entity-schema";
 
 const rootDir = join(import.meta.dir, "../..");
 const schemaPath = join(import.meta.dir, "extracted-schema.json");
 const outputDir = join(rootDir, "packages/cli/src/generated");
 
 const schema: ExtractedSchema = JSON.parse(readFileSync(schemaPath, "utf-8"));
+
+// === flag/scoped injection helpers ===
+
+/**
+ * generates zod field declarations for injected flag operations.
+ * called by inputSchema functions to add flags from entity-definitions.
+ */
+function generateFlagZodFields(commandName: string): string[] {
+  const flags = getFlagsForCommand(ENTITY_DEFINITIONS, commandName);
+  const lines: string[] = [];
+
+  for (const flagEntity of flags) {
+    for (const op of flagEntity.flags.operations) {
+      const zodType = op.inputType === "boolean" ? "z.boolean()" : "z.string()";
+      const desc = op.description.replace(/"/g, '\\"');
+      lines.push(`  ${op.flag}: ${zodType}.optional().describe("${desc}"),`);
+    }
+  }
+
+  return lines;
+}
+
+/**
+ * generates zod field declarations for scoped entities (accessed via flags).
+ */
+function generateScopedZodFields(commandName: string): string[] {
+  const scoped = getScopedForCommand(ENTITY_DEFINITIONS, commandName);
+  const lines: string[] = [];
+
+  for (const s of scoped) {
+    const desc = s.scoped.description.replace(/"/g, '\\"');
+    lines.push(`  ${s.scoped.flag}: z.boolean().optional().describe("${desc}"),`);
+  }
+
+  return lines;
+}
+
+/**
+ * collects imports needed for injected flags (handlers like createReaction, deleteReaction, etc).
+ */
+function getInjectedImports(commandName: string): string[] {
+  const flags = getFlagsForCommand(ENTITY_DEFINITIONS, commandName);
+  const imports = new Set<string>();
+
+  for (const flagEntity of flags) {
+    for (const op of flagEntity.flags.operations) {
+      if (op.handler) {
+        imports.add(op.handler);
+      }
+    }
+    // special cases for subscription auto-find
+    if (flagEntity.name === "NotificationSubscription") {
+      imports.add("findUserSubscription");
+    }
+  }
+
+  const scoped = getScopedForCommand(ENTITY_DEFINITIONS, commandName);
+  for (const s of scoped) {
+    if (s.scoped.listHandler) imports.add(s.scoped.listHandler);
+    if (s.scoped.getHandler) imports.add(s.scoped.getHandler);
+  }
+
+  return Array.from(imports);
+}
+
+/**
+ * collects mutation flag names for injected entities (used in inferOperation).
+ */
+function getInjectedMutationFlags(commandName: string): string[] {
+  const flags = getFlagsForCommand(ENTITY_DEFINITIONS, commandName);
+  const mutationFlags: string[] = [];
+
+  for (const flagEntity of flags) {
+    for (const op of flagEntity.flags.operations) {
+      // all flag operations are mutations (create or delete)
+      mutationFlags.push(op.flag);
+    }
+  }
+
+  return mutationFlags;
+}
 
 interface EntityConfig {
   entityKey: string;
@@ -85,7 +178,7 @@ const issueConfig: EntityConfig = {
     "updateComment",
     "replyToComment",
     "deleteComment",
-    "createReaction",
+    "createCommentReaction",
     "deleteReaction",
     "getIssueComments",
     "getSubIssues",
@@ -283,6 +376,12 @@ const projectConfig: EntityConfig = {
       lines.push(`  ${cliName}: ${zodType},`);
     }
 
+    // inject scoped entity flags (--updates, --labels, --showStatus, --milestones)
+    lines.push(...generateScopedZodFields("project"));
+
+    // inject flag entity fields (--react, --emoji, --unreact, --subscribe, --unsubscribe, --link)
+    lines.push(...generateFlagZodFields("project"));
+
     lines.push("});");
     return lines.join("\n");
   },
@@ -292,21 +391,29 @@ const projectConfig: EntityConfig = {
   { header: "PROGRESS", value: (p) => \`\${Math.round((p.progress ?? 0) * 100)}%\`, width: 10 },
   { header: "TARGET", value: (p) => formatDate(p.targetDate), width: 12 },
 ];`,
-  inferOperation: `type Operation = "create" | "read" | "update" | "delete";
+  inferOperation: (() => {
+    const baseMutationFlags = [
+      "newName", "description", "content", "status", "startDate", "targetDate", "priority", "lead", "team"
+    ];
+    const injectedFlags = getInjectedMutationFlags("project");
+    const allFlags = [...baseMutationFlags, ...injectedFlags];
+
+    return `type Operation = "create" | "read" | "update" | "delete";
 
 function inferOperation(input: ProjectInput): Operation {
   if (input.name === "new") return "create";
   if (input.delete) return "delete";
 
   const mutationFlags: (keyof ProjectInput)[] = [
-    "newName", "description", "content", "status", "startDate", "targetDate", "priority", "lead", "team"
+    ${allFlags.map(f => `"${f}"`).join(", ")}
   ];
   for (const flag of mutationFlags) {
     if (input[flag] !== undefined) return "update";
   }
 
   return "read";
-}`,
+}`;
+  })(),
   listHandler: generateProjectListHandler(),
   showHandler: generateProjectShowHandler(),
   updateHandler: generateProjectUpdateHandler(),
@@ -694,6 +801,10 @@ function generateEntityFile(config: EntityConfig): string {
   const TypeName = config.singularCommand.charAt(0).toUpperCase() + config.singularCommand.slice(1);
   const inputType = `${TypeName}Input`;
 
+  // merge base imports with injected imports from entity-definitions
+  const injectedImports = getInjectedImports(config.singularCommand);
+  const allImports = [...new Set([...config.imports, ...injectedImports])];
+
   return `/**
  * GENERATED FILE - DO NOT EDIT
  * Generated from extracted-schema.json at ${timestamp}
@@ -703,7 +814,7 @@ function generateEntityFile(config: EntityConfig): string {
 
 import { z } from "zod";
 import {
-  ${config.imports.join(",\n  ")},
+  ${allImports.join(",\n  ")},
   type ${config.coreTypes.join(",\n  type ")},
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
@@ -1090,7 +1201,7 @@ function generateIssueUpdateHandler(): string {
     }
 
     if (input.react) {
-      const success = await createReaction(client, input.react, input.emoji!);
+      const success = await createCommentReaction(client, input.react, input.emoji!);
       if (!success) {
         exitWithError(\`failed to add reaction to comment \${input.react.slice(0, 8)}\`);
       }
@@ -1295,6 +1406,51 @@ function generateProjectShowHandler(): string {
       return;
     }
 
+    // scoped entity handlers (injected from entity-definitions)
+    if (input.updates) {
+      const updates = await getProjectUpdates(client, project.id);
+      if (format === "json") {
+        outputJson(updates);
+      } else if (format === "quiet") {
+        outputQuiet(updates.map((u) => u.id));
+      } else {
+        for (const u of updates) {
+          console.log(\`[\${u.health}] \${formatDate(u.createdAt)} - \${truncate(u.body.replace(/\\n/g, " "), 60)}\`);
+        }
+      }
+      return;
+    }
+
+    if (input.labels) {
+      const labels = await getProjectLabels(client, project.id);
+      if (format === "json") {
+        outputJson(labels);
+      } else if (format === "quiet") {
+        outputQuiet(labels.map((l) => l.id));
+      } else {
+        for (const l of labels) {
+          console.log(\`\${l.name} (\${l.color})\`);
+        }
+      }
+      return;
+    }
+
+    if (input.showStatus) {
+      const status = await getProjectStatus(client, project.id);
+      if (!status) {
+        console.log("no status set");
+        return;
+      }
+      if (format === "json") {
+        outputJson(status);
+      } else if (format === "quiet") {
+        console.log(status.id);
+      } else {
+        console.log(\`\${status.name} (\${status.type}) - \${status.color}\`);
+      }
+      return;
+    }
+
     if (format === "json") {
       outputJson(project);
       return;
@@ -1359,6 +1515,43 @@ function generateProjectUpdateHandler(): string {
     if (Object.keys(updatePayload).length > 0) {
       await updateProject(client, project.id, updatePayload);
       console.log(\`updated \${name}\`);
+    }
+
+    // flag entity handlers (injected from entity-definitions)
+    if (input.react) {
+      if (!input.emoji) {
+        exitWithError("--emoji is required when using --react");
+      }
+      const success = await createReaction(client, { type: "projectUpdate", id: input.react }, input.emoji);
+      if (!success) {
+        exitWithError(\`failed to add reaction to project update \${input.react.slice(0, 8)}\`);
+      }
+      console.log(\`added reaction \${input.emoji} to project update \${input.react.slice(0, 8)}\`);
+    }
+
+    if (input.unreact) {
+      const success = await deleteReaction(client, input.unreact);
+      if (!success) {
+        exitWithError(\`reaction \${input.unreact.slice(0, 8)} not found\`, undefined, EXIT_CODES.NOT_FOUND);
+      }
+      console.log(\`removed reaction \${input.unreact.slice(0, 8)}\`);
+    }
+
+    if (input.subscribe) {
+      const subscriptionId = await createSubscription(client, { type: "project", projectId: project.id });
+      console.log(\`subscribed to \${name} (subscription: \${subscriptionId.slice(0, 8)})\`);
+    }
+
+    if (input.unsubscribe) {
+      const subscriptionId = await findUserSubscription(client, { type: "project", projectId: project.id });
+      if (!subscriptionId) {
+        exitWithError(\`no subscription found for \${name}\`, "you may not be subscribed to this project");
+      }
+      const success = await deleteSubscription(client, subscriptionId);
+      if (!success) {
+        exitWithError(\`failed to remove subscription\`, undefined, EXIT_CODES.NOT_FOUND);
+      }
+      console.log(\`unsubscribed from \${name}\`);
     }
   } catch (error) {
     handleApiError(error);
