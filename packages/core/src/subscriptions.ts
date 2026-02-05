@@ -9,11 +9,25 @@ export type SubscriptionTarget =
   | { type: "customView"; customViewId: string }
   | { type: "user"; userId: string };
 
+/**
+ * subscription type mappings per entity.
+ * Linear requires specific notification types, not a generic "all".
+ */
+const SUBSCRIPTION_TYPES = {
+  project: ["projectupdatecreated", "projectnewcomment"],
+  team: ["issuecreated", "issuestatuschanged"],
+  initiative: ["initiativenewcomment", "initiativeupdatecreated"],
+  cycle: ["issuecreated"],
+  label: ["issuecreated"],
+  customView: ["issueaddedtoview"],
+  user: ["issuecreated"],
+} as const;
+
 export async function createSubscription(
   client: LinearClient,
   target: SubscriptionTarget
 ): Promise<string> {
-  const input = (() => {
+  const baseInput = (() => {
     switch (target.type) {
       case "project":
         return { projectId: target.projectId };
@@ -31,6 +45,11 @@ export async function createSubscription(
         return { userId: target.userId };
     }
   })();
+
+  const input = {
+    ...baseInput,
+    notificationSubscriptionTypes: [...SUBSCRIPTION_TYPES[target.type]],
+  };
 
   const result = await client.createNotificationSubscription(input);
   if (!result.success) {
