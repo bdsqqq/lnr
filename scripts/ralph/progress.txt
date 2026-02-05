@@ -4,7 +4,7 @@ Feature: zod → arktype migration (task 0050)
 
 ## Codebase Patterns
 - generated CLI files in packages/cli/src/generated/*.ts NOW use arktype
-- hand-crafted routers in packages/cli/src/router/*.ts still use zod (task 0050.3)
+- hand-crafted routers in packages/cli/src/router/*.ts NOW use arktype (task 0050.3 complete)
 - trpc v11 supports arktype via Standard Schema (no adapter needed)
 - arktype syntax: `type({ name: "string", "age?": "number" })`
 - positional args: `type("string").configure({ positional: true })`
@@ -40,5 +40,36 @@ Thread: https://ampcode.com/threads/T-019c2f24-4a56-76ae-95fd-1b4d4fbc0ca0
 - extend via `declare global { interface ArkEnv { meta(): {...} } }`
 - config file must be imported BEFORE arktype in generated files
 - arktype validates by calling type as function, returns data or ArkErrors
+
+---
+
+## 2026-02-05 - Task 0050.3: update non-generated routers from zod to arktype
+Thread: https://ampcode.com/threads/T-019c2fdf-faee-77ba-af88-cb4891da376b
+
+**What was implemented:**
+- migrated 6 hand-crafted routers from zod to arktype:
+  - auth.ts, config.ts, search.ts, teams.ts, cycles.ts, me.ts
+- updated all imports: `import "../lib/arktype-config"; import { type } from "arktype";`
+- converted z.object() → type({})
+- converted optional fields: z.field().optional() → "field?": type("field")
+- converted positional args: .meta({ positional: true }) → .configure({ positional: true })
+- converted type inference: z.infer<typeof X> → typeof X.infer
+- converted enums: z.enum([...]) → type("'a' | 'b' | 'c'")
+- updated contract.test.ts to use safeParse() helper for all migrated schemas
+
+**Files changed:**
+- packages/cli/src/router/auth.ts
+- packages/cli/src/router/config.ts
+- packages/cli/src/router/search.ts
+- packages/cli/src/router/teams.ts
+- packages/cli/src/router/cycles.ts
+- packages/cli/src/router/me.ts
+- packages/cli/src/router/contract.test.ts
+- .todo.md
+
+**Learnings:**
+- arktype enum syntax uses string union: `type("'a' | 'b' | 'c'")`
+- when using .merge() in zod, must flatten fields manually in arktype
+- safeParse() helper in contract.test.ts handles both zod and arktype seamlessly
 
 ---

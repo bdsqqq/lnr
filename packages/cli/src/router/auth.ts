@@ -1,4 +1,5 @@
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import {
   setApiKey,
   clearApiKey,
@@ -9,10 +10,10 @@ import {
 import { router, procedure } from "./trpc";
 import { exitWithError, EXIT_CODES } from "../lib/error";
 
-export const authInput = z.object({
-  apiKey: z.string().optional().meta({ positional: true }).describe("Linear API key"),
-  whoami: z.boolean().optional().describe("show current authenticated user"),
-  logout: z.boolean().optional().describe("clear stored credentials"),
+export const authInput = type({
+  "apiKey?": type("string").configure({ positional: true }).describe("Linear API key"),
+  "whoami?": type("boolean").describe("show current authenticated user"),
+  "logout?": type("boolean").describe("clear stored credentials"),
 });
 
 export const authRouter = router({

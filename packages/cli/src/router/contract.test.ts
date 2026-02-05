@@ -103,12 +103,12 @@ describe("projects", () => {
 describe("search", () => {
   describe("search", () => {
     test("valid input parses", () => {
-      const result = searchInput.safeParse({"query":"test-value"});
+      const result = safeParse(searchInput, {"query":"test-value"});
       expect(result.success).toBe(true);
     });
 
     test("rejects missing required flags", () => {
-      const result = searchInput.safeParse({});
+      const result = safeParse(searchInput, {});
       expect(result.success).toBe(false);
     });
 
@@ -119,12 +119,12 @@ describe("search", () => {
 describe("cycles", () => {
   describe("cycles", () => {
     test("valid input parses", () => {
-      const result = listCyclesInput.safeParse({"team":"test-value"});
+      const result = safeParse(listCyclesInput, {"team":"test-value"});
       expect(result.success).toBe(true);
     });
 
     test("rejects missing required flags", () => {
-      const result = listCyclesInput.safeParse({});
+      const result = safeParse(listCyclesInput, {});
       expect(result.success).toBe(false);
     });
 
@@ -132,27 +132,27 @@ describe("cycles", () => {
 
   describe("cycle", () => {
     test("valid input parses", () => {
-      const result = cycleInput.safeParse({"nameOrNumber":"1","team":"test-value"});
+      const result = safeParse(cycleInput, {"nameOrNumber":"1","team":"test-value"});
       expect(result.success).toBe(true);
     });
 
     test("rejects missing required flags", () => {
-      const result = cycleInput.safeParse({});
+      const result = safeParse(cycleInput, {});
       expect(result.success).toBe(false);
     });
 
     test("infers CREATE when nameOrNumber='new'", () => {
-      const result = cycleInput.safeParse({"nameOrNumber":"new","team":"ENG"});
+      const result = safeParse(cycleInput, {"nameOrNumber":"new","team":"ENG"});
       expect(result.success).toBe(true);
     });
 
     test("infers DELETE when --delete", () => {
-      const result = cycleInput.safeParse({"nameOrNumber":"1","team":"ENG","delete":true});
+      const result = safeParse(cycleInput, {"nameOrNumber":"1","team":"ENG","delete":true});
       expect(result.success).toBe(true);
     });
 
     test("infers SHOW with no mutation flags", () => {
-      const result = cycleInput.safeParse({"nameOrNumber":"Sprint 1","team":"ENG"});
+      const result = safeParse(cycleInput, {"nameOrNumber":"Sprint 1","team":"ENG"});
       expect(result.success).toBe(true);
     });
 
@@ -203,7 +203,7 @@ describe("docs", () => {
 describe("teams", () => {
   describe("teams", () => {
     test("valid input parses", () => {
-      const result = listTeamsInput.safeParse({});
+      const result = safeParse(listTeamsInput, {});
       expect(result.success).toBe(true);
     });
 
@@ -211,12 +211,12 @@ describe("teams", () => {
 
   describe("team", () => {
     test("valid input parses", () => {
-      const result = teamInput.safeParse({"key":"test-value"});
+      const result = safeParse(teamInput, {"key":"test-value"});
       expect(result.success).toBe(true);
     });
 
     test("rejects missing required flags", () => {
-      const result = teamInput.safeParse({});
+      const result = safeParse(teamInput, {});
       expect(result.success).toBe(false);
     });
 
@@ -227,12 +227,12 @@ describe("teams", () => {
 describe("config", () => {
   describe("get", () => {
     test("valid input parses", () => {
-      const result = configGetInput.safeParse({"key":"api_key"});
+      const result = safeParse(configGetInput, {"key":"api_key"});
       expect(result.success).toBe(true);
     });
 
     test("rejects missing required flags", () => {
-      const result = configGetInput.safeParse({});
+      const result = safeParse(configGetInput, {});
       expect(result.success).toBe(false);
     });
 
@@ -240,12 +240,12 @@ describe("config", () => {
 
   describe("set", () => {
     test("valid input parses", () => {
-      const result = configSetInput.safeParse({"key":"api_key","value":"test-value"});
+      const result = safeParse(configSetInput, {"key":"api_key","value":"test-value"});
       expect(result.success).toBe(true);
     });
 
     test("rejects missing required flags", () => {
-      const result = configSetInput.safeParse({});
+      const result = safeParse(configSetInput, {});
       expect(result.success).toBe(false);
     });
 
@@ -256,7 +256,7 @@ describe("config", () => {
 describe("me", () => {
   describe("me", () => {
     test("valid input parses", () => {
-      const result = meInput.safeParse({});
+      const result = safeParse(meInput, {});
       expect(result.success).toBe(true);
     });
 
@@ -307,7 +307,7 @@ describe("labels", () => {
 describe("auth", () => {
   describe("auth", () => {
     test("valid input parses", () => {
-      const result = authInput.safeParse({});
+      const result = safeParse(authInput, {});
       expect(result.success).toBe(true);
     });
 

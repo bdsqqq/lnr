@@ -1,4 +1,5 @@
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import {
   getClient,
   listCycles,
@@ -24,36 +25,35 @@ import {
   type TableColumn,
 } from "../lib/output";
 
-const outputOptions = z.object({
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+const outputOptions = type({
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });
 
-export const listCyclesInput = z
-  .object({
-    team: z.string().describe("team key"),
-  })
-  .merge(outputOptions);
+export const listCyclesInput = type({
+  team: type("string").describe("team key"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
+});
 
-export const cycleInput = z
-  .object({
-    nameOrNumber: z
-      .string()
-      .meta({ positional: true })
-      .describe("cycle name, number, or 'new'"),
-    team: z.string().describe("team key"),
-    name: z.string().optional().describe("cycle name"),
-    description: z.string().optional().describe("cycle description"),
-    startsAt: z.string().optional().describe("start date (ISO format)"),
-    endsAt: z.string().optional().describe("end date (ISO format)"),
-    current: z.boolean().optional().describe("show current active cycle"),
-    issues: z.boolean().optional().describe("list issues in cycle"),
-    delete: z.boolean().optional().describe("archive the cycle"),
-  })
-  .merge(outputOptions);
+export const cycleInput = type({
+  nameOrNumber: type("string").configure({ positional: true }).describe("cycle name, number, or 'new'"),
+  team: type("string").describe("team key"),
+  "name?": type("string").describe("cycle name"),
+  "description?": type("string").describe("cycle description"),
+  "startsAt?": type("string").describe("start date (ISO format)"),
+  "endsAt?": type("string").describe("end date (ISO format)"),
+  "current?": type("boolean").describe("show current active cycle"),
+  "issues?": type("boolean").describe("list issues in cycle"),
+  "delete?": type("boolean").describe("archive the cycle"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
+});
 
-type CycleInput = z.infer<typeof cycleInput>;
+type CycleInput = typeof cycleInput.infer;
 
 const cycleColumns: TableColumn<Cycle>[] = [
   { header: "#", value: (c) => String(c.number), width: 4 },
@@ -94,7 +94,7 @@ function inferOperation(input: CycleInput): Operation {
 }
 
 async function handleListCycles(
-  input: z.infer<typeof listCyclesInput>
+  input: typeof listCyclesInput.infer
 ): Promise<void> {
   try {
     const client = getClient();

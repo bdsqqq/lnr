@@ -1,4 +1,5 @@
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import { getClient, searchIssues } from "@bdsqqq/lnr-core";
 import { router, procedure } from "./trpc";
 import { handleApiError } from "../lib/error";
@@ -10,11 +11,11 @@ import {
   truncate,
 } from "../lib/output";
 
-export const searchInput = z.object({
-  query: z.string().meta({ positional: true }).describe("search query"),
-  team: z.string().optional().describe("filter by team key"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
+export const searchInput = type({
+  query: type("string").configure({ positional: true }).describe("search query"),
+  "team?": type("string").describe("filter by team key"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
 });
 
 export const searchRouter = router({

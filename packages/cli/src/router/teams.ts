@@ -1,4 +1,5 @@
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import {
   getClient,
   listTeams,
@@ -20,18 +21,18 @@ import {
   type TableColumn,
 } from "../lib/output";
 
-export const listTeamsInput = z.object({
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output keys only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+export const listTeamsInput = type({
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output keys only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });
 
-export const teamInput = z.object({
-  key: z.string().meta({ positional: true }).describe("team key"),
-  members: z.boolean().optional().describe("list team members"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output id only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+export const teamInput = type({
+  key: type("string").configure({ positional: true }).describe("team key"),
+  "members?": type("boolean").describe("list team members"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output id only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });
 
 const teamColumns: TableColumn<Team>[] = [
