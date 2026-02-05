@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-01-30T20:56:20.013Z
+ * Generated from extracted-schema.json at 2026-02-05T17:36:40.059Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -11,10 +11,6 @@ import {
   listProjects,
   getProject,
   getProjectIssues,
-  getProjectUpdates,
-  getProjectLabels,
-  getProjectStatus,
-  getProjectExternalLinks,
   createProject,
   deleteProject,
   updateProject,
@@ -27,11 +23,10 @@ import {
   createSubscription,
   deleteSubscription,
   findUserSubscription,
+  getProjectUpdates,
+  getProjectLabels,
+  getProjectStatus,
   type Project,
-  type ProjectUpdate,
-  type ProjectLabel,
-  type ProjectStatus,
-  type EntityExternalLink,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
@@ -59,10 +54,6 @@ export const listProjectsInput = z.object({
 export const projectInput = z.object({
   name: z.string().meta({ positional: true }).describe("project name or 'new'"),
   issues: z.boolean().optional().describe("list issues in project"),
-  updates: z.boolean().optional().describe("list project updates"),
-  labels: z.boolean().optional().describe("list project labels"),
-  showStatus: z.boolean().optional().describe("show project status details"),
-  links: z.boolean().optional().describe("list project external links"),
   json: z.boolean().optional().describe("output as json"),
   quiet: z.boolean().optional().describe("output ids only"),
   verbose: z.boolean().optional().describe("show all columns"),
@@ -76,11 +67,14 @@ export const projectInput = z.object({
   startDate: z.string().optional().describe("set start date (YYYY-MM-DD)"),
   targetDate: z.string().optional().describe("set target date (YYYY-MM-DD)"),
   priority: z.number().optional().describe("set priority (0=none, 1=urgent, 2=high, 3=normal, 4=low)"),
-  react: z.string().optional().describe("project update id to add reaction (requires --emoji)"),
+  updates: z.boolean().optional().describe("list project updates"),
+  labels: z.boolean().optional().describe("list project labels"),
+  showStatus: z.boolean().optional().describe("show project status details"),
+  react: z.string().optional().describe("entity id to add reaction (requires --emoji)"),
   emoji: z.string().optional().describe("emoji for --react"),
   unreact: z.string().optional().describe("reaction id to remove"),
-  subscribe: z.boolean().optional().describe("subscribe to project notifications"),
-  unsubscribe: z.boolean().optional().describe("unsubscribe from project notifications"),
+  subscribe: z.boolean().optional().describe("subscribe to notifications"),
+  unsubscribe: z.boolean().optional().describe("unsubscribe from notifications"),
 });
 
 type ProjectInput = z.infer<typeof projectInput>;
@@ -92,59 +86,6 @@ const projectColumns: TableColumn<Project>[] = [
   { header: "TARGET", value: (p) => formatDate(p.targetDate), width: 12 },
 ];
 
-const updateColumns: TableColumn<ProjectUpdate>[] = [
-  { header: "DATE", value: (u) => formatDate(u.createdAt), width: 12 },
-  { header: "HEALTH", value: (u) => u.health, width: 10 },
-  { header: "AUTHOR", value: (u) => u.userName ?? "-", width: 20 },
-  { header: "CONTENT", value: (u) => truncate(u.body.replace(/\n/g, " "), 40), width: 40 },
-];
-
-const verboseUpdateColumns: TableColumn<ProjectUpdate>[] = [
-  { header: "ID", value: (u) => u.id, width: 36 },
-  ...updateColumns,
-];
-
-const labelColumns: TableColumn<ProjectLabel>[] = [
-  { header: "NAME", value: (l) => l.name, width: 30 },
-  { header: "COLOR", value: (l) => l.color, width: 10 },
-];
-
-const verboseLabelColumns: TableColumn<ProjectLabel>[] = [
-  { header: "ID", value: (l) => l.id, width: 36 },
-  { header: "NAME", value: (l) => l.name, width: 30 },
-  { header: "COLOR", value: (l) => l.color, width: 10 },
-  { header: "GROUP", value: (l) => l.isGroup ? "yes" : "no", width: 6 },
-  { header: "DESCRIPTION", value: (l) => truncate(l.description ?? "-", 40), width: 40 },
-];
-
-const statusColumns: TableColumn<ProjectStatus>[] = [
-  { header: "NAME", value: (s) => s.name, width: 20 },
-  { header: "TYPE", value: (s) => s.type, width: 12 },
-  { header: "COLOR", value: (s) => s.color, width: 10 },
-];
-
-const verboseStatusColumns: TableColumn<ProjectStatus>[] = [
-  { header: "ID", value: (s) => s.id, width: 36 },
-  { header: "NAME", value: (s) => s.name, width: 20 },
-  { header: "TYPE", value: (s) => s.type, width: 12 },
-  { header: "COLOR", value: (s) => s.color, width: 10 },
-  { header: "POSITION", value: (s) => String(s.position), width: 10 },
-  { header: "INDEFINITE", value: (s) => s.indefinite ? "yes" : "no", width: 10 },
-  { header: "DESCRIPTION", value: (s) => truncate(s.description ?? "-", 40), width: 40 },
-];
-
-const linkColumns: TableColumn<EntityExternalLink>[] = [
-  { header: "LABEL", value: (l) => truncate(l.label, 30), width: 30 },
-  { header: "URL", value: (l) => truncate(l.url, 50), width: 50 },
-];
-
-const verboseLinkColumns: TableColumn<EntityExternalLink>[] = [
-  { header: "ID", value: (l) => l.id, width: 36 },
-  { header: "LABEL", value: (l) => truncate(l.label, 30), width: 30 },
-  { header: "URL", value: (l) => truncate(l.url, 50), width: 50 },
-  { header: "CREATOR", value: (l) => l.creatorName ?? "-", width: 20 },
-];
-
 type Operation = "create" | "read" | "update" | "delete";
 
 function inferOperation(input: ProjectInput): Operation {
@@ -152,8 +93,7 @@ function inferOperation(input: ProjectInput): Operation {
   if (input.delete) return "delete";
 
   const mutationFlags: (keyof ProjectInput)[] = [
-    "newName", "description", "content", "status", "startDate", "targetDate", "priority", "lead", "team",
-    "react", "unreact", "subscribe", "unsubscribe",
+    "newName", "description", "content", "status", "startDate", "targetDate", "priority", "lead", "team", "react", "emoji", "unreact", "subscribe", "unsubscribe"
   ];
   for (const flag of mutationFlags) {
     if (input[flag] !== undefined) return "update";
@@ -225,6 +165,7 @@ async function handleShowProject(
       return;
     }
 
+    // scoped entity handlers (injected from entity-definitions)
     if (input.updates) {
       const updates = await getProjectUpdates(client, project.id);
       if (format === "json") {
@@ -232,8 +173,9 @@ async function handleShowProject(
       } else if (format === "quiet") {
         outputQuiet(updates.map((u) => u.id));
       } else {
-        const cols = outputOpts.verbose ? verboseUpdateColumns : updateColumns;
-        outputTable(updates, cols, outputOpts);
+        for (const u of updates) {
+          console.log(`[${u.health}] ${formatDate(u.createdAt)} - ${truncate(u.body.replace(/\n/g, " "), 60)}`);
+        }
       }
       return;
     }
@@ -245,8 +187,9 @@ async function handleShowProject(
       } else if (format === "quiet") {
         outputQuiet(labels.map((l) => l.id));
       } else {
-        const cols = outputOpts.verbose ? verboseLabelColumns : labelColumns;
-        outputTable(labels, cols, outputOpts);
+        for (const l of labels) {
+          console.log(`${l.name} (${l.color})`);
+        }
       }
       return;
     }
@@ -262,25 +205,7 @@ async function handleShowProject(
       } else if (format === "quiet") {
         console.log(status.id);
       } else {
-        const cols = outputOpts.verbose ? verboseStatusColumns : statusColumns;
-        outputTable([status], cols, outputOpts);
-      }
-      return;
-    }
-
-    if (input.links) {
-      const links = await getProjectExternalLinks(client, project.id);
-      if (format === "json") {
-        outputJson(links);
-      } else if (format === "quiet") {
-        outputQuiet(links.map((l) => l.id));
-      } else {
-        if (links.length === 0) {
-          console.log("no external links");
-          return;
-        }
-        const cols = outputOpts.verbose ? verboseLinkColumns : linkColumns;
-        outputTable(links, cols, outputOpts);
+        console.log(`${status.name} (${status.type}) - ${status.color}`);
       }
       return;
     }
@@ -349,6 +274,7 @@ async function handleUpdateProject(
       console.log(`updated ${name}`);
     }
 
+    // flag entity handlers (injected from entity-definitions)
     if (input.react) {
       if (!input.emoji) {
         exitWithError("--emoji is required when using --react");

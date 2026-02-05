@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-01-30T20:56:20.013Z
+ * Generated from extracted-schema.json at 2026-02-05T17:36:40.059Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -33,9 +33,10 @@ import {
   getIssueComments,
   getSubIssues,
   getTeamStates,
-  subscribeToIssue,
-  unsubscribeFromIssue,
-  batchUpdateIssues,
+  createReaction,
+  createSubscription,
+  deleteSubscription,
+  findUserSubscription,
   type Issue,
   type ListIssuesFilter,
 } from "@bdsqqq/lnr-core";
@@ -99,25 +100,9 @@ export const issueInput = z.object({
   emoji: z.string().optional().describe("emoji for --react"),
   unreact: z.string().optional().describe("reaction id to remove"),
   subIssues: z.boolean().optional().describe("list sub-issues"),
-  subscribe: z.boolean().optional().describe("subscribe to issue notifications"),
-  unsubscribe: z.boolean().optional().describe("unsubscribe from issue notifications"),
 });
 
 type IssueInput = z.infer<typeof issueInput>;
-
-export const batchUpdateInput = z.object({
-  issues: z.string().meta({ positional: true }).describe("comma-separated issue identifiers (e.g. ENG-1,ENG-2,ENG-3)"),
-  state: z.string().optional().describe("set workflow state for all issues"),
-  assignee: z.string().optional().describe("set assignee by email or @me for all issues"),
-  priority: z.string().optional().describe("set priority for all issues (urgent, high, medium, low, none)"),
-  label: z.string().optional().describe("set label for all issues (+name to add)"),
-  project: z.string().optional().describe("set project for all issues"),
-  cycle: z.string().optional().describe("set cycle for all issues"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-});
-
-type BatchUpdateInput = z.infer<typeof batchUpdateInput>;
 
 const issueColumns: TableColumn<Issue>[] = [
   { header: "ID", value: (i) => i.identifier, width: 10 },
@@ -138,7 +123,6 @@ function inferOperation(input: IssueInput): Operation {
     "editComment", "replyTo", "deleteComment", "react", "unreact",
     "parent", "blocks", "blockedBy", "relatesTo", "title", "description",
     "project", "cycle", "estimate", "dueDate", "milestone",
-    "subscribe", "unsubscribe",
   ];
   for (const flag of mutationFlags) {
     if (input[flag] !== undefined) return "update";
@@ -457,26 +441,6 @@ async function handleUpdateIssue(
       }
       console.log(`removed reaction ${input.unreact.slice(0, 8)}`);
     }
-
-    if (input.subscribe && input.unsubscribe) {
-      exitWithError("cannot use --subscribe and --unsubscribe together");
-    }
-
-    if (input.subscribe) {
-      const success = await subscribeToIssue(client, issue.id);
-      if (!success) {
-        exitWithError(`failed to subscribe to ${identifier}`);
-      }
-      console.log(`subscribed to ${identifier}`);
-    }
-
-    if (input.unsubscribe) {
-      const success = await unsubscribeFromIssue(client, issue.id);
-      if (!success) {
-        exitWithError(`failed to unsubscribe from ${identifier}`);
-      }
-      console.log(`unsubscribed from ${identifier}`);
-    }
   } catch (error) {
     handleApiError(error);
   }
@@ -599,106 +563,6 @@ async function handleArchiveIssue(
   }
 }
 
-async function handleBatchUpdate(input: BatchUpdateInput): Promise<void> {
-  try {
-    const client = getClient();
-
-    const outputOpts: OutputOptions = {
-      format: input.json ? "json" : input.quiet ? "quiet" : undefined,
-    };
-    const format = getOutputFormat(outputOpts);
-
-    const identifiers = input.issues.split(",").map((id) => id.trim()).filter(Boolean);
-    if (identifiers.length === 0) {
-      exitWithError("no issue identifiers provided", "usage: lnr issue batch ENG-1,ENG-2 --state done");
-    }
-
-    const firstIdentifier = identifiers[0] as string;
-
-    const ids: string[] = [];
-    for (const identifier of identifiers) {
-      const issueId = await resolveIssueIdentifier(client, identifier);
-      ids.push(issueId);
-    }
-
-    const updateInput: Record<string, unknown> = {};
-
-    const getFirstIssueTeam = async () => {
-      const fullIssue = await client.issue(firstIdentifier);
-      if (!fullIssue) {
-        exitWithError(`issue ${firstIdentifier} not found`, undefined, EXIT_CODES.NOT_FOUND);
-      }
-      const team = await fullIssue.team;
-      if (!team) {
-        exitWithError("could not determine team");
-      }
-      return team;
-    };
-
-    if (input.state) {
-      const team = await getFirstIssueTeam();
-      const stateId = await resolveStateName(client, team.id, input.state);
-      updateInput.stateId = stateId;
-    }
-
-    if (input.assignee) {
-      const assigneeId = await resolveAssignee(client, input.assignee);
-      updateInput.assigneeId = assigneeId;
-    }
-
-    if (input.priority) {
-      updateInput.priority = priorityFromString(input.priority);
-    }
-
-    if (input.label) {
-      const labelName = input.label.startsWith("+") ? input.label.slice(1) : input.label;
-      const team = await getFirstIssueTeam();
-      const labels = await getTeamLabels(client, team.id);
-      const label = labels.find((l) => l.name.toLowerCase() === labelName.toLowerCase());
-      if (!label) {
-        exitWithError(`label "${labelName}" not found in team ${team.key}`, undefined, EXIT_CODES.NOT_FOUND);
-      }
-      updateInput.labelIds = [label.id];
-    }
-
-    if (input.project) {
-      const projectId = await resolveProjectByName(client, input.project);
-      updateInput.projectId = projectId;
-    }
-
-    if (input.cycle) {
-      const team = await getFirstIssueTeam();
-      const cycleId = await resolveCycleByName(client, team.id, input.cycle);
-      updateInput.cycleId = cycleId;
-    }
-
-    if (Object.keys(updateInput).length === 0) {
-      exitWithError("no update flags provided", "use --state, --assignee, --priority, --label, --project, or --cycle");
-    }
-
-    const result = await batchUpdateIssues(client, ids, updateInput);
-
-    if (!result.success) {
-      exitWithError("batch update failed");
-    }
-
-    if (format === "json") {
-      outputJson(result.issues);
-      return;
-    }
-
-    if (format === "quiet") {
-      outputQuiet(result.issues.map((i) => i.identifier));
-      return;
-    }
-
-    console.log(`updated ${result.issues.length} issues:`);
-    outputTable(result.issues, issueColumns, outputOpts);
-  } catch (error) {
-    handleApiError(error);
-  }
-}
-
 export const generatedIssuesRouter = router({
   issues: procedure
     .meta({
@@ -734,14 +598,5 @@ export const generatedIssuesRouter = router({
           await handleShowIssue(input.idOrNew, input);
           break;
       }
-    }),
-
-  "issue batch": procedure
-    .meta({
-      description: "batch update multiple issues at once",
-    })
-    .input(batchUpdateInput)
-    .mutation(async ({ input }) => {
-      await handleBatchUpdate(input);
     }),
 });
