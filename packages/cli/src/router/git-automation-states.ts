@@ -1,4 +1,5 @@
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import {
   getClient,
   listGitAutomationStates,
@@ -23,36 +24,26 @@ import {
 
 const gitAutomationEvents = ["draft", "merge", "mergeable", "review", "start"] as const;
 
-const outputOptions = z.object({
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+export const listGitAutomationStatesInput = type({
+  team: type("string").describe("team key"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });
 
-export const listGitAutomationStatesInput = z
-  .object({
-    team: z.string().describe("team key"),
-  })
-  .merge(outputOptions);
+export const gitAutomationStateInput = type({
+  idOrEvent: type("string").configure({ positional: true }).describe("automation id, event name, or 'new'"),
+  team: type("string").describe("team key"),
+  "event?": type("'draft' | 'merge' | 'mergeable' | 'review' | 'start'").describe("git event: draft, merge, mergeable, review, start"),
+  "state?": type("string").describe("workflow state name to transition to"),
+  "branch?": type("string").describe("target branch ID"),
+  "delete?": type("boolean").describe("delete the automation"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
+});
 
-export const gitAutomationStateInput = z
-  .object({
-    idOrEvent: z
-      .string()
-      .meta({ positional: true })
-      .describe("automation id, event name, or 'new'"),
-    team: z.string().describe("team key"),
-    event: z
-      .enum(gitAutomationEvents)
-      .optional()
-      .describe("git event: draft, merge, mergeable, review, start"),
-    state: z.string().optional().describe("workflow state name to transition to"),
-    branch: z.string().optional().describe("target branch ID"),
-    delete: z.boolean().optional().describe("delete the automation"),
-  })
-  .merge(outputOptions);
-
-type GitAutomationStateCliInput = z.infer<typeof gitAutomationStateInput>;
+type GitAutomationStateCliInput = typeof gitAutomationStateInput.infer;
 
 const automationColumns: TableColumn<GitAutomationState>[] = [
   { header: "EVENT", value: (a) => a.event, width: 12 },
@@ -76,7 +67,7 @@ function inferOperation(input: GitAutomationStateCliInput): Operation {
 }
 
 async function handleListGitAutomationStates(
-  input: z.infer<typeof listGitAutomationStatesInput>
+  input: typeof listGitAutomationStatesInput.infer
 ): Promise<void> {
   try {
     const client = getClient();

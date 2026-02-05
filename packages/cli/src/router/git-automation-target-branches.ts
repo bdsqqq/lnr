@@ -1,4 +1,5 @@
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import {
   getClient,
   listGitAutomationTargetBranches,
@@ -19,32 +20,25 @@ import {
   type TableColumn,
 } from "../lib/output";
 
-const outputOptions = z.object({
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+export const listGitAutomationTargetBranchesInput = type({
+  team: type("string").describe("team key"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });
 
-export const listGitAutomationTargetBranchesInput = z
-  .object({
-    team: z.string().describe("team key"),
-  })
-  .merge(outputOptions);
+export const gitAutomationTargetBranchInput = type({
+  patternOrId: type("string").configure({ positional: true }).describe("branch pattern, id, or 'new'"),
+  team: type("string").describe("team key"),
+  "pattern?": type("string").describe("branch pattern"),
+  "regex?": type("boolean").describe("treat pattern as regex"),
+  "delete?": type("boolean").describe("delete the target branch"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
+});
 
-export const gitAutomationTargetBranchInput = z
-  .object({
-    patternOrId: z
-      .string()
-      .meta({ positional: true })
-      .describe("branch pattern, id, or 'new'"),
-    team: z.string().describe("team key"),
-    pattern: z.string().optional().describe("branch pattern"),
-    regex: z.boolean().optional().describe("treat pattern as regex"),
-    delete: z.boolean().optional().describe("delete the target branch"),
-  })
-  .merge(outputOptions);
-
-type GitAutomationTargetBranchCliInput = z.infer<typeof gitAutomationTargetBranchInput>;
+type GitAutomationTargetBranchCliInput = typeof gitAutomationTargetBranchInput.infer;
 
 const branchColumns: TableColumn<GitAutomationTargetBranch>[] = [
   { header: "PATTERN", value: (b) => b.branchPattern, width: 30 },
@@ -66,7 +60,7 @@ function inferOperation(input: GitAutomationTargetBranchCliInput): Operation {
 }
 
 async function handleListGitAutomationTargetBranches(
-  input: z.infer<typeof listGitAutomationTargetBranchesInput>
+  input: typeof listGitAutomationTargetBranchesInput.infer
 ): Promise<void> {
   try {
     const client = getClient();

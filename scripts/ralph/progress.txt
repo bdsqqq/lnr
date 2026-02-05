@@ -73,3 +73,32 @@ Thread: https://ampcode.com/threads/T-019c2fdf-faee-77ba-af88-cb4891da376b
 - safeParse() helper in contract.test.ts handles both zod and arktype seamlessly
 
 ---
+
+## 2026-02-05 - Task 0050.4: remove zod dependency from cli package
+Thread: https://ampcode.com/threads/T-019c2fe3-854e-720f-823c-61084b29c969
+
+**What was implemented:**
+- migrated 8 remaining hand-crafted routers from zod to arktype:
+  - users.ts, notifications.ts, agent-sessions.ts, roadmaps.ts
+  - initiatives.ts, views.ts, git-automation-states.ts, git-automation-target-branches.ts
+- removed zod dependency from packages/cli/package.json
+- ran bun install to update lockfile
+- all typecheck and tests pass
+
+**Files changed:**
+- packages/cli/src/router/users.ts
+- packages/cli/src/router/notifications.ts
+- packages/cli/src/router/agent-sessions.ts
+- packages/cli/src/router/roadmaps.ts
+- packages/cli/src/router/initiatives.ts
+- packages/cli/src/router/views.ts
+- packages/cli/src/router/git-automation-states.ts
+- packages/cli/src/router/git-automation-target-branches.ts
+- packages/cli/package.json
+
+**Learnings:**
+- 0050.3 only migrated 6 of 14 hand-crafted routers; 8 more remained
+- .merge(outputOptions) pattern in zod must be flattened to inline fields in arktype
+- all routers now use arktype; zod fully removed from cli package
+
+---

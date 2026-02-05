@@ -1,4 +1,5 @@
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import {
   getClient,
   listRoadmaps,
@@ -19,18 +20,18 @@ import {
   type TableColumn,
 } from "../lib/output";
 
-export const listRoadmapsInput = z.object({
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+export const listRoadmapsInput = type({
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });
 
-export const roadmapInput = z.object({
-  nameOrId: z.string().meta({ positional: true }).describe("roadmap name, slugId, or id"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output id only"),
-  verbose: z.boolean().optional().describe("show all columns"),
-  projects: z.boolean().optional().describe("show roadmap projects"),
+export const roadmapInput = type({
+  nameOrId: type("string").configure({ positional: true }).describe("roadmap name, slugId, or id"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output id only"),
+  "verbose?": type("boolean").describe("show all columns"),
+  "projects?": type("boolean").describe("show roadmap projects"),
 });
 
 const roadmapColumns: TableColumn<Roadmap>[] = [

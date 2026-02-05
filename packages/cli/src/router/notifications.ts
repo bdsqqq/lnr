@@ -1,4 +1,5 @@
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import {
   getClient,
   listNotifications,
@@ -18,20 +19,20 @@ import {
   type TableColumn,
 } from "../lib/output";
 
-export const listNotificationsInput = z.object({
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
-  unread: z.boolean().optional().describe("show unread only"),
+export const listNotificationsInput = type({
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
+  "unread?": type("boolean").describe("show unread only"),
 });
 
-export const notificationInput = z.object({
-  id: z.string().meta({ positional: true }).describe("notification id"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output id only"),
-  verbose: z.boolean().optional().describe("show all fields"),
-  read: z.boolean().optional().describe("mark as read"),
-  archive: z.boolean().optional().describe("archive notification"),
+export const notificationInput = type({
+  id: type("string").configure({ positional: true }).describe("notification id"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output id only"),
+  "verbose?": type("boolean").describe("show all fields"),
+  "read?": type("boolean").describe("mark as read"),
+  "archive?": type("boolean").describe("archive notification"),
 });
 
 const notificationColumns: TableColumn<Notification>[] = [

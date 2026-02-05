@@ -1,4 +1,5 @@
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import {
   getClient,
   listInitiatives,
@@ -26,24 +27,24 @@ import {
   type TableColumn,
 } from "../lib/output";
 
-export const listInitiativesInput = z.object({
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+export const listInitiativesInput = type({
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });
 
-export const initiativeInput = z.object({
-  nameOrId: z.string().meta({ positional: true }).describe("initiative name, slugId, or id"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output id only"),
-  verbose: z.boolean().optional().describe("show all columns"),
-  updates: z.boolean().optional().describe("show initiative updates"),
-  links: z.boolean().optional().describe("show initiative external links"),
-  react: z.string().optional().describe("initiative update id to add reaction (requires --emoji)"),
-  emoji: z.string().optional().describe("emoji for --react"),
-  unreact: z.string().optional().describe("reaction id to remove"),
-  subscribe: z.boolean().optional().describe("subscribe to initiative notifications"),
-  unsubscribe: z.boolean().optional().describe("unsubscribe from initiative notifications"),
+export const initiativeInput = type({
+  nameOrId: type("string").configure({ positional: true }).describe("initiative name, slugId, or id"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output id only"),
+  "verbose?": type("boolean").describe("show all columns"),
+  "updates?": type("boolean").describe("show initiative updates"),
+  "links?": type("boolean").describe("show initiative external links"),
+  "react?": type("string").describe("initiative update id to add reaction (requires --emoji)"),
+  "emoji?": type("string").describe("emoji for --react"),
+  "unreact?": type("string").describe("reaction id to remove"),
+  "subscribe?": type("boolean").describe("subscribe to initiative notifications"),
+  "unsubscribe?": type("boolean").describe("unsubscribe from initiative notifications"),
 });
 
 const initiativeColumns: TableColumn<Initiative>[] = [

@@ -1,4 +1,5 @@
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import {
   getClient,
   listViews,
@@ -23,31 +24,27 @@ import {
   type TableColumn,
 } from "../lib/output";
 
-const outputOptions = z.object({
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
-  verbose: z.boolean().optional().describe("show all columns"),
+export const listViewsInput = type({
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
 });
 
-export const listViewsInput = z.object({}).merge(outputOptions);
+export const viewInput = type({
+  nameOrId: type("string").configure({ positional: true }).describe("view name, id, or 'new'"),
+  "name?": type("string").describe("view name"),
+  "description?": type("string").describe("view description"),
+  "icon?": type("string").describe("view icon"),
+  "color?": type("string").describe("view color"),
+  "shared?": type("boolean").describe("make view shared"),
+  "delete?": type("boolean").describe("delete the view"),
+  "preferences?": type("boolean").describe("show view preferences"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
+});
 
-export const viewInput = z
-  .object({
-    nameOrId: z
-      .string()
-      .meta({ positional: true })
-      .describe("view name, id, or 'new'"),
-    name: z.string().optional().describe("view name"),
-    description: z.string().optional().describe("view description"),
-    icon: z.string().optional().describe("view icon"),
-    color: z.string().optional().describe("view color"),
-    shared: z.boolean().optional().describe("make view shared"),
-    delete: z.boolean().optional().describe("delete the view"),
-    preferences: z.boolean().optional().describe("show view preferences"),
-  })
-  .merge(outputOptions);
-
-type ViewInput = z.infer<typeof viewInput>;
+type ViewInput = typeof viewInput.infer;
 
 const viewColumns: TableColumn<CustomView>[] = [
   { header: "NAME", value: (v) => v.name, width: 25 },
@@ -85,7 +82,7 @@ function inferOperation(input: ViewInput): Operation {
 }
 
 async function handleListViews(
-  input: z.infer<typeof listViewsInput>
+  input: typeof listViewsInput.infer
 ): Promise<void> {
   try {
     const client = getClient();
