@@ -226,18 +226,17 @@ const definitions: EntityDefinition[] = [
     },
   },
 
-  // TODO: ProjectMilestone scoped entity - needs getProjectMilestones function in core
-  // {
-  //   name: "ProjectMilestone",
-  //   exposure: "scoped",
-  //   reason: "milestones via --milestones (per ADR-0004)",
-  //   scoped: {
-  //     parent: "project",
-  //     flag: "milestones",
-  //     description: "list project milestones",
-  //     listHandler: "getProjectMilestones",
-  //   },
-  // },
+  {
+    name: "ProjectMilestone",
+    exposure: "scoped",
+    reason: "milestones via --milestones (per ADR-0004)",
+    scoped: {
+      parent: "project",
+      flag: "milestones",
+      description: "list project milestones",
+      listHandler: "listMilestones",
+    },
+  },
 
   {
     name: "RoadmapToProject",

@@ -1451,6 +1451,24 @@ function generateProjectShowHandler(): string {
       return;
     }
 
+    if (input.milestones) {
+      const milestones = await listMilestones(client, { projectId: project.id });
+      if (format === "json") {
+        outputJson(milestones);
+      } else if (format === "quiet") {
+        outputQuiet(milestones.map((m) => m.id));
+      } else {
+        if (milestones.length === 0) {
+          console.log("no milestones");
+          return;
+        }
+        for (const m of milestones) {
+          console.log(\`\${m.name}\${m.targetDate ? \` (target: \${formatDate(m.targetDate)})\` : ""}\`);
+        }
+      }
+      return;
+    }
+
     if (format === "json") {
       outputJson(project);
       return;

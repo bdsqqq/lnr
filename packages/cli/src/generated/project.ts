@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-05T17:36:40.059Z
+ * Generated from extracted-schema.json at 2026-02-05T17:41:17.846Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -26,6 +26,7 @@ import {
   getProjectUpdates,
   getProjectLabels,
   getProjectStatus,
+  listMilestones,
   type Project,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
@@ -70,6 +71,7 @@ export const projectInput = z.object({
   updates: z.boolean().optional().describe("list project updates"),
   labels: z.boolean().optional().describe("list project labels"),
   showStatus: z.boolean().optional().describe("show project status details"),
+  milestones: z.boolean().optional().describe("list project milestones"),
   react: z.string().optional().describe("entity id to add reaction (requires --emoji)"),
   emoji: z.string().optional().describe("emoji for --react"),
   unreact: z.string().optional().describe("reaction id to remove"),
@@ -206,6 +208,24 @@ async function handleShowProject(
         console.log(status.id);
       } else {
         console.log(`${status.name} (${status.type}) - ${status.color}`);
+      }
+      return;
+    }
+
+    if (input.milestones) {
+      const milestones = await listMilestones(client, { projectId: project.id });
+      if (format === "json") {
+        outputJson(milestones);
+      } else if (format === "quiet") {
+        outputQuiet(milestones.map((m) => m.id));
+      } else {
+        if (milestones.length === 0) {
+          console.log("no milestones");
+          return;
+        }
+        for (const m of milestones) {
+          console.log(`${m.name}${m.targetDate ? ` (target: ${formatDate(m.targetDate)})` : ""}`);
+        }
       }
       return;
     }
