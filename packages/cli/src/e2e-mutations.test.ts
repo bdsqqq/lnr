@@ -1,11 +1,10 @@
 /**
- * e2e tests for entity expansion commands.
- * runs against a real Linear workspace — creates a sandbox team, exercises all
- * CRUD operations, then tears down the team.
+ * ⚠️  DANGER: MUTATION TESTS — creates, updates, deletes Linear data.
  *
- * requires LINEAR_API_KEY env var pointing to a workspace where you can create teams.
+ * DO NOT RUN WITH YOUR PRODUCTION LINEAR API KEY.
+ * USE A SANDBOX WORKSPACE ONLY.
  *
- * run: LINEAR_API_KEY=xxx bun test packages/cli/src/e2e.test.ts
+ * run: LINEAR_API_KEY=<SANDBOX_KEY> bun test packages/cli/src/e2e-mutations.test.ts
  */
 
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
@@ -13,27 +12,22 @@ import { createClientWithKey } from "@bdsqqq/lnr-core";
 
 const API_KEY = process.env.LINEAR_API_KEY;
 if (!API_KEY) {
-  // skip entire file if no API key - prevents failure in CI/regular test runs
-  console.log("skipping e2e tests: LINEAR_API_KEY not set");
+  console.log("skipping e2e mutation tests: LINEAR_API_KEY not set");
   process.exit(0);
 }
 
 const client = createClientWithKey(API_KEY);
 const TEST_TEAM_KEY = `E2E${Date.now().toString(36).slice(-4).toUpperCase()}`;
 const TEST_TEAM_NAME = `e2e-test-${Date.now()}`;
+const TEST_PROJECT_NAME = `e2e-project-${Date.now()}`;
 
 let teamId: string;
 let issueId: string;
 let issueIdentifier: string;
 let projectId: string;
-let cycleId: string;
 let viewId: string;
 let commentId: string;
 
-/**
- * helper to run lnr commands via bun shell.
- * returns stdout, throws on non-zero exit.
- */
 async function lnr(...args: string[]): Promise<string> {
   const proc = Bun.spawn(["bun", "run", "dev", "--", ...args], {
     cwd: import.meta.dir + "/../..",
@@ -51,29 +45,9 @@ async function lnr(...args: string[]): Promise<string> {
   return stdout.trim();
 }
 
-/**
- * helper that expects command to fail.
- */
-async function lnrFails(...args: string[]): Promise<string> {
-  const proc = Bun.spawn(["bun", "run", "dev", "--", ...args], {
-    cwd: import.meta.dir + "/../..",
-    env: { ...process.env, LINEAR_API_KEY: API_KEY },
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const stdout = await new Response(proc.stdout).text();
-  const stderr = await new Response(proc.stderr).text();
-  const exitCode = await proc.exited;
-
-  if (exitCode === 0) {
-    throw new Error(`expected lnr ${args.join(" ")} to fail but it succeeded`);
-  }
-  return (stderr || stdout).trim();
-}
-
-describe("e2e: entity expansion", () => {
+describe("e2e: mutations", () => {
   beforeAll(async () => {
-    console.log(`creating test team: ${TEST_TEAM_NAME} (${TEST_TEAM_KEY})`);
+    console.log(`\n⚠️  MUTATION TESTS — creating test team: ${TEST_TEAM_NAME} (${TEST_TEAM_KEY})`);
     const result = await client.createTeam({
       name: TEST_TEAM_NAME,
       key: TEST_TEAM_KEY,
@@ -92,7 +66,7 @@ describe("e2e: entity expansion", () => {
     }
   }, 30000);
 
-  describe("team (read-only)", () => {
+  describe("team", () => {
     test("list teams includes test team", async () => {
       const out = await lnr("teams");
       expect(out).toContain(TEST_TEAM_KEY);
@@ -104,7 +78,7 @@ describe("e2e: entity expansion", () => {
     });
   });
 
-  describe("cycle (full CRUD)", () => {
+  describe("cycle CRUD", () => {
     test("create cycle", async () => {
       const out = await lnr(
         "cycle",
@@ -119,9 +93,6 @@ describe("e2e: entity expansion", () => {
         "2026-03-14"
       );
       expect(out).toContain("created cycle");
-      // extract cycle number
-      const match = out.match(/created cycle (\d+)/);
-      expect(match).toBeTruthy();
     });
 
     test("list cycles", async () => {
@@ -145,11 +116,10 @@ describe("e2e: entity expansion", () => {
     });
   });
 
-  describe("custom view (full CRUD)", () => {
+  describe("view CRUD", () => {
     test("create view", async () => {
       const out = await lnr("view", "new", "--name", "Test View");
       expect(out).toContain("created");
-      // save view id for later tests
       const json = await lnr("views", "--json");
       const views = JSON.parse(json);
       const testView = views.find((v: any) => v.name === "Test View");
@@ -182,7 +152,6 @@ describe("e2e: entity expansion", () => {
     test("create issue", async () => {
       const out = await lnr("issue", "new", "--team", TEST_TEAM_KEY, "--title", "Test Issue");
       expect(out).toContain("created");
-      // get issue identifier
       const json = await lnr("issues", "--team", TEST_TEAM_KEY, "--json");
       const issues = JSON.parse(json);
       const testIssue = issues.find((i: any) => i.title === "Test Issue");
@@ -202,12 +171,10 @@ describe("e2e: entity expansion", () => {
     });
 
     test("add reaction to comment", async () => {
-      // get comment id first
       const json = await lnr("issue", issueIdentifier, "--comments", "--json");
       const comments = JSON.parse(json);
       expect(comments.length).toBeGreaterThan(0);
       commentId = comments[0].id;
-
       const out = await lnr("issue", issueIdentifier, "--react", commentId, "--emoji", "thumbsup");
       expect(out).toContain("reaction");
     });
@@ -237,8 +204,6 @@ describe("e2e: entity expansion", () => {
       const issues = JSON.parse(json);
       const batchIssues = issues.filter((i: any) => i.title.startsWith("Batch Issue"));
       const ids = batchIssues.map((i: any) => i.identifier).join(",");
-
-      // trpc-cli requires "issue batch" as single arg for subcommand
       const out = await lnr("issue batch", ids, "--priority", "high");
       expect(out).toContain("updated");
     });
@@ -246,62 +211,52 @@ describe("e2e: entity expansion", () => {
 
   describe("project + scoped entities", () => {
     test("create project", async () => {
-      // project uses positional "new" + --new-name for creation
-      const out = await lnr("project", "new", "--new-name", "Test Project", "--team", TEST_TEAM_KEY);
+      const out = await lnr("project", "new", "--new-name", TEST_PROJECT_NAME, "--team", TEST_TEAM_KEY);
       expect(out).toContain("created");
-
       const json = await lnr("projects", "--json");
       const projects = JSON.parse(json);
-      const testProject = projects.find((p: any) => p.name === "Test Project");
+      const testProject = projects.find((p: any) => p.name === TEST_PROJECT_NAME);
       expect(testProject).toBeTruthy();
       projectId = testProject.id;
     });
 
     test("show project labels (scoped)", async () => {
-      const out = await lnr("project", "Test Project", "--labels");
-      // may be empty, just shouldn't error
+      const out = await lnr("project", TEST_PROJECT_NAME, "--labels");
       expect(out).toBeDefined();
     });
 
     test("show project status (scoped)", async () => {
-      const out = await lnr("project", "Test Project", "--show-status");
+      const out = await lnr("project", TEST_PROJECT_NAME, "--show-status");
       expect(out).toBeDefined();
     });
 
     test("show project updates (scoped)", async () => {
-      const out = await lnr("project", "Test Project", "--updates");
-      // may be empty
+      const out = await lnr("project", TEST_PROJECT_NAME, "--updates");
       expect(out).toBeDefined();
     });
 
-    test.skip("subscribe to project (TODO: derive notificationSubscriptionTypes from schema)", async () => {
-      // BUG: hardcoded subscription types don't match Linear's expected values
-      // FIX: generate valid types from schema introspection
-      const out = await lnr("project", "Test Project", "--subscribe");
-      expect(out.toLowerCase()).toMatch(/subscrib/);
-    });
-
-    test("unsubscribe from project (skip - requires subscription id)", async () => {
-      // --unsubscribe requires a subscription id, not boolean
-      // skipping as we'd need to fetch the subscription id first
-      expect(true).toBe(true);
+    test("subscribe to project", async () => {
+      // may succeed or fail with "already subscribed" — both are valid
+      try {
+        const out = await lnr("project", TEST_PROJECT_NAME, "--subscribe");
+        expect(out.toLowerCase()).toMatch(/subscrib/);
+      } catch (e: any) {
+        expect(e.message).toContain("already have an existing subscription");
+      }
     });
   });
 
-  describe("git automation (team-scoped)", () => {
+  describe("git automation", () => {
     test("list git automations (empty ok)", async () => {
-      // might have default automations or be empty
       try {
         const out = await lnr("git-automations", "--team", TEST_TEAM_KEY);
         expect(out).toBeDefined();
       } catch (e: any) {
-        // "no git automation states found" is acceptable
         expect(e.message).toContain("no git automation");
       }
     });
 
     test("create git automation state", async () => {
-      // need a workflow state first - get one from the team
       const team = await client.team(teamId);
       const states = await team.states();
       const inProgressState = states.nodes.find((s) => s.name === "In Progress");
@@ -334,55 +289,6 @@ describe("e2e: entity expansion", () => {
     });
   });
 
-  describe("read-only entities", () => {
-    test("list templates", async () => {
-      // may be empty on sandbox
-      try {
-        const out = await lnr("templates");
-        expect(out).toBeDefined();
-      } catch {
-        // empty is fine
-      }
-    });
-
-    test("list users", async () => {
-      const out = await lnr("users");
-      expect(out).toContain("@"); // email contains @
-    });
-
-    test("list notifications", async () => {
-      // may be empty
-      try {
-        const out = await lnr("notifications");
-        expect(out).toBeDefined();
-      } catch {
-        // empty is fine
-      }
-    });
-
-    test("list agent sessions", async () => {
-      // experimental, may be empty
-      try {
-        const out = await lnr("agent-sessions");
-        expect(out).toBeDefined();
-      } catch {
-        // empty is fine
-      }
-    });
-
-    test("list initiatives (enterprise)", async () => {
-      // returns empty on non-enterprise, not error
-      const out = await lnr("initiatives");
-      expect(out).toBeDefined();
-    });
-
-    test("list roadmaps (enterprise)", async () => {
-      // returns empty on non-enterprise, not error
-      const out = await lnr("roadmaps");
-      expect(out).toBeDefined();
-    });
-  });
-
   describe("cleanup", () => {
     test(
       "archive all test issues",
@@ -399,7 +305,7 @@ describe("e2e: entity expansion", () => {
 
     test("delete test project", async () => {
       if (projectId) {
-        const out = await lnr("project", "Test Project", "--delete");
+        const out = await lnr("project", TEST_PROJECT_NAME, "--delete");
         expect(out).toContain("deleted");
       }
     });

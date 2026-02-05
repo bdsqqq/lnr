@@ -5,7 +5,7 @@
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {
-    "dev": "bun run --cwd packages/cli src/cli.ts",
+    "dev": "bun --cwd packages/cli --env-file=../../.env src/cli.ts",
     "check": "bun run --filter '*' check",
     "test": "bun run --filter '*' test",
     "build": "bun build ./packages/cli/src/cli.ts --compile --outfile lnr",

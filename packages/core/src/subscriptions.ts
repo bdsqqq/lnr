@@ -10,18 +10,61 @@ export type SubscriptionTarget =
   | { type: "user"; userId: string };
 
 /**
- * subscription type mappings per entity.
- * Linear requires specific notification types, not a generic "all".
+ * valid notification subscription types from Linear API.
+ * camelCase required — Linear validates case-sensitively.
  */
-const SUBSCRIPTION_TYPES = {
-  project: ["projectupdatecreated", "projectnewcomment"],
-  team: ["issuecreated", "issuestatuschanged"],
-  initiative: ["initiativenewcomment", "initiativeupdatecreated"],
-  cycle: ["issuecreated"],
-  label: ["issuecreated"],
-  customView: ["issueaddedtoview"],
-  user: ["issuecreated"],
-} as const;
+export const NOTIFICATION_SUBSCRIPTION_TYPES = [
+  "issueCreated",
+  "issueStatusChanged",
+  "issueAddedToTriage",
+  "issueSlaHighRisk",
+  "issueSlaBreached",
+  "teamUpdateCreated",
+  "issueAddedToView",
+  "projectUpdateCreated",
+  "projectNewComment",
+  "projectMilestoneNewComment",
+  "projectDescriptionContentChange",
+  "projectMilestoneDescriptionContentChange",
+  "customerNeedCreated",
+  "initiativeNewComment",
+  "initiativeDescriptionContentChange",
+  "initiativeUpdateCreated",
+  "initiativeUpdatePrompt",
+  "customerNeedMarkedAsImportant",
+  "customerNeedResolved",
+] as const;
+
+export type NotificationSubscriptionType =
+  (typeof NOTIFICATION_SUBSCRIPTION_TYPES)[number];
+
+/**
+ * subscription type mappings per entity.
+ * uses subset of valid types relevant to each entity context.
+ */
+const SUBSCRIPTION_TYPES: Record<
+  SubscriptionTarget["type"],
+  readonly NotificationSubscriptionType[]
+> = {
+  project: [
+    "projectUpdateCreated",
+    "projectNewComment",
+    "projectMilestoneNewComment",
+    "projectDescriptionContentChange",
+    "projectMilestoneDescriptionContentChange",
+  ],
+  team: ["issueCreated", "issueStatusChanged", "issueAddedToTriage", "teamUpdateCreated"],
+  initiative: [
+    "initiativeNewComment",
+    "initiativeDescriptionContentChange",
+    "initiativeUpdateCreated",
+    "initiativeUpdatePrompt",
+  ],
+  cycle: ["issueCreated", "issueStatusChanged"],
+  label: ["issueCreated"],
+  customView: ["issueAddedToView"],
+  user: ["issueCreated"],
+};
 
 export async function createSubscription(
   client: LinearClient,
