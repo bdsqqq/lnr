@@ -31,6 +31,7 @@ export {
   getConfigValue,
   setConfigValue,
   ensureConfigDir,
+  findNearestConfig,
   listConfig,
   getConfigPath,
   type Config,

@@ -8,15 +8,30 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { createClientWithKey } from "@bdsqqq/lnr-core";
+import { getApiKey, getClient } from "@bdsqqq/lnr-core";
 
-const API_KEY = process.env.LINEAR_API_KEY;
+const API_KEY = getApiKey();
 if (!API_KEY) {
-  console.log("skipping e2e mutation tests: LINEAR_API_KEY not set");
+  console.log("skipping e2e mutation tests: no API key found (set LINEAR_API_KEY or add .lnr.json)");
   process.exit(0);
 }
 
-const client = createClientWithKey(API_KEY);
+const client = getClient();
+const org = await client.organization;
+
+const rl = require("readline").createInterface({ input: process.stdin, output: process.stdout });
+const answer = await new Promise<string>((resolve) => {
+  rl.question(`\n⚠️  MUTATION TESTS will create, update, and delete data in org: ${org.name}\n   type the org name to confirm: `, resolve);
+});
+rl.close();
+
+if (answer.trim() !== org.name) {
+  console.log("aborted — org name did not match.");
+  process.exit(0);
+}
+
+console.log(`testing org: ${org.name}`);
+
 const TEST_TEAM_KEY = `E2E${Date.now().toString(36).slice(-4).toUpperCase()}`;
 const TEST_TEAM_NAME = `e2e-test-${Date.now()}`;
 const TEST_PROJECT_NAME = `e2e-project-${Date.now()}`;
@@ -31,7 +46,6 @@ let commentId: string;
 async function lnr(...args: string[]): Promise<string> {
   const proc = Bun.spawn(["bun", "run", "dev", "--", ...args], {
     cwd: import.meta.dir + "/../..",
-    env: { ...process.env, LINEAR_API_KEY: API_KEY },
     stdout: "pipe",
     stderr: "pipe",
   });

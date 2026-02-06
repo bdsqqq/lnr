@@ -6,17 +6,21 @@
  */
 
 import { describe, test, expect } from "bun:test";
+import { getApiKey, getClient } from "@bdsqqq/lnr-core";
 
-const API_KEY = process.env.LINEAR_API_KEY;
+const API_KEY = getApiKey();
 if (!API_KEY) {
-  console.log("skipping e2e tests: LINEAR_API_KEY not set");
+  console.log("skipping e2e tests: no API key found (set LINEAR_API_KEY or add .lnr.json)");
   process.exit(0);
 }
+
+const client = getClient();
+const org = await client.organization;
+console.log(`testing org: ${org.name}`);
 
 async function lnr(...args: string[]): Promise<string> {
   const proc = Bun.spawn(["bun", "run", "dev", "--", ...args], {
     cwd: import.meta.dir + "/../..",
-    env: { ...process.env, LINEAR_API_KEY: API_KEY },
     stdout: "pipe",
     stderr: "pipe",
   });

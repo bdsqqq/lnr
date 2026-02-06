@@ -59,8 +59,7 @@ describe("config core", () => {
   test("getConfigPath returns path string", () => {
     const path = getConfigPath();
     expect(typeof path).toBe("string");
-    expect(path).toContain(".lnr");
-    expect(path).toContain("config.json");
+    expect(path).toEndWith(".lnr.json");
   });
 });
 
@@ -96,15 +95,15 @@ describe("getApiKey precedence", () => {
     expect(getApiKey()).toBe("config_key_123");
   });
 
-  test("getApiKey returns env var when set", () => {
-    saveConfig({ api_key: "config_key_123" });
+  test("getApiKey falls back to env var when config unset", () => {
+    saveConfig({});
     process.env.LINEAR_API_KEY = "env_key_456";
     expect(getApiKey()).toBe("env_key_456");
   });
 
-  test("getApiKey prefers env over config", () => {
-    saveConfig({ api_key: "should_not_return" });
-    process.env.LINEAR_API_KEY = "should_return";
+  test("getApiKey prefers config over env", () => {
+    saveConfig({ api_key: "should_return" });
+    process.env.LINEAR_API_KEY = "should_not_return";
     expect(getApiKey()).toBe("should_return");
   });
 

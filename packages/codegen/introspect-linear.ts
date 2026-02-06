@@ -83,15 +83,19 @@ async function getApiKey(): Promise<string> {
   }
 
   // Fall back to lnr config
-  const configPath = `${process.env.HOME}/.lnr/config.json`;
-  try {
-    const config = await Bun.file(configPath).json();
-    if (config.api_key) {
-      console.log("using API key from ~/.lnr/config.json");
-      return config.api_key;
+  for (const configPath of [
+    `${process.env.HOME}/.lnr.json`,
+    `${process.env.HOME}/.lnr/config.json`,
+  ]) {
+    try {
+      const config = await Bun.file(configPath).json();
+      if (config.api_key) {
+        console.log(`using API key from ${configPath}`);
+        return config.api_key;
+      }
+    } catch {
+      // Config doesn't exist or is invalid
     }
-  } catch {
-    // Config doesn't exist or is invalid
   }
 
   console.error("error: no API key found");
