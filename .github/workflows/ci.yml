@@ -26,6 +26,7 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v1
@@ -34,6 +35,7 @@ jobs:
       - run: bun test packages/cli/src/e2e-readonly.test.ts
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
-      - run: bun test packages/cli/src/e2e-mutations.test.ts --operating-on-this-org-do-not-put-an-org-you-care-about-or-youll-be-fired=bdsqqq-sandbox
+      - run: bun test packages/cli/src/e2e-mutations.test.ts
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          LNR_E2E_CONFIRM_ORG: bdsqqq-sandbox

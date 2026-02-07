@@ -62,8 +62,8 @@ two test files in `packages/cli/src/`:
 - `e2e-readonly.test.ts` — safe with any API key, read-only operations
 - `e2e-mutations.test.ts` — DANGER: creates/deletes data, sandbox org only
 
-mutation tests require `--operating-on-this-org-...=<org-name>` flag in CI.
-locally they prompt interactively.
+mutation tests require `LNR_E2E_CONFIRM_ORG=<org-name>` env var in CI.
+locally they prompt interactively if the env var is unset.
 
 cleanup of leftover state runs automatically at module level before tests.
 

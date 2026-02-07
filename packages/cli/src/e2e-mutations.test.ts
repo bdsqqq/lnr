@@ -4,7 +4,7 @@
  * DO NOT RUN WITH YOUR PRODUCTION LINEAR API KEY.
  * USE A SANDBOX WORKSPACE ONLY.
  *
- * run: LINEAR_API_KEY=<SANDBOX_KEY> bun test packages/cli/src/e2e-mutations.test.ts
+ * run: LINEAR_API_KEY=<SANDBOX_KEY> LNR_E2E_CONFIRM_ORG=<org-name> bun test packages/cli/src/e2e-mutations.test.ts
  */
 
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
@@ -19,8 +19,7 @@ if (!API_KEY) {
 const client = getClient();
 const org = await client.organization;
 
-const confirmFlag = process.argv.find((a) => a.startsWith("--operating-on-this-org-do-not-put-an-org-you-care-about-or-youll-be-fired="));
-const confirmOrg = confirmFlag?.split("=")[1];
+const confirmOrg = process.env.LNR_E2E_CONFIRM_ORG;
 
 if (confirmOrg) {
   if (confirmOrg !== org.name) {
