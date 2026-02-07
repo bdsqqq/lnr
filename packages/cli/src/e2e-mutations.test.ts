@@ -43,6 +43,36 @@ if (confirmOrg) {
   console.log(`testing org: ${org.name}`);
 }
 
+async function cleanupPreviousRuns() {
+  try {
+    console.log("cleaning up previous test runs...");
+
+    const teams = await client.teams();
+    for (const team of teams.nodes.filter((t) => t.name.startsWith("e2e-test-"))) {
+      console.log(`deleting leftover team: ${team.name}`);
+      await client.deleteTeam(team.id);
+    }
+
+    const projects = await client.projects();
+    for (const project of projects.nodes.filter((p) => p.name.startsWith("e2e-project-"))) {
+      console.log(`deleting leftover project: ${project.name}`);
+      await client.deleteProject(project.id);
+    }
+
+    const views = await client.customViews();
+    for (const view of views.nodes.filter((v) => v.name === "Test View" || v.name === "Updated View")) {
+      console.log(`deleting leftover view: ${view.name}`);
+      await client.deleteCustomView(view.id);
+    }
+
+    console.log("cleanup complete");
+  } catch (err) {
+    console.log("cleanup failed, continuing:", err);
+  }
+}
+
+await cleanupPreviousRuns();
+
 const TEST_TEAM_KEY = `E2E${Date.now().toString(36).slice(-4).toUpperCase()}`;
 const TEST_TEAM_NAME = `e2e-test-${Date.now()}`;
 const TEST_PROJECT_NAME = `e2e-project-${Date.now()}`;

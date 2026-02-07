@@ -1,4 +1,7 @@
 import { describe, test, expect, afterEach, beforeAll, afterAll } from "bun:test";
+import { mkdtempSync, unlinkSync, existsSync } from "fs";
+import { join } from "path";
+import { tmpdir } from "os";
 import {
   loadConfig,
   saveConfig,
@@ -10,17 +13,32 @@ import {
   type Config,
 } from "./config";
 
+let tmpDir: string;
+let tmpConfigPath: string;
+let originalLnrConfigPath: string | undefined;
+
+beforeAll(() => {
+  tmpDir = mkdtempSync(join(tmpdir(), "lnr-test-"));
+  tmpConfigPath = join(tmpDir, ".lnr.json");
+  originalLnrConfigPath = process.env.LNR_CONFIG_PATH;
+  process.env.LNR_CONFIG_PATH = tmpConfigPath;
+});
+
+afterAll(() => {
+  if (originalLnrConfigPath !== undefined) {
+    process.env.LNR_CONFIG_PATH = originalLnrConfigPath;
+  } else {
+    delete process.env.LNR_CONFIG_PATH;
+  }
+});
+
+afterEach(() => {
+  if (existsSync(tmpConfigPath)) {
+    unlinkSync(tmpConfigPath);
+  }
+});
+
 describe("config core", () => {
-  let originalConfig: Config;
-
-  beforeAll(() => {
-    originalConfig = loadConfig();
-  });
-
-  afterEach(() => {
-    saveConfig(originalConfig);
-  });
-
   test("loadConfig returns object", () => {
     const config = loadConfig();
     expect(typeof config).toBe("object");
@@ -64,16 +82,16 @@ describe("config core", () => {
 });
 
 describe("getApiKey precedence", () => {
-  let originalConfig: Config;
   let originalEnv: string | undefined;
 
   beforeAll(() => {
-    originalConfig = loadConfig();
     originalEnv = process.env.LINEAR_API_KEY;
   });
 
   afterEach(() => {
-    saveConfig(originalConfig);
+    if (existsSync(tmpConfigPath)) {
+      unlinkSync(tmpConfigPath);
+    }
     if (originalEnv !== undefined) {
       process.env.LINEAR_API_KEY = originalEnv;
     } else {

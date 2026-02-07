@@ -13,6 +13,10 @@ const LEGACY_CONFIG_PATH = join(homedir(), ".lnr", "config.json");
 
 export function ensureConfigDir(): void {}
 
+function getOverridePath(): string | undefined {
+  return process.env.LNR_CONFIG_PATH || undefined;
+}
+
 export function findNearestConfig(from?: string): string | null {
   let dir = from ?? process.cwd();
   while (true) {
@@ -29,6 +33,16 @@ export function findNearestConfig(from?: string): string | null {
 }
 
 export function loadConfig(): Config {
+  const override = getOverridePath();
+  if (override) {
+    if (!existsSync(override)) return {};
+    try {
+      return JSON.parse(readFileSync(override, "utf-8"));
+    } catch {
+      return {};
+    }
+  }
+
   const nearest = findNearestConfig();
   if (nearest) {
     try {
@@ -52,7 +66,8 @@ export function loadConfig(): Config {
 }
 
 export function saveConfig(config: Config): void {
-  writeFileSync(GLOBAL_CONFIG_PATH, JSON.stringify(config, null, 2));
+  const target = getOverridePath() ?? GLOBAL_CONFIG_PATH;
+  writeFileSync(target, JSON.stringify(config, null, 2));
 }
 
 export function getApiKey(): string | undefined {
@@ -64,7 +79,7 @@ export function listConfig(): Config {
 }
 
 export function getConfigPath(): string {
-  return findNearestConfig() ?? GLOBAL_CONFIG_PATH;
+  return getOverridePath() ?? findNearestConfig() ?? GLOBAL_CONFIG_PATH;
 }
 
 export function setApiKey(key: string): void {
