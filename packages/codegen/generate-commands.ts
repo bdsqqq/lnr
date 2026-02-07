@@ -322,21 +322,30 @@ const issueConfig: EntityConfig = {
     const injectedFlags = getInjectedMutationFlags("issue");
     const allFlags = [...baseMutationFlags, ...injectedFlags];
 
-    return `type Operation = "create" | "read" | "update" | "archive";
+    return `export const issueOperations = ["create", "read", "update", "archive"] as const;
+type Operation = (typeof issueOperations)[number];
 
-function inferOperation(input: IssueInput): Operation {
+export const issueMutationFlags: readonly (keyof IssueInput)[] = [
+  ${allFlags.map(f => `"${f}"`).join(", ")}
+] as const;
+
+export function inferOperation(input: IssueInput): Operation {
   if (input.idOrNew === "new") return "create";
   if (input.archive) return "archive";
 
-  const mutationFlags: (keyof IssueInput)[] = [
-    ${allFlags.map(f => `"${f}"`).join(", ")}
-  ];
-  for (const flag of mutationFlags) {
+  for (const flag of issueMutationFlags) {
     if (input[flag] !== undefined) return "update";
   }
 
   return "read";
-}`;
+}
+
+export const issueOperationSpec: OperationSpec<IssueInput, Operation> = {
+  command: "issue",
+  operations: issueOperations,
+  mutationFlags: issueMutationFlags,
+  inferOperation,
+};`;
   })(),
   listHandler: generateIssueListHandler(),
   showHandler: generateIssueShowHandler(),
@@ -471,21 +480,30 @@ const projectConfig: EntityConfig = {
     const injectedFlags = getInjectedMutationFlags("project");
     const allFlags = [...baseMutationFlags, ...injectedFlags];
 
-    return `type Operation = "create" | "read" | "update" | "delete";
+    return `export const projectOperations = ["create", "read", "update", "delete"] as const;
+type Operation = (typeof projectOperations)[number];
 
-function inferOperation(input: ProjectInput): Operation {
+export const projectMutationFlags: readonly (keyof ProjectInput)[] = [
+  ${allFlags.map(f => `"${f}"`).join(", ")}
+] as const;
+
+export function inferOperation(input: ProjectInput): Operation {
   if (input.name === "new") return "create";
   if (input.delete) return "delete";
 
-  const mutationFlags: (keyof ProjectInput)[] = [
-    ${allFlags.map(f => `"${f}"`).join(", ")}
-  ];
-  for (const flag of mutationFlags) {
+  for (const flag of projectMutationFlags) {
     if (input[flag] !== undefined) return "update";
   }
 
   return "read";
-}`;
+}
+
+export const projectOperationSpec: OperationSpec<ProjectInput, Operation> = {
+  command: "project",
+  operations: projectOperations,
+  mutationFlags: projectMutationFlags,
+  inferOperation,
+};`;
   })(),
   listHandler: generateProjectListHandler(),
   showHandler: generateProjectShowHandler(),
@@ -576,19 +594,30 @@ const labelConfig: EntityConfig = {
   { header: "COLOR", value: (l) => l.color ?? "-", width: 10 },
   { header: "DESCRIPTION", value: (l) => truncate(l.description ?? "-", 40), width: 40 },
 ];`,
-  inferOperation: `type Operation = "create" | "read" | "update" | "delete";
+  inferOperation: `export const labelOperations = ["create", "read", "update", "delete"] as const;
+type Operation = (typeof labelOperations)[number];
 
-function inferOperation(input: LabelInput): Operation {
+export const labelMutationFlags: readonly (keyof LabelInput)[] = [
+  "name", "color", "description"
+] as const;
+
+export function inferOperation(input: LabelInput): Operation {
   if (input.id === "new") return "create";
   if (input.delete) return "delete";
 
-  const mutationFlags: (keyof LabelInput)[] = ["name", "color", "description"];
-  for (const flag of mutationFlags) {
+  for (const flag of labelMutationFlags) {
     if (input[flag] !== undefined) return "update";
   }
 
   return "read";
-}`,
+}
+
+export const labelOperationSpec: OperationSpec<LabelInput, Operation> = {
+  command: "label",
+  operations: labelOperations,
+  mutationFlags: labelMutationFlags,
+  inferOperation,
+};`,
   listHandler: generateLabelListHandler(),
   showHandler: generateLabelShowHandler(),
   updateHandler: generateLabelUpdateHandler(),
@@ -634,14 +663,30 @@ const docConfig: EntityConfig = {
   { header: "ID", value: (d) => d.id, width: 20 },
   { header: "TITLE", value: (d) => truncate(d.title, 50), width: 50 },
 ];`,
-  inferOperation: `type Operation = "create" | "read" | "update" | "delete";
+  inferOperation: `export const docOperations = ["create", "read", "update", "delete"] as const;
+type Operation = (typeof docOperations)[number];
 
-function inferOperation(input: DocInput): Operation {
+export const docMutationFlags: readonly (keyof DocInput)[] = [
+  "title", "content"
+] as const;
+
+export function inferOperation(input: DocInput): Operation {
   if (input.id === "new") return "create";
   if (input.delete) return "delete";
-  if (input.title !== undefined || input.content !== undefined) return "update";
+
+  for (const flag of docMutationFlags) {
+    if (input[flag] !== undefined) return "update";
+  }
+
   return "read";
-}`,
+}
+
+export const docOperationSpec: OperationSpec<DocInput, Operation> = {
+  command: "doc",
+  operations: docOperations,
+  mutationFlags: docMutationFlags,
+  inferOperation,
+};`,
   listHandler: generateDocListHandler(),
   showHandler: generateDocShowHandler(),
   updateHandler: generateDocUpdateHandler(),
@@ -928,6 +973,7 @@ import {
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
+import type { OperationSpec } from "../lib/operation-spec";
 import {
   outputJson,
   outputQuiet,

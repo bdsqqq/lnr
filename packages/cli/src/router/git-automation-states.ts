@@ -1,3 +1,4 @@
+import type { OperationSpec } from "../lib/operation-spec";
 import "../lib/arktype-config";
 import { type } from "arktype";
 import {
@@ -56,15 +57,30 @@ const verboseAutomationColumns: TableColumn<GitAutomationState>[] = [
   { header: "ID", value: (a) => a.id, width: 36 },
 ];
 
-type Operation = "create" | "read" | "update" | "delete";
+export const gitAutomationStateOperations = ["create", "read", "update", "delete"] as const;
+type Operation = (typeof gitAutomationStateOperations)[number];
 
-function inferOperation(input: GitAutomationStateCliInput): Operation {
+export const gitAutomationStateMutationFlags: readonly (keyof GitAutomationStateCliInput)[] = [
+  "event", "state", "branch"
+] as const;
+
+export function inferOperation(input: GitAutomationStateCliInput): Operation {
   if (input.idOrEvent === "new") return "create";
   if (input.delete) return "delete";
-  if (input.event !== undefined || input.state !== undefined || input.branch !== undefined)
-    return "update";
+
+  for (const flag of gitAutomationStateMutationFlags) {
+    if (input[flag] !== undefined) return "update";
+  }
+
   return "read";
 }
+
+export const gitAutomationStateOperationSpec: OperationSpec<GitAutomationStateCliInput, Operation> = {
+  command: "git-automation",
+  operations: gitAutomationStateOperations,
+  mutationFlags: gitAutomationStateMutationFlags,
+  inferOperation,
+};
 
 async function handleListGitAutomationStates(
   input: typeof listGitAutomationStatesInput.infer

@@ -12,6 +12,7 @@ import {
   findTeamByKeyOrName,
   type Cycle,
 } from "@bdsqqq/lnr-core";
+import type { OperationSpec } from "../lib/operation-spec";
 import { router, procedure } from "./trpc";
 import { exitWithError, handleApiError, EXIT_CODES } from "../lib/error";
 import {
@@ -77,21 +78,31 @@ const verboseCycleColumns: TableColumn<Cycle>[] = [
   { header: "ID", value: (c) => c.id, width: 36 },
 ];
 
-type Operation = "create" | "read" | "update" | "delete" | "current";
+export const cycleOperations = ["create", "read", "update", "delete", "current"] as const;
+type Operation = (typeof cycleOperations)[number];
 
-function inferOperation(input: CycleInput): Operation {
+export const cycleMutationFlags: readonly (keyof CycleInput)[] = [
+  "name", "description", "startsAt", "endsAt"
+] as const;
+
+export function inferOperation(input: CycleInput): Operation {
   if (input.current) return "current";
   if (input.nameOrNumber === "new") return "create";
   if (input.delete) return "delete";
-  if (
-    input.name !== undefined ||
-    input.description !== undefined ||
-    input.startsAt !== undefined ||
-    input.endsAt !== undefined
-  )
-    return "update";
+
+  for (const flag of cycleMutationFlags) {
+    if (input[flag] !== undefined) return "update";
+  }
+
   return "read";
 }
+
+export const cycleOperationSpec: OperationSpec<CycleInput, Operation> = {
+  command: "cycle",
+  operations: cycleOperations,
+  mutationFlags: cycleMutationFlags,
+  inferOperation,
+};
 
 async function handleListCycles(
   input: typeof listCyclesInput.infer

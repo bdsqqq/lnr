@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-07T23:30:13.472Z
+ * Generated from extracted-schema.json at 2026-02-07T23:40:01.131Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -19,6 +19,7 @@ import {
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
+import type { OperationSpec } from "../lib/operation-spec";
 import {
   outputJson,
   outputQuiet,
@@ -62,14 +63,30 @@ const docColumns: TableColumn<Document>[] = [
   { header: "TITLE", value: (d) => truncate(d.title, 50), width: 50 },
 ];
 
-type Operation = "create" | "read" | "update" | "delete";
+export const docOperations = ["create", "read", "update", "delete"] as const;
+type Operation = (typeof docOperations)[number];
 
-function inferOperation(input: DocInput): Operation {
+export const docMutationFlags: readonly (keyof DocInput)[] = [
+  "title", "content"
+] as const;
+
+export function inferOperation(input: DocInput): Operation {
   if (input.id === "new") return "create";
   if (input.delete) return "delete";
-  if (input.title !== undefined || input.content !== undefined) return "update";
+
+  for (const flag of docMutationFlags) {
+    if (input[flag] !== undefined) return "update";
+  }
+
   return "read";
 }
+
+export const docOperationSpec: OperationSpec<DocInput, Operation> = {
+  command: "doc",
+  operations: docOperations,
+  mutationFlags: docMutationFlags,
+  inferOperation,
+};
 
 async function handleListDocs(
   input: typeof listDocsInput.infer

@@ -1,3 +1,4 @@
+import type { OperationSpec } from "../lib/operation-spec";
 import "../lib/arktype-config";
 import { type } from "arktype";
 import {
@@ -50,14 +51,30 @@ const verboseBranchColumns: TableColumn<GitAutomationTargetBranch>[] = [
   { header: "ID", value: (b) => b.id, width: 36 },
 ];
 
-type Operation = "create" | "read" | "update" | "delete";
+export const gitAutomationTargetBranchOperations = ["create", "read", "update", "delete"] as const;
+type Operation = (typeof gitAutomationTargetBranchOperations)[number];
 
-function inferOperation(input: GitAutomationTargetBranchCliInput): Operation {
+export const gitAutomationTargetBranchMutationFlags: readonly (keyof GitAutomationTargetBranchCliInput)[] = [
+  "pattern", "regex"
+] as const;
+
+export function inferOperation(input: GitAutomationTargetBranchCliInput): Operation {
   if (input.patternOrId === "new") return "create";
   if (input.delete) return "delete";
-  if (input.pattern !== undefined || input.regex !== undefined) return "update";
+
+  for (const flag of gitAutomationTargetBranchMutationFlags) {
+    if (input[flag] !== undefined) return "update";
+  }
+
   return "read";
 }
+
+export const gitAutomationTargetBranchOperationSpec: OperationSpec<GitAutomationTargetBranchCliInput, Operation> = {
+  command: "git-branch",
+  operations: gitAutomationTargetBranchOperations,
+  mutationFlags: gitAutomationTargetBranchMutationFlags,
+  inferOperation,
+};
 
 async function handleListGitAutomationTargetBranches(
   input: typeof listGitAutomationTargetBranchesInput.infer

@@ -1,3 +1,4 @@
+import type { OperationSpec } from "../lib/operation-spec";
 import "../lib/arktype-config";
 import { type } from "arktype";
 import {
@@ -64,22 +65,31 @@ const verboseViewColumns: TableColumn<CustomView>[] = [
   { header: "ID", value: (v) => v.id, width: 36 },
 ];
 
-type Operation = "create" | "read" | "update" | "delete" | "preferences";
+export const viewOperations = ["create", "read", "update", "delete", "preferences"] as const;
+type Operation = (typeof viewOperations)[number];
 
-function inferOperation(input: ViewInput): Operation {
+export const viewMutationFlags: readonly (keyof ViewInput)[] = [
+  "name", "description", "icon", "color", "shared"
+] as const;
+
+export function inferOperation(input: ViewInput): Operation {
   if (input.nameOrId === "new") return "create";
   if (input.delete) return "delete";
   if (input.preferences) return "preferences";
-  if (
-    input.name !== undefined ||
-    input.description !== undefined ||
-    input.icon !== undefined ||
-    input.color !== undefined ||
-    input.shared !== undefined
-  )
-    return "update";
+
+  for (const flag of viewMutationFlags) {
+    if (input[flag] !== undefined) return "update";
+  }
+
   return "read";
 }
+
+export const viewOperationSpec: OperationSpec<ViewInput, Operation> = {
+  command: "view",
+  operations: viewOperations,
+  mutationFlags: viewMutationFlags,
+  inferOperation,
+};
 
 async function handleListViews(
   input: typeof listViewsInput.infer

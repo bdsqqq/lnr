@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-07T23:30:13.471Z
+ * Generated from extracted-schema.json at 2026-02-07T23:40:01.130Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -44,6 +44,7 @@ import {
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
+import type { OperationSpec } from "../lib/operation-spec";
 import {
   outputJson,
   outputQuiet,
@@ -135,21 +136,30 @@ const issueColumns: TableColumn<Issue>[] = [
   { header: "PRIORITY", value: (i) => formatPriority(i.priority), width: 8 },
 ];
 
-type Operation = "create" | "read" | "update" | "archive";
+export const issueOperations = ["create", "read", "update", "archive"] as const;
+type Operation = (typeof issueOperations)[number];
 
-function inferOperation(input: IssueInput): Operation {
+export const issueMutationFlags: readonly (keyof IssueInput)[] = [
+  "state", "assignee", "priority", "label", "comment", "editComment", "replyTo", "deleteComment", "parent", "blocks", "blockedBy", "relatesTo", "title", "description", "project", "cycle", "estimate", "dueDate", "milestone", "pr", "prioritySortOrder", "subscribe", "unsubscribe", "react", "emoji", "unreact"
+] as const;
+
+export function inferOperation(input: IssueInput): Operation {
   if (input.idOrNew === "new") return "create";
   if (input.archive) return "archive";
 
-  const mutationFlags: (keyof IssueInput)[] = [
-    "state", "assignee", "priority", "label", "comment", "editComment", "replyTo", "deleteComment", "parent", "blocks", "blockedBy", "relatesTo", "title", "description", "project", "cycle", "estimate", "dueDate", "milestone", "pr", "prioritySortOrder", "subscribe", "unsubscribe", "react", "emoji", "unreact"
-  ];
-  for (const flag of mutationFlags) {
+  for (const flag of issueMutationFlags) {
     if (input[flag] !== undefined) return "update";
   }
 
   return "read";
 }
+
+export const issueOperationSpec: OperationSpec<IssueInput, Operation> = {
+  command: "issue",
+  operations: issueOperations,
+  mutationFlags: issueMutationFlags,
+  inferOperation,
+};
 
 async function handleListIssues(
   input: typeof listIssuesInput.infer
