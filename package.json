@@ -8,6 +8,7 @@
     "dev": "bun --cwd packages/cli --env-file=../../.env src/cli.ts",
     "check": "bun run --filter '*' check",
     "test": "bun run --filter '*' test",
+    "generate": "bun run packages/codegen/generate-commands.ts && bun run scripts/enumerate-commands.ts --markdown > docs/command-reference.md",
     "build": "bun build ./packages/cli/src/cli.ts --compile --outfile lnr",
     "build:all": "bun build ./packages/cli/src/cli.ts --compile --target=bun-linux-x64 --outfile dist/lnr-linux-x64 && bun build ./packages/cli/src/cli.ts --compile --target=bun-linux-arm64 --outfile dist/lnr-linux-arm64 && bun build ./packages/cli/src/cli.ts --compile --target=bun-darwin-x64 --outfile dist/lnr-darwin-x64 && bun build ./packages/cli/src/cli.ts --compile --target=bun-darwin-arm64 --outfile dist/lnr-darwin-arm64 && bun build ./packages/cli/src/cli.ts --compile --target=bun-windows-x64 --outfile dist/lnr-windows-x64.exe",
     "release": "changeset publish"

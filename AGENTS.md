@@ -7,6 +7,7 @@ bun run check    # typecheck all packages
 bun run test     # run tests
 bun run dev      # run cli in dev mode
 bun run build    # build binary
+bun run generate # codegen + command reference (docs/command-reference.md)
 ```
 
 ## structure

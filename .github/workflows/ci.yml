@@ -21,6 +21,8 @@ jobs:
       - uses: oven-sh/setup-bun@v1
 
       - run: bun install
+      - run: bun run generate
+      - run: git diff --exit-code docs/command-reference.md packages/cli/src/generated/
       - run: bun run check
       - run: bun run test
 
