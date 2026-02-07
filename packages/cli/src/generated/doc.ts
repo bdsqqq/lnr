@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-05T18:55:41.728Z
+ * Generated from extracted-schema.json at 2026-02-07T23:30:13.472Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -30,6 +30,9 @@ import {
   type OutputOptions,
   type TableColumn,
 } from "../lib/output";
+import { outputCommentThreads } from "../lib/renderers/comments";
+import { outputDetail } from "../lib/renderers/detail";
+import { docToDetail } from "../lib/adapters";
 
 
 export const listDocsInput = type({
@@ -129,11 +132,7 @@ async function handleShowDoc(id: string, input: DocInput): Promise<void> {
       return;
     }
 
-    console.log(`${doc.title}`);
-    if (doc.content) {
-      console.log();
-      console.log(doc.content);
-    }
+    outputDetail(docToDetail(doc));
   } catch (error) {
     handleApiError(error);
   }

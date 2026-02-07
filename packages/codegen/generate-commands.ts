@@ -216,7 +216,7 @@ const issueConfig: EntityConfig = {
     "subscribeToIssue",
     "unsubscribeFromIssue",
   ],
-  coreTypes: ["Issue", "ListIssuesFilter"],
+  coreTypes: ["Issue", "ListIssuesFilter", "Comment"],
   listInputSchema: () => `export const listIssuesInput = type({
   "team?": type("string").describe("filter by team key"),
   "project?": type("string").describe("filter by project name"),
@@ -235,6 +235,8 @@ const issueConfig: EntityConfig = {
     lines.push('  idOrNew: type("string").configure({ positional: true }).describe("issue identifier (e.g. ENG-123) or \'new\'"),');
     lines.push('  "json?": type("boolean").describe("output as json"),');
     lines.push('  "open?": type("boolean").describe("open issue in browser"),');
+    lines.push('  "branch?": type("boolean").describe("output a git-friendly branch name"),');
+    lines.push('  "pr?": type("string").describe("link a GitHub PR URL to the issue"),');
 
     const filteredFields = fields.filter(f => !f.isDeprecated && !issueConfig.fieldsToExclude.includes(f.name) && !f.description.includes("[Internal]"));
 
@@ -313,6 +315,7 @@ const issueConfig: EntityConfig = {
       "editComment", "replyTo", "deleteComment",
       "parent", "blocks", "blockedBy", "relatesTo", "title", "description",
       "project", "cycle", "estimate", "dueDate", "milestone",
+      "pr", "prioritySortOrder",
       // issue-specific subscriptions (not from NotificationSubscription entity)
       "subscribe", "unsubscribe"
     ];
@@ -884,6 +887,19 @@ function inferOperation(input: MilestoneInput): Operation {
 
 const entityConfigs: EntityConfig[] = [issueConfig, projectConfig, labelConfig, docConfig];
 
+const ADAPTER_MAP: Record<string, string> = {
+  Issue: "issueToDetail",
+  Project: "projectToDetail",
+  IssueLabel: "labelToDetail",
+  Document: "docToDetail",
+};
+
+function getAdapterImport(entityKey: string): string {
+  const adapter = ADAPTER_MAP[entityKey];
+  if (!adapter) return "";
+  return `import { ${adapter} } from "../lib/adapters";`;
+}
+
 function generateEntityFile(config: EntityConfig): string {
   const timestamp = new Date().toISOString();
   const entitySchema = schema.entities[config.entityKey];
@@ -923,6 +939,9 @@ import {
   type OutputOptions,
   type TableColumn,
 } from "../lib/output";
+import { outputCommentThreads } from "../lib/renderers/comments";
+import { outputDetail } from "../lib/renderers/detail";
+${getAdapterImport(config.entityKey)}
 ${config.extraHandlers || ""}
 
 ${config.listInputSchema()}
@@ -996,7 +1015,9 @@ ${config.subcommandRouterEntries ? `
 }
 
 function generateIssueExtraImports(): string {
-  return "";
+  return `import { handlePr } from "../hand-crafted/issue";
+import { spawn } from "node:child_process";
+import chalk from "chalk";`;
 }
 
 function generateIssueListHandler(): string {
@@ -1032,6 +1053,14 @@ function generateIssueListHandler(): string {
 
     if (input.project) {
       filters.project = input.project;
+    }
+
+    if (input.priority) {
+      filters.priority = priorityFromString(input.priority);
+    }
+
+    if (input.cycle) {
+      filters.cycle = input.cycle;
     }
 
     const issues = await listIssues(client, filters);
@@ -1072,14 +1101,28 @@ function generateIssueShowHandler(): string {
       exitWithError(\`issue \${identifier} not found\`, undefined, EXIT_CODES.NOT_FOUND);
     }
 
+    if (input.branch) {
+      console.log(issue.branchName);
+      return;
+    }
+
+    if (input.open) {
+      const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
+      spawn(cmd, [issue.url], { stdio: "ignore", detached: true }).unref();
+      console.log(\`opened \${issue.url}\`);
+      return;
+    }
+
     if (input.comments) {
-      const result = await getIssueComments(client, issue.id);
+      const { comments, error } = await getIssueComments(client, issue.id);
+      if (error) {
+        console.error(\`failed to fetch comments: \${error}\`);
+        return;
+      }
       if (format === "json") {
-        outputJson(result.comments);
+        outputJson(comments);
       } else {
-        for (const c of result.comments) {
-          console.log(\`[\${c.id.slice(0, 8)}] \${c.user ?? "unknown"}: \${c.body}\`);
-        }
+        outputCommentThreads(comments);
       }
       return;
     }
@@ -1094,20 +1137,30 @@ function generateIssueShowHandler(): string {
       return;
     }
 
+    const { comments, error: commentsError } = await getIssueComments(client, issue.id);
+
     if (format === "json") {
-      outputJson(issue);
+      outputJson({
+        ...issue,
+        priority: formatPriority(issue.priority),
+        createdAt: formatDate(issue.createdAt),
+        updatedAt: formatDate(issue.updatedAt),
+        comments,
+      });
       return;
     }
 
-    console.log(\`\${issue.identifier}: \${issue.title}\`);
-    if (issue.description) {
-      console.log(\`  \${truncate(issue.description, 80)}\`);
+    outputDetail(issueToDetail(issue));
+
+    if (commentsError) {
+      console.log();
+      console.log(chalk.dim(\`comments: failed to load (\${commentsError})\`));
+    } else if (comments.length > 0) {
+      console.log();
+      console.log("─".repeat(40));
+      console.log();
+      outputCommentThreads(comments);
     }
-    console.log();
-    console.log(\`state:    \${issue.state ?? "-"}\`);
-    console.log(\`assignee: \${issue.assignee ?? "-"}\`);
-    console.log(\`priority: \${formatPriority(issue.priority)}\`);
-    console.log(\`created:  \${formatDate(issue.createdAt)}\`);
   } catch (error) {
     handleApiError(error);
   }
@@ -1331,6 +1384,15 @@ function generateIssueUpdateHandler(): string {
       }
       console.log(\`unsubscribed from \${identifier}\`);
     }
+
+    if (input.pr) {
+      await handlePr(client, issue, input.pr);
+    }
+
+    if (input.prioritySortOrder !== undefined) {
+      await updateIssue(client, issue.id, { prioritySortOrder: input.prioritySortOrder });
+      console.log(\`updated priority sort order for \${identifier}\`);
+    }
   } catch (error) {
     handleApiError(error);
   }
@@ -1423,6 +1485,10 @@ function generateIssueCreateHandler(): string {
         const relatedIssueId = await resolveIssueIdentifier(client, input.relatesTo);
         await createIssueRelation(client, issue.id, relatedIssueId, "related");
         console.log(\`\${issue.identifier} now relates to \${input.relatesTo}\`);
+      }
+
+      if (input.pr) {
+        await handlePr(client, issue, input.pr);
       }
 
       console.log(\`created \${issue.identifier}: \${issue.title}\`);
@@ -1570,7 +1636,7 @@ function generateProjectListHandler(): string {
     };
     const format = getOutputFormat(outputOpts);
 
-    const projects = await listProjects(client);
+    const projects = await listProjects(client, { team: input.team, status: input.status });
 
     if (format === "json") {
       outputJson(projects);
@@ -1714,16 +1780,7 @@ function generateProjectShowHandler(): string {
       return;
     }
 
-    console.log(\`\${project.name}\`);
-    if (project.description) {
-      console.log(\`  \${truncate(project.description, 80)}\`);
-    }
-    console.log();
-    console.log(\`state:    \${project.state ?? "-"}\`);
-    console.log(\`progress: \${Math.round((project.progress ?? 0) * 100)}%\`);
-    console.log(\`target:   \${formatDate(project.targetDate)}\`);
-    console.log(\`started:  \${formatDate(project.startDate)}\`);
-    console.log(\`created:  \${formatDate(project.createdAt)}\`);
+    outputDetail(projectToDetail(project));
   } catch (error) {
     handleApiError(error);
   }
@@ -2052,13 +2109,7 @@ function generateLabelShowHandler(): string {
       return;
     }
 
-    console.log(\`\${label.name}\`);
-    if (label.description) {
-      console.log(\`  \${truncate(label.description, 80)}\`);
-    }
-    console.log();
-    console.log(\`id:    \${label.id}\`);
-    console.log(\`color: \${label.color ?? "-"}\`);
+    outputDetail(labelToDetail(label));
   } catch (error) {
     handleApiError(error);
   }
@@ -2213,11 +2264,7 @@ function generateDocShowHandler(): string {
       return;
     }
 
-    console.log(\`\${doc.title}\`);
-    if (doc.content) {
-      console.log();
-      console.log(doc.content);
-    }
+    outputDetail(docToDetail(doc));
   } catch (error) {
     handleApiError(error);
   }

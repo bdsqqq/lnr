@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-05T18:55:41.727Z
+ * Generated from extracted-schema.json at 2026-02-07T23:30:13.472Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -49,6 +49,9 @@ import {
   type OutputOptions,
   type TableColumn,
 } from "../lib/output";
+import { outputCommentThreads } from "../lib/renderers/comments";
+import { outputDetail } from "../lib/renderers/detail";
+import { projectToDetail } from "../lib/adapters";
 
 
 export const listProjectsInput = type({
@@ -136,7 +139,7 @@ async function handleListProjects(
     };
     const format = getOutputFormat(outputOpts);
 
-    const projects = await listProjects(client);
+    const projects = await listProjects(client, { team: input.team, status: input.status });
 
     if (format === "json") {
       outputJson(projects);
@@ -278,16 +281,7 @@ async function handleShowProject(
       return;
     }
 
-    console.log(`${project.name}`);
-    if (project.description) {
-      console.log(`  ${truncate(project.description, 80)}`);
-    }
-    console.log();
-    console.log(`state:    ${project.state ?? "-"}`);
-    console.log(`progress: ${Math.round((project.progress ?? 0) * 100)}%`);
-    console.log(`target:   ${formatDate(project.targetDate)}`);
-    console.log(`started:  ${formatDate(project.startDate)}`);
-    console.log(`created:  ${formatDate(project.createdAt)}`);
+    outputDetail(projectToDetail(project));
   } catch (error) {
     handleApiError(error);
   }

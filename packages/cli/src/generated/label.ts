@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-05T18:55:41.728Z
+ * Generated from extracted-schema.json at 2026-02-07T23:30:13.472Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -33,6 +33,9 @@ import {
   type OutputOptions,
   type TableColumn,
 } from "../lib/output";
+import { outputCommentThreads } from "../lib/renderers/comments";
+import { outputDetail } from "../lib/renderers/detail";
+import { labelToDetail } from "../lib/adapters";
 
 
 export const listLabelsInput = type({
@@ -135,13 +138,7 @@ async function handleShowLabel(
       return;
     }
 
-    console.log(`${label.name}`);
-    if (label.description) {
-      console.log(`  ${truncate(label.description, 80)}`);
-    }
-    console.log();
-    console.log(`id:    ${label.id}`);
-    console.log(`color: ${label.color ?? "-"}`);
+    outputDetail(labelToDetail(label));
   } catch (error) {
     handleApiError(error);
   }

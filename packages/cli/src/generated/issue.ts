@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-05T18:55:41.727Z
+ * Generated from extracted-schema.json at 2026-02-07T23:30:13.471Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -40,6 +40,7 @@ import {
   batchUpdateIssues,
   type Issue,
   type ListIssuesFilter,
+  type Comment,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "../router/trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
@@ -54,7 +55,12 @@ import {
   type OutputOptions,
   type TableColumn,
 } from "../lib/output";
-
+import { outputCommentThreads } from "../lib/renderers/comments";
+import { outputDetail } from "../lib/renderers/detail";
+import { issueToDetail } from "../lib/adapters";
+import { handlePr } from "../hand-crafted/issue";
+import { spawn } from "node:child_process";
+import chalk from "chalk";
 
 export const listIssuesInput = type({
   "team?": type("string").describe("filter by team key"),
@@ -73,6 +79,8 @@ export const issueInput = type({
   idOrNew: type("string").configure({ positional: true }).describe("issue identifier (e.g. ENG-123) or 'new'"),
   "json?": type("boolean").describe("output as json"),
   "open?": type("boolean").describe("open issue in browser"),
+  "branch?": type("boolean").describe("output a git-friendly branch name"),
+  "pr?": type("string").describe("link a GitHub PR URL to the issue"),
   "title?": type("string").describe("The issue title."),
   "description?": type("string").describe("The issue description in markdown format."),
   "assignee?": type("string").describe("set assignee by email or @me"),
@@ -134,7 +142,7 @@ function inferOperation(input: IssueInput): Operation {
   if (input.archive) return "archive";
 
   const mutationFlags: (keyof IssueInput)[] = [
-    "state", "assignee", "priority", "label", "comment", "editComment", "replyTo", "deleteComment", "parent", "blocks", "blockedBy", "relatesTo", "title", "description", "project", "cycle", "estimate", "dueDate", "milestone", "subscribe", "unsubscribe", "react", "emoji", "unreact"
+    "state", "assignee", "priority", "label", "comment", "editComment", "replyTo", "deleteComment", "parent", "blocks", "blockedBy", "relatesTo", "title", "description", "project", "cycle", "estimate", "dueDate", "milestone", "pr", "prioritySortOrder", "subscribe", "unsubscribe", "react", "emoji", "unreact"
   ];
   for (const flag of mutationFlags) {
     if (input[flag] !== undefined) return "update";
@@ -177,6 +185,14 @@ async function handleListIssues(
       filters.project = input.project;
     }
 
+    if (input.priority) {
+      filters.priority = priorityFromString(input.priority);
+    }
+
+    if (input.cycle) {
+      filters.cycle = input.cycle;
+    }
+
     const issues = await listIssues(client, filters);
 
     if (format === "json") {
@@ -213,14 +229,28 @@ async function handleShowIssue(
       exitWithError(`issue ${identifier} not found`, undefined, EXIT_CODES.NOT_FOUND);
     }
 
+    if (input.branch) {
+      console.log(issue.branchName);
+      return;
+    }
+
+    if (input.open) {
+      const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
+      spawn(cmd, [issue.url], { stdio: "ignore", detached: true }).unref();
+      console.log(`opened ${issue.url}`);
+      return;
+    }
+
     if (input.comments) {
-      const result = await getIssueComments(client, issue.id);
+      const { comments, error } = await getIssueComments(client, issue.id);
+      if (error) {
+        console.error(`failed to fetch comments: ${error}`);
+        return;
+      }
       if (format === "json") {
-        outputJson(result.comments);
+        outputJson(comments);
       } else {
-        for (const c of result.comments) {
-          console.log(`[${c.id.slice(0, 8)}] ${c.user ?? "unknown"}: ${c.body}`);
-        }
+        outputCommentThreads(comments);
       }
       return;
     }
@@ -235,20 +265,30 @@ async function handleShowIssue(
       return;
     }
 
+    const { comments, error: commentsError } = await getIssueComments(client, issue.id);
+
     if (format === "json") {
-      outputJson(issue);
+      outputJson({
+        ...issue,
+        priority: formatPriority(issue.priority),
+        createdAt: formatDate(issue.createdAt),
+        updatedAt: formatDate(issue.updatedAt),
+        comments,
+      });
       return;
     }
 
-    console.log(`${issue.identifier}: ${issue.title}`);
-    if (issue.description) {
-      console.log(`  ${truncate(issue.description, 80)}`);
+    outputDetail(issueToDetail(issue));
+
+    if (commentsError) {
+      console.log();
+      console.log(chalk.dim(`comments: failed to load (${commentsError})`));
+    } else if (comments.length > 0) {
+      console.log();
+      console.log("─".repeat(40));
+      console.log();
+      outputCommentThreads(comments);
     }
-    console.log();
-    console.log(`state:    ${issue.state ?? "-"}`);
-    console.log(`assignee: ${issue.assignee ?? "-"}`);
-    console.log(`priority: ${formatPriority(issue.priority)}`);
-    console.log(`created:  ${formatDate(issue.createdAt)}`);
   } catch (error) {
     handleApiError(error);
   }
@@ -470,6 +510,15 @@ async function handleUpdateIssue(
       }
       console.log(`unsubscribed from ${identifier}`);
     }
+
+    if (input.pr) {
+      await handlePr(client, issue, input.pr);
+    }
+
+    if (input.prioritySortOrder !== undefined) {
+      await updateIssue(client, issue.id, { prioritySortOrder: input.prioritySortOrder });
+      console.log(`updated priority sort order for ${identifier}`);
+    }
   } catch (error) {
     handleApiError(error);
   }
@@ -560,6 +609,10 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
         const relatedIssueId = await resolveIssueIdentifier(client, input.relatesTo);
         await createIssueRelation(client, issue.id, relatedIssueId, "related");
         console.log(`${issue.identifier} now relates to ${input.relatesTo}`);
+      }
+
+      if (input.pr) {
+        await handlePr(client, issue, input.pr);
       }
 
       console.log(`created ${issue.identifier}: ${issue.title}`);

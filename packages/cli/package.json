@@ -29,8 +29,7 @@
     "@trpc/server": "^11.8.1",
     "chalk": "^5.6.2",
     "commander": "^14.0.2",
-    "trpc-cli": "^0.12.2",
-    "zod": "^4.0.0"
+    "trpc-cli": "^0.12.2"
   },
   "peerDependencies": {
     "typescript": "^5"
