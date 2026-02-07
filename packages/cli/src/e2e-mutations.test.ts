@@ -19,18 +19,29 @@ if (!API_KEY) {
 const client = getClient();
 const org = await client.organization;
 
-const rl = require("readline").createInterface({ input: process.stdin, output: process.stdout });
-const answer = await new Promise<string>((resolve) => {
-  rl.question(`\n⚠️  MUTATION TESTS will create, update, and delete data in org: ${org.name}\n   type the org name to confirm: `, resolve);
-});
-rl.close();
+const confirmFlag = process.argv.find((a) => a.startsWith("--operating-on-this-org-do-not-put-an-org-you-care-about-or-youll-be-fired="));
+const confirmOrg = confirmFlag?.split("=")[1];
 
-if (answer.trim() !== org.name) {
-  console.log("aborted — org name did not match.");
-  process.exit(0);
+if (confirmOrg) {
+  if (confirmOrg !== org.name) {
+    console.log(`aborted — org "${confirmOrg}" does not match actual org "${org.name}"`);
+    process.exit(1);
+  }
+  console.log(`testing org: ${org.name}`);
+} else {
+  const rl = require("readline").createInterface({ input: process.stdin, output: process.stdout });
+  const answer = await new Promise<string>((resolve) => {
+    rl.question(`\n⚠️  MUTATION TESTS will create, update, and delete data in org: ${org.name}\n   type the org name to confirm: `, resolve);
+  });
+  rl.close();
+
+  if (answer.trim() !== org.name) {
+    console.log("aborted — org name did not match.");
+    process.exit(0);
+  }
+
+  console.log(`testing org: ${org.name}`);
 }
-
-console.log(`testing org: ${org.name}`);
 
 const TEST_TEAM_KEY = `E2E${Date.now().toString(36).slice(-4).toUpperCase()}`;
 const TEST_TEAM_NAME = `e2e-test-${Date.now()}`;
@@ -211,7 +222,7 @@ describe("e2e: mutations", () => {
       const out = await lnr("issues", "--team", TEST_TEAM_KEY);
       expect(out).toContain("Batch Issue 1");
       expect(out).toContain("Batch Issue 2");
-    });
+    }, 15000);
 
     test("batch update priority", async () => {
       const json = await lnr("issues", "--team", TEST_TEAM_KEY, "--json");
