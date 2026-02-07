@@ -56,6 +56,38 @@ entity support configured in `packages/codegen/entity-config.ts`.
 - update `.todo.md` with progress
 - load `git` skill before commit
 
+### e2e tests
+
+two test files in `packages/cli/src/`:
+- `e2e-readonly.test.ts` — safe with any API key, read-only operations
+- `e2e-mutations.test.ts` — DANGER: creates/deletes data, sandbox org only
+
+mutation tests require `--operating-on-this-org-...=<org-name>` flag in CI.
+locally they prompt interactively.
+
+cleanup of leftover state runs automatically at module level before tests.
+
+### benchmarking
+
+`packages/cli/src/bench-lnr-overhead.ts` measures per-call cost of the `lnr()`
+subprocess helper used in e2e tests. run before optimizing e2e speed — it
+decomposes time into subprocess startup, module loading, and API latency.
+
+```bash
+bun run packages/cli/src/bench-lnr-overhead.ts
+```
+
+baseline finding (2026-02-07): ~300ms module loading + ~300ms API per call.
+compiling the binary saves only ~38ms/call. the bottleneck is sequential API
+round-trips, not subprocess overhead. parallelizing independent test groups
+is the only approach that meaningfully reduces total time.
+
+### config isolation
+
+`LNR_CONFIG_PATH` env var overrides all config resolution (nearest-wins, global,
+legacy). both `loadConfig()` and `saveConfig()` honor it. used in tests to
+prevent reading the project's `.lnr.json`.
+
 ## conventions
 
 - @linear/sdk for all API calls
