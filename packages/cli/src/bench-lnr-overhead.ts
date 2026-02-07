@@ -22,9 +22,14 @@
  *   API latency (derived):               ~300ms   ← irreducible
  *   savings from compiling (40 calls):    ~1.5s   ← not worth it
  *
- * conclusion: the bottleneck is 40 sequential API round-trips (~12s),
- * not subprocess startup. parallelizing independent test groups is the
- * only approach that meaningfully reduces total time.
+ * CI end-to-end (2026-02-07, ubuntu github actions runner):
+ *   readonly tests:   6s (10 tests)
+ *   mutation tests:  42s (32 tests, 40 subprocess calls)
+ *   per-test mean:   ~1.3s (range: 575ms to 4000ms)
+ *
+ * conclusion: the bottleneck is sequential API round-trips (~300ms each
+ * on CI), not subprocess startup. parallelizing independent test groups
+ * is the only approach that meaningfully reduces total time.
  */
 
 const ITERATIONS = 5;
