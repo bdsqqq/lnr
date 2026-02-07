@@ -49,6 +49,14 @@ export async function listIssues(
     apiFilter.project = { name: { eqIgnoreCase: filter.project } };
   }
 
+  if (filter.priority !== undefined) {
+    apiFilter.priority = { eq: filter.priority };
+  }
+
+  if (filter.cycle) {
+    apiFilter.cycle = { name: { containsIgnoreCase: filter.cycle } };
+  }
+
   const issues = await client.issues({ filter: apiFilter });
   const nodes = issues.nodes;
 

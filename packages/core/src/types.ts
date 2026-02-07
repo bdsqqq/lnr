@@ -83,6 +83,8 @@ export interface ListIssuesFilter {
   assignee?: string;
   label?: string;
   project?: string;
+  priority?: number;
+  cycle?: string;
 }
 
 export interface CreateIssueInput {
@@ -102,6 +104,7 @@ export interface UpdateIssueInput {
   priority?: number;
   labelIds?: string[];
   parentId?: string;
+  prioritySortOrder?: number;
 }
 
 export interface BatchIssueResult {
