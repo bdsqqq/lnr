@@ -1,3 +1,4 @@
+import { GitAutomationStates } from "@linear/sdk";
 import type { LinearClient } from "@linear/sdk";
 import type {
   GitAutomationState,
@@ -5,6 +6,14 @@ import type {
   CreateGitAutomationStateInput,
   UpdateGitAutomationStateInput,
 } from "./types";
+
+const EVENT_TO_SDK: Record<GitAutomationEvent, GitAutomationStates> = {
+  draft: GitAutomationStates.Draft,
+  merge: GitAutomationStates.Merge,
+  mergeable: GitAutomationStates.Mergeable,
+  review: GitAutomationStates.Review,
+  start: GitAutomationStates.Start,
+};
 
 export async function listGitAutomationStates(
   client: LinearClient,
@@ -75,7 +84,7 @@ export async function createGitAutomationState(
   try {
     const payload = await client.createGitAutomationState({
       teamId: input.teamId,
-      event: input.event as unknown as import("@linear/sdk").GitAutomationStates,
+      event: EVENT_TO_SDK[input.event],
       stateId: input.stateId,
       targetBranchId: input.targetBranchId,
     });
@@ -114,7 +123,7 @@ export async function updateGitAutomationState(
 ): Promise<boolean> {
   try {
     const payload = await client.updateGitAutomationState(id, {
-      event: input.event as unknown as import("@linear/sdk").GitAutomationStates | undefined,
+      event: input.event ? EVENT_TO_SDK[input.event] : undefined,
       stateId: input.stateId,
       targetBranchId: input.targetBranchId,
     });
