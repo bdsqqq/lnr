@@ -26,12 +26,6 @@ import {
   type TableColumn,
 } from "../lib/output";
 
-const outputOptions = type({
-  "json?": type("boolean").describe("output as json"),
-  "quiet?": type("boolean").describe("output ids only"),
-  "verbose?": type("boolean").describe("show all columns"),
-});
-
 export const listCyclesInput = type({
   team: type("string").describe("team key"),
   "json?": type("boolean").describe("output as json"),
