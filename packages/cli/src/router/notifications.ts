@@ -97,7 +97,7 @@ export const notificationsRouter = router({
   notification: procedure
     .meta({ description: "show notification details" })
     .input(notificationInput)
-    .query(async ({ input }) => {
+    .mutation(async ({ input }) => {
       try {
         const client = getClient();
 
