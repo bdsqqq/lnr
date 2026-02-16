@@ -122,14 +122,14 @@ export async function createIssue(
     return null;
   }
 
-  const issueData = (result as unknown as { _issue?: { id: string } })._issue;
-  if (!issueData?.id) {
+  const createdIssueRef = await result.issue;
+  if (!createdIssueRef) {
     return null;
   }
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const createdIssue = await client.issue(issueData.id);
+      const createdIssue = await client.issue(createdIssueRef.id);
       if (createdIssue) {
         const state = await createdIssue.state;
         const assignee = await createdIssue.assignee;
