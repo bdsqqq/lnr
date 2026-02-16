@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-07T23:40:01.131Z
+ * Generated from extracted-schema.json at 2026-02-11T00:27:17.080Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -25,19 +25,16 @@ import {
   outputQuiet,
   outputTable,
   getOutputFormat,
-  formatDate,
-  formatPriority,
   truncate,
   type OutputOptions,
   type TableColumn,
 } from "../lib/output";
-import { outputCommentThreads } from "../lib/renderers/comments";
 import { outputDetail } from "../lib/renderers/detail";
 import { docToDetail } from "../lib/adapters";
 
 
 export const listDocsInput = type({
-  "project?": type("string").describe("filter by project id"),
+  "project?": type("string").describe("filter by project name or id"),
   "json?": type("boolean").describe("output as json"),
   "quiet?": type("boolean").describe("output ids only"),
   "verbose?": type("boolean").describe("show all columns"),
@@ -47,7 +44,7 @@ export const docInput = type({
   id: type("string").configure({ positional: true }).describe("document id or 'new'"),
   "title?": type("string").describe("document title (required for new)"),
   "content?": type("string").describe("document content"),
-  "project?": type("string").describe("project id to attach document to"),
+  "project?": type("string").describe("project name or id to attach document to"),
   "delete?": type("boolean").describe("delete the document"),
   "json?": type("boolean").describe("output as json"),
   "quiet?": type("boolean").describe("output ids only"),
@@ -102,7 +99,11 @@ async function handleListDocs(
 
     let projectId: string | undefined;
     if (input.project) {
-      projectId = await resolveProjectByName(client, input.project);
+      try {
+        projectId = await resolveProjectByName(client, input.project);
+      } catch {
+        projectId = input.project;
+      }
     }
 
     const documents = await listDocuments(client, projectId);
@@ -191,7 +192,13 @@ async function handleCreateDoc(input: DocInput): Promise<void> {
     };
 
     if (input.content) createPayload.content = input.content;
-    if (input.project) createPayload.projectId = await resolveProjectByName(client, input.project);
+    if (input.project) {
+      try {
+        createPayload.projectId = await resolveProjectByName(client, input.project);
+      } catch {
+        createPayload.projectId = input.project;
+      }
+    }
 
     const doc = await createDocument(client, createPayload);
 

@@ -208,18 +208,30 @@ describe("property B: precedence under contradictory flags", () => {
       }
 
       if (sws.archiveKey) {
-        test(`--${sws.archiveKey} → archive, even with mutation flags`, () => {
+        test(`--${sws.archiveKey} alone → archive`, () => {
+          const input = generateRandomInput(sws, rng, {
+            [sws.positionalKey]: "ENG-1",
+            [sws.archiveKey!]: true,
+          });
+          for (const mf of sws.spec.mutationFlags) {
+            delete input[mf];
+          }
+          input[sws.archiveKey!] = true;
+          const result = sws.spec.inferOperation(input);
+          expect(result).toBe("archive");
+        });
+
+        test(`--${sws.archiveKey} + mutation flags → update (archive runs after updates)`, () => {
           for (let i = 0; i < 50; i++) {
             const mutationOverrides: Record<string, unknown> = {
               [sws.positionalKey]: `ENG-${i}`,
               [sws.archiveKey!]: true,
             };
-            for (const mf of sws.spec.mutationFlags) {
-              if (rng() > 0.5) mutationOverrides[mf] = randomValue("string", rng);
-            }
+            const mf = sws.spec.mutationFlags[i % sws.spec.mutationFlags.length]!;
+            mutationOverrides[mf] = randomValue("string", rng);
             const input = generateRandomInput(sws, rng, mutationOverrides);
             const result = sws.spec.inferOperation(input);
-            expect(result).toBe("archive");
+            expect(result).toBe("update");
           }
         });
       }

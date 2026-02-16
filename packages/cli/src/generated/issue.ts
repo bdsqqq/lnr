@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-07T23:40:01.130Z
+ * Generated from extracted-schema.json at 2026-02-11T00:27:17.079Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -50,9 +50,9 @@ import {
   outputQuiet,
   outputTable,
   getOutputFormat,
+  truncate,
   formatDate,
   formatPriority,
-  truncate,
   type OutputOptions,
   type TableColumn,
 } from "../lib/output";
@@ -145,11 +145,13 @@ export const issueMutationFlags: readonly (keyof IssueInput)[] = [
 
 export function inferOperation(input: IssueInput): Operation {
   if (input.idOrNew === "new") return "create";
+
+  const hasMutationFlags = issueMutationFlags.some(flag => input[flag] !== undefined);
+
+  if (input.archive && hasMutationFlags) return "update";
   if (input.archive) return "archive";
 
-  for (const flag of issueMutationFlags) {
-    if (input[flag] !== undefined) return "update";
-  }
+  if (hasMutationFlags) return "update";
 
   return "read";
 }
@@ -528,6 +530,11 @@ async function handleUpdateIssue(
     if (input.prioritySortOrder !== undefined) {
       await updateIssue(client, issue.id, { prioritySortOrder: input.prioritySortOrder });
       console.log(`updated priority sort order for ${identifier}`);
+    }
+
+    if (input.archive) {
+      await archiveIssue(client, issue.id);
+      console.log(`archived ${identifier}`);
     }
   } catch (error) {
     handleApiError(error);

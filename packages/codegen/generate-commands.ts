@@ -331,11 +331,13 @@ export const issueMutationFlags: readonly (keyof IssueInput)[] = [
 
 export function inferOperation(input: IssueInput): Operation {
   if (input.idOrNew === "new") return "create";
+
+  const hasMutationFlags = issueMutationFlags.some(flag => input[flag] !== undefined);
+
+  if (input.archive && hasMutationFlags) return "update";
   if (input.archive) return "archive";
 
-  for (const flag of issueMutationFlags) {
-    if (input[flag] !== undefined) return "update";
-  }
+  if (hasMutationFlags) return "update";
 
   return "read";
 }
@@ -644,7 +646,7 @@ const docConfig: EntityConfig = {
   ],
   coreTypes: ["Document"],
   listInputSchema: () => `export const listDocsInput = type({
-  "project?": type("string").describe("filter by project id"),
+  "project?": type("string").describe("filter by project name or id"),
   "json?": type("boolean").describe("output as json"),
   "quiet?": type("boolean").describe("output ids only"),
   "verbose?": type("boolean").describe("show all columns"),
@@ -653,7 +655,7 @@ const docConfig: EntityConfig = {
   id: type("string").configure({ positional: true }).describe("document id or 'new'"),
   "title?": type("string").describe("document title (required for new)"),
   "content?": type("string").describe("document content"),
-  "project?": type("string").describe("project id to attach document to"),
+  "project?": type("string").describe("project name or id to attach document to"),
   "delete?": type("boolean").describe("delete the document"),
   "json?": type("boolean").describe("output as json"),
   "quiet?": type("boolean").describe("output ids only"),
@@ -958,6 +960,22 @@ function generateEntityFile(config: EntityConfig): string {
   const subcommandImports = getSubcommandImports(config.singularCommand);
   const allImports = [...new Set([...config.imports, ...injectedImports, ...subcommandImports])];
 
+  const allHandlerCode = [config.columns, config.listHandler, config.showHandler, config.updateHandler, config.createHandler, config.deleteHandler ?? "", config.archiveHandler ?? "", config.extraHandlers ?? ""].join("\n");
+
+  const outputImports = [
+    "outputJson",
+    "outputQuiet",
+    "outputTable",
+    "getOutputFormat",
+    "truncate",
+  ];
+  if (allHandlerCode.includes("formatDate")) outputImports.push("formatDate");
+  if (allHandlerCode.includes("formatPriority")) outputImports.push("formatPriority");
+
+  const outputTypeImports = ["OutputOptions", "TableColumn"];
+
+  const needsCommentThreads = allHandlerCode.includes("outputCommentThreads");
+
   return `/**
  * GENERATED FILE - DO NOT EDIT
  * Generated from extracted-schema.json at ${timestamp}
@@ -975,18 +993,10 @@ import { router, procedure } from "../router/trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
 import type { OperationSpec } from "../lib/operation-spec";
 import {
-  outputJson,
-  outputQuiet,
-  outputTable,
-  getOutputFormat,
-  formatDate,
-  formatPriority,
-  truncate,
-  type OutputOptions,
-  type TableColumn,
+  ${outputImports.join(",\n  ")},
+  type ${outputTypeImports.join(",\n  type ")},
 } from "../lib/output";
-import { outputCommentThreads } from "../lib/renderers/comments";
-import { outputDetail } from "../lib/renderers/detail";
+${needsCommentThreads ? `import { outputCommentThreads } from "../lib/renderers/comments";\n` : ""}import { outputDetail } from "../lib/renderers/detail";
 ${getAdapterImport(config.entityKey)}
 ${config.extraHandlers || ""}
 
@@ -1438,6 +1448,11 @@ function generateIssueUpdateHandler(): string {
     if (input.prioritySortOrder !== undefined) {
       await updateIssue(client, issue.id, { prioritySortOrder: input.prioritySortOrder });
       console.log(\`updated priority sort order for \${identifier}\`);
+    }
+
+    if (input.archive) {
+      await archiveIssue(client, issue.id);
+      console.log(\`archived \${identifier}\`);
     }
   } catch (error) {
     handleApiError(error);
@@ -2261,7 +2276,11 @@ function generateDocListHandler(): string {
 
     let projectId: string | undefined;
     if (input.project) {
-      projectId = await resolveProjectByName(client, input.project);
+      try {
+        projectId = await resolveProjectByName(client, input.project);
+      } catch {
+        projectId = input.project;
+      }
     }
 
     const documents = await listDocuments(client, projectId);
@@ -2356,7 +2375,13 @@ function generateDocCreateHandler(): string {
     };
 
     if (input.content) createPayload.content = input.content;
-    if (input.project) createPayload.projectId = await resolveProjectByName(client, input.project);
+    if (input.project) {
+      try {
+        createPayload.projectId = await resolveProjectByName(client, input.project);
+      } catch {
+        createPayload.projectId = input.project;
+      }
+    }
 
     const doc = await createDocument(client, createPayload);
 

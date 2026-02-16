@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-07T23:40:01.131Z
+ * Generated from extracted-schema.json at 2026-02-11T00:27:17.080Z
  *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
@@ -44,13 +44,11 @@ import {
   outputQuiet,
   outputTable,
   getOutputFormat,
-  formatDate,
-  formatPriority,
   truncate,
+  formatDate,
   type OutputOptions,
   type TableColumn,
 } from "../lib/output";
-import { outputCommentThreads } from "../lib/renderers/comments";
 import { outputDetail } from "../lib/renderers/detail";
 import { projectToDetail } from "../lib/adapters";
 
