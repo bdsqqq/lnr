@@ -61,24 +61,37 @@ export const parseSchema = (json: SchemaJson): Flag[] => [
 export const camelToKebab = (s: string): string =>
   s.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
 
+interface ProcedureDef {
+  _def: {
+    meta?: { description?: string; aliases?: { command?: string[] } };
+    inputs?: { json: SchemaJson }[];
+  };
+}
+
+function isProcedureDef(value: unknown): value is ProcedureDef {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "_def" in value &&
+    typeof (value as Record<string, unknown>)._def === "object"
+  );
+}
+
 export const buildCommands = (): Command[] => {
-  const procedures = appRouter._def.procedures as unknown as Record<string, {
-    _def: {
-      meta?: { description?: string; aliases?: { command?: string[] } };
-      inputs?: { json: SchemaJson }[];
-    };
-  }>;
+  const procedures = appRouter._def.procedures as Record<string, unknown>;
 
-  return Object.entries(procedures).map(([name, proc]) => {
-    const meta = proc._def.meta ?? {};
-    const schema = proc._def.inputs?.[0]?.json;
-    const flags = schema ? parseSchema(schema) : [];
+  return Object.entries(procedures)
+    .filter((entry): entry is [string, ProcedureDef] => isProcedureDef(entry[1]))
+    .map(([name, proc]) => {
+      const meta = proc._def.meta ?? {};
+      const schema = proc._def.inputs?.[0]?.json;
+      const flags = schema ? parseSchema(schema) : [];
 
-    return {
-      name: name.replace(/\./g, " "),
-      description: meta.description ?? "",
-      aliases: meta.aliases?.command ?? [],
-      flags,
-    };
-  });
+      return {
+        name: name.replace(/\./g, " "),
+        description: meta.description ?? "",
+        aliases: meta.aliases?.command ?? [],
+        flags,
+      };
+    });
 };
