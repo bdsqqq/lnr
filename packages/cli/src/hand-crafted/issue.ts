@@ -12,30 +12,6 @@ import { exitWithError } from "../lib/error";
 type Client = Parameters<typeof linkGitHubPR>[0];
 
 /**
- * --branch: output a git-friendly branch name from issue identifier + title
- */
-export function handleBranch(issue: Issue): void {
-  // git ref names max at 255 bytes, but github limits to 256 - len("refs/heads/") = 244 chars
-  const MAX_BRANCH_LENGTH = 244;
-
-  const sanitizedTitle = issue.title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-
-  const branchName = `${issue.identifier.toLowerCase()}-${sanitizedTitle}`;
-
-  if (branchName.length > MAX_BRANCH_LENGTH) {
-    exitWithError(
-      `branch name too long (${branchName.length} chars, max ${MAX_BRANCH_LENGTH})\n` +
-        `fix: shorten issue title or use a custom branch name`
-    );
-  }
-
-  console.log(branchName);
-}
-
-/**
  * --pr: link a GitHub PR URL to the issue
  */
 export async function handlePr(

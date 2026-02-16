@@ -141,7 +141,6 @@ mock.module("./adapters", () => ({
 
 mock.module("../../hand-crafted/issue", () => ({
   handlePr: mock(async () => {}),
-  handleBranch: mock(() => {}),
 }));
 
 mock.module("./arktype-config", () => ({}));

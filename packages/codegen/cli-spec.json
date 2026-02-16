@@ -956,7 +956,6 @@
           "description": "output git branch name",
           "positional": false,
           "cliOnly": true,
-          "handler": "handleBranch",
           "dispatchIn": "show"
         },
         {
