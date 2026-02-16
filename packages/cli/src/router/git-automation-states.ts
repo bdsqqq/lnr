@@ -89,13 +89,6 @@ async function handleListGitAutomationStates(
     const client = getClient();
     const automations = await listGitAutomationStates(client, input.team);
 
-    if (automations.length === 0) {
-      exitWithError(
-        `no git automation states found for team "${input.team}"`,
-        "create one with: lnr git-automation new --team <key> --event <event> --state <state>"
-      );
-    }
-
     const outputOpts: OutputOptions = {
       format: input.json ? "json" : input.quiet ? "quiet" : undefined,
       verbose: input.verbose,

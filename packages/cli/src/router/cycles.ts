@@ -105,10 +105,6 @@ async function handleListCycles(
     const client = getClient();
     const cycles = await listCycles(client, input.team);
 
-    if (cycles.length === 0) {
-      exitWithError(`no cycles found for team "${input.team}"`);
-    }
-
     const outputOpts: OutputOptions = {
       format: input.json ? "json" : input.quiet ? "quiet" : undefined,
       verbose: input.verbose,

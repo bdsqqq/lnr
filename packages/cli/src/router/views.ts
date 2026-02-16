@@ -98,10 +98,6 @@ async function handleListViews(
     const client = getClient();
     const views = await listViews(client);
 
-    if (views.length === 0) {
-      exitWithError("no custom views found");
-    }
-
     const outputOpts: OutputOptions = {
       format: input.json ? "json" : input.quiet ? "quiet" : undefined,
       verbose: input.verbose,

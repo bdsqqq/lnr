@@ -83,13 +83,6 @@ async function handleListGitAutomationTargetBranches(
     const client = getClient();
     const branches = await listGitAutomationTargetBranches(client, input.team);
 
-    if (branches.length === 0) {
-      exitWithError(
-        `no git automation target branches found for team "${input.team}"`,
-        "create one with: lnr git-branch new --team <key> --pattern <pattern>"
-      );
-    }
-
     const outputOpts: OutputOptions = {
       format: input.json ? "json" : input.quiet ? "quiet" : undefined,
       verbose: input.verbose,
