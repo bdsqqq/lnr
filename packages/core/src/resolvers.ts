@@ -39,7 +39,11 @@ export async function resolveIssueIdentifier(
     if (error instanceof IssueNotFoundError) {
       throw error;
     }
-    throw new IssueNotFoundError(identifier);
+    const msg = error instanceof Error ? error.message.toLowerCase() : "";
+    if (msg.includes("not found") || msg.includes("entity not accessible")) {
+      throw new IssueNotFoundError(identifier);
+    }
+    throw error;
   }
 }
 

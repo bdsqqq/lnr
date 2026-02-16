@@ -37,14 +37,24 @@ describe("resolveIssueIdentifier", () => {
     );
   });
 
-  it("throws IssueNotFoundError when API throws", async () => {
+  it("throws IssueNotFoundError when API throws not found", async () => {
+    const mockClient = {
+      issue: mock(() => Promise.reject(new Error("Entity not found"))),
+    } as unknown as LinearClient;
+
+    await expect(
+      resolveIssueIdentifier(mockClient, "INVALID-123")
+    ).rejects.toThrow(IssueNotFoundError);
+  });
+
+  it("re-throws non-not-found API errors as-is", async () => {
     const mockClient = {
       issue: mock(() => Promise.reject(new Error("API error"))),
     } as unknown as LinearClient;
 
     await expect(
       resolveIssueIdentifier(mockClient, "INVALID-123")
-    ).rejects.toThrow(IssueNotFoundError);
+    ).rejects.toThrow("API error");
   });
 
   it("error message includes the identifier", async () => {
