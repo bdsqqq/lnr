@@ -1,5 +1,20 @@
 # @bdsqqq/lnr-cli
 
+## 2.0.1
+
+### Patch Changes
+
+- fix(auth): make apiKey positional arg optional for --whoami/--logout (#21)
+
+  trpc-cli's isOptional() checks the property value schema for optional
+  markers, but arktype's "key?" syntax only encodes optionality at the
+  object level (required array). using "string | undefined" embeds the
+  optional signal where trpc-cli expects it.
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c90c6-c261-75dd-be9e-48cc2e28ccdb
+
+  Co-authored-by: Amp <amp@ampcode.com>
+
 ## 2.0.0
 
 ### Major Changes
