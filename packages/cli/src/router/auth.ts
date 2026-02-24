@@ -11,7 +11,10 @@ import { router, procedure } from "./trpc";
 import { exitWithError, EXIT_CODES } from "../lib/error";
 
 export const authInput = type({
-  "apiKey?": type("string").configure({ positional: true }).describe("Linear API key"),
+  // "string | undefined" ensures trpc-cli's isOptional() sees the optional marker
+  // in the value schema — arktype's "key?" syntax only marks it optional at the
+  // object level (required array), which trpc-cli doesn't check for positionals
+  "apiKey?": type("string | undefined").configure({ positional: true }).describe("Linear API key"),
   "whoami?": type("boolean").describe("show current authenticated user"),
   "logout?": type("boolean").describe("clear stored credentials"),
 });
