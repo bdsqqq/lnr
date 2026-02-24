@@ -70,7 +70,7 @@ interface ProcedureDef {
 
 function isProcedureDef(value: unknown): value is ProcedureDef {
   return (
-    typeof value === "object" &&
+    (typeof value === "object" || typeof value === "function") &&
     value !== null &&
     "_def" in value &&
     typeof (value as Record<string, unknown>)._def === "object"
