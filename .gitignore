@@ -38,6 +38,5 @@ status.json
 lnr
 dist/
 
-# codegen intermediates (regenerate with extract-schema.ts)
-packages/codegen/extracted-schema.json
+
 .env.test
