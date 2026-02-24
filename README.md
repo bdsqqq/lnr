@@ -63,18 +63,26 @@ api key from: https://linear.app/settings/account/security
 
 ## commands
 
-- `lnr issues` - list issues
-- `lnr issue <id>` - show/update issue
-- `lnr issue new` - create issue
-- `lnr teams` - list teams
-- `lnr projects` - list projects (use `lnr project <name> --milestones` for milestones)
-- `lnr cycles` - list cycles
-- `lnr search <query>` - search issues
-- `lnr me` - show my info
-- `lnr labels` - list labels
-- `lnr docs` - list documents
+| entity | list | show / mutate |
+|--------|------|---------------|
+| issues | `lnr issues` | `lnr issue <id>` · `lnr issue new` · `lnr issue batch` |
+| projects | `lnr projects` | `lnr project <name>` · `lnr project milestone` |
+| cycles | `lnr cycles` | `lnr cycle <n>` |
+| views | `lnr views` | `lnr view <name>` |
+| labels | `lnr labels` | `lnr label <id>` |
+| docs | `lnr docs` | `lnr doc <id>` |
+| teams | `lnr teams` | `lnr team <key>` |
+| users | `lnr users` | `lnr user <name>` |
+| initiatives | `lnr initiatives` | `lnr initiative <name>` |
+| roadmaps | `lnr roadmaps` | `lnr roadmap <name>` |
+| templates | `lnr templates` | `lnr template <name>` |
+| notifications | `lnr notifications` | `lnr notification <id>` |
+| git automations | `lnr git-automations` | `lnr git-automation <event>` · `lnr git-branch` |
+| agent sessions | `lnr agent-sessions` | `lnr agent-session <id>` |
 
-see SPEC.md for full command reference.
+plus: `lnr auth`, `lnr config`, `lnr me`, `lnr search`.
+
+every list command supports `--json`, `--quiet`, and `--verbose`. see the full [command reference](docs/command-reference.md) for all flags and invocations.
 
 ## architecture
 
@@ -144,10 +152,14 @@ flags not in Linear's schema (like `--branch`, `--pr`) are handled in `packages/
 
 ### ADRs
 
-architecture decisions in `docs/adr/`:
+architecture decisions in [`docs/adr/`](docs/adr/):
 - [0001-schema-driven-cli-generation](docs/adr/0001-schema-driven-cli-generation.md)
 - [0002-introspection-over-sdk-types](docs/adr/0002-introspection-over-sdk-types.md)
 - [0003-field-resolver-registry](docs/adr/0003-field-resolver-registry.md)
+- [0004-milestones-scoped-to-projects](docs/adr/0004-milestones-scoped-to-projects.md)
+- [0005-entity-expansion-roadmap](docs/adr/0005-entity-expansion-roadmap.md)
+- [0006-todo-task-tracking](docs/adr/0006-todo-task-tracking.md)
+- [0007-entity-config-v2-exploration](docs/adr/0007-entity-config-v2-exploration.md)
 
 ## development
 
