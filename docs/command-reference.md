@@ -44,14 +44,14 @@ generated for UX review. each row = one valid invocation.
 | `lnr view <nameOrId> --verbose` | show all columns |
 | `lnr docs` | list docs |
 | `lnr docs --json` | output as json |
-| `lnr docs --project <string>` | filter by project id |
+| `lnr docs --project <string>` | filter by project name or id |
 | `lnr docs --quiet` | output ids only |
 | `lnr docs --verbose` | show all columns |
 | `lnr doc <id>` | show or update a doc, or create with 'new' |
 | `lnr doc <id> --content <string>` | document content |
 | `lnr doc <id> --delete` | delete the document |
 | `lnr doc <id> --json` | output as json |
-| `lnr doc <id> --project <string>` | project id to attach document to |
+| `lnr doc <id> --project <string>` | project name or id to attach document to |
 | `lnr doc <id> --quiet` | output ids only |
 | `lnr doc <id> --title <string>` | document title (required for new) |
 | `lnr doc <id> --verbose` | show all columns |

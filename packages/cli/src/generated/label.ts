@@ -1,7 +1,5 @@
 /**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at 2026-02-11T00:27:17.080Z
- *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
 
