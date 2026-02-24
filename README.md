@@ -67,7 +67,7 @@ api key from: https://linear.app/settings/account/security
 - `lnr issue <id>` - show/update issue
 - `lnr issue new` - create issue
 - `lnr teams` - list teams
-- `lnr projects` - list projects
+- `lnr projects` - list projects (use `lnr project <name> --milestones` for milestones)
 - `lnr cycles` - list cycles
 - `lnr search <query>` - search issues
 - `lnr me` - show my info
@@ -75,6 +75,79 @@ api key from: https://linear.app/settings/account/security
 - `lnr docs` - list documents
 
 see SPEC.md for full command reference.
+
+## architecture
+
+lnr uses **schema-driven code generation** to stay in sync with Linear's API while keeping full control over CLI UX.
+
+```
+Linear GraphQL Schema
+        ↓ introspect
+   schema metadata
+        ↓ codegen
+  generated commands
+        ↓ calls
+  hand-crafted UX layer
+```
+
+### what's generated (from Linear's schema)
+
+- **zod input schemas** — flags, types, descriptions
+- **operation inference** — `new` → create, mutation flags → update, etc.
+- **trpc router wiring** — command registration and dispatch
+- **handler dispatch** — routes to the right function
+
+when Linear adds a field to `IssueUpdateInput`, re-run codegen and the flag appears automatically.
+
+### what's hand-crafted (full control)
+
+- **output formatting** — tables, threaded comments, reactions, colors
+- **UX resolvers** — `@me` → user ID, `done` → state ID, `ENG-123` → UUID
+- **error messages** — actionable, lowercase, with fix suggestions
+- **composition rules** — which flags work together vs. conflict
+- **core business logic** — all SDK interactions in `packages/core`
+
+this means the tedious plumbing (schema → zod → router) is automated, but the *experience* of using lnr stays yours.
+
+### UX resolvers
+
+translate human-friendly inputs to Linear API IDs:
+
+| input | resolver | output |
+|-------|----------|--------|
+| `@me` | `resolveAssignee` | current user UUID |
+| `done` | `resolveStateName` | state UUID for team |
+| `ENG-123` | `resolveIssueIdentifier` | issue UUID |
+| `MyProject` | `resolveProjectByName` | project UUID |
+| `ENG` | `resolveTeamByKey` | team UUID |
+| `Sprint 1` | `resolveCycleByName` | cycle UUID |
+| `v1.0` | `resolveMilestoneByName` | milestone UUID |
+
+resolvers live in `packages/core/src/resolvers.ts` and throw typed errors with available options.
+
+### regenerating commands
+
+```bash
+# regenerate all entity commands (issue, project, label, doc)
+bun run packages/codegen/generate-commands.ts
+
+# refresh schema from Linear API (requires LINEAR_API_KEY)
+bun run packages/codegen/introspect-linear.ts
+bun run packages/codegen/extract-schema.ts
+```
+
+generated files live in `packages/cli/src/generated/`.
+
+### CLI-only flags
+
+flags not in Linear's schema (like `--branch`, `--pr`) are handled in `packages/cli/src/hand-crafted/`.
+
+### ADRs
+
+architecture decisions in `docs/adr/`:
+- [0001-schema-driven-cli-generation](docs/adr/0001-schema-driven-cli-generation.md)
+- [0002-introspection-over-sdk-types](docs/adr/0002-introspection-over-sdk-types.md)
+- [0003-field-resolver-registry](docs/adr/0003-field-resolver-registry.md)
 
 ## development
 

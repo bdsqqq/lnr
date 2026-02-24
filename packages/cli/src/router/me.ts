@@ -1,4 +1,5 @@
-import { z } from "zod";
+import "../lib/arktype-config";
+import { type } from "arktype";
 import {
   getClient,
   getViewer,
@@ -17,12 +18,12 @@ import {
 } from "../lib/output";
 import { handleApiError } from "../lib/error";
 
-const meInput = z.object({
-  issues: z.boolean().optional().describe("list issues assigned to me"),
-  created: z.boolean().optional().describe("list issues created by me"),
-  activity: z.boolean().optional().describe("show recent activity"),
-  json: z.boolean().optional().describe("output as json"),
-  quiet: z.boolean().optional().describe("output ids only"),
+export const meInput = type({
+  "issues?": type("boolean").describe("list issues assigned to me"),
+  "created?": type("boolean").describe("list issues created by me"),
+  "activity?": type("boolean").describe("show recent activity"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
 });
 
 export const meRouter = router({

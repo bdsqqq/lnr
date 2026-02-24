@@ -1,0 +1,138 @@
+# Ralph Progress Log
+Started: 2026-02-05
+Feature: zod → arktype migration (task 0050)
+
+## Codebase Patterns
+- generated CLI files in packages/cli/src/generated/*.ts NOW use arktype
+- hand-crafted routers in packages/cli/src/router/*.ts NOW use arktype (task 0050.3 complete)
+- trpc v11 supports arktype via Standard Schema (no adapter needed)
+- arktype syntax: `type({ name: "string", "age?": "number" })`
+- positional args: `type("string").configure({ positional: true })`
+- descriptions: `.describe("...")`
+- type inference: `typeof schema.infer` (not `z.infer<typeof schema>`)
+- must extend ArkEnv.meta for custom metadata like `positional`
+- contract tests use safeParse() helper that works with both zod and arktype
+
+---
+
+## 2026-02-05 - Task 0050.1: emit arktype instead of zod
+Thread: https://ampcode.com/threads/T-019c2f24-4a56-76ae-95fd-1b4d4fbc0ca0
+
+**What was implemented:**
+- renamed `graphqlTypeToZod()` → `graphqlTypeToArktype()` in types.ts
+- updated generate-commands.ts to emit arktype schemas instead of zod
+- changed import from `import { z } from "zod"` to `import { type } from "arktype"`
+- updated all entity configs (issue, project, label, doc, milestone)
+- changed `.meta({ positional: true })` to `.configure({ positional: true })`
+- changed `z.infer<typeof X>` to `typeof X.infer`
+- created arktype-config.ts to extend ArkEnv.meta with `positional`
+- updated contract.test.ts with safeParse() helper for migration
+
+**Files changed:**
+- packages/codegen/types.ts (graphqlTypeToArktype)
+- packages/codegen/generate-commands.ts (all templates)
+- packages/cli/src/lib/arktype-config.ts (new - extends ArkEnv)
+- packages/cli/src/router/contract.test.ts (safeParse helper)
+- packages/cli/src/generated/*.ts (regenerated with arktype)
+
+**Learnings:**
+- arktype requires extending ArkEnv.meta interface for custom metadata
+- extend via `declare global { interface ArkEnv { meta(): {...} } }`
+- config file must be imported BEFORE arktype in generated files
+- arktype validates by calling type as function, returns data or ArkErrors
+
+---
+
+## 2026-02-05 - Task 0050.3: update non-generated routers from zod to arktype
+Thread: https://ampcode.com/threads/T-019c2fdf-faee-77ba-af88-cb4891da376b
+
+**What was implemented:**
+- migrated 6 hand-crafted routers from zod to arktype:
+  - auth.ts, config.ts, search.ts, teams.ts, cycles.ts, me.ts
+- updated all imports: `import "../lib/arktype-config"; import { type } from "arktype";`
+- converted z.object() → type({})
+- converted optional fields: z.field().optional() → "field?": type("field")
+- converted positional args: .meta({ positional: true }) → .configure({ positional: true })
+- converted type inference: z.infer<typeof X> → typeof X.infer
+- converted enums: z.enum([...]) → type("'a' | 'b' | 'c'")
+- updated contract.test.ts to use safeParse() helper for all migrated schemas
+
+**Files changed:**
+- packages/cli/src/router/auth.ts
+- packages/cli/src/router/config.ts
+- packages/cli/src/router/search.ts
+- packages/cli/src/router/teams.ts
+- packages/cli/src/router/cycles.ts
+- packages/cli/src/router/me.ts
+- packages/cli/src/router/contract.test.ts
+- .todo.md
+
+**Learnings:**
+- arktype enum syntax uses string union: `type("'a' | 'b' | 'c'")`
+- when using .merge() in zod, must flatten fields manually in arktype
+- safeParse() helper in contract.test.ts handles both zod and arktype seamlessly
+
+---
+
+## 2026-02-05 - Task 0050.4: remove zod dependency from cli package
+Thread: https://ampcode.com/threads/T-019c2fe3-854e-720f-823c-61084b29c969
+
+**What was implemented:**
+- migrated 8 remaining hand-crafted routers from zod to arktype:
+  - users.ts, notifications.ts, agent-sessions.ts, roadmaps.ts
+  - initiatives.ts, views.ts, git-automation-states.ts, git-automation-target-branches.ts
+- removed zod dependency from packages/cli/package.json
+- ran bun install to update lockfile
+- all typecheck and tests pass
+
+**Files changed:**
+- packages/cli/src/router/users.ts
+- packages/cli/src/router/notifications.ts
+- packages/cli/src/router/agent-sessions.ts
+- packages/cli/src/router/roadmaps.ts
+- packages/cli/src/router/initiatives.ts
+- packages/cli/src/router/views.ts
+- packages/cli/src/router/git-automation-states.ts
+- packages/cli/src/router/git-automation-target-branches.ts
+- packages/cli/package.json
+
+**Learnings:**
+- 0050.3 only migrated 6 of 14 hand-crafted routers; 8 more remained
+- .merge(outputOptions) pattern in zod must be flattened to inline fields in arktype
+- all routers now use arktype; zod fully removed from cli package
+
+---
+
+## 2026-02-05 - Task 0050.5: verify trpc integration works with arktype schemas
+Thread: https://ampcode.com/threads/T-019c2fe3-854e-720f-823c-61084b29c969
+
+**What was verified:**
+- CLI help generation works (trpc-cli parses arktype schemas)
+- required argument validation works (search command)
+- enum union type validation works (config get rejects invalid keys)
+- actual API calls work (me, teams, issues commands)
+- positional args with .configure({ positional: true }) work
+
+**Evidence:**
+- `lnr me` returns authenticated user info
+- `lnr teams` lists teams
+- `lnr issues --team AXM --assignee @me` returns issues
+- `lnr search` without query shows "missing required argument"
+- `lnr config get invalid_key` shows "must be api_key, default_team, or output_format"
+
+**Result:**
+- trpc-cli integrates seamlessly with arktype via Standard Schema
+- no adapter or special configuration needed
+- arktype provides proper JSON Schema via `.toJsonSchema()` for CLI generation
+
+---
+
+## Migration Complete
+
+zod → arktype migration (task 0050) is COMPLETE:
+- all generated files use arktype (packages/cli/src/generated/*.ts)
+- all hand-crafted routers use arktype (14 routers migrated)
+- zod removed from cli package.json
+- trpc integration verified working
+
+---

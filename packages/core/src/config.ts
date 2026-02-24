@@ -1,6 +1,6 @@
 import { homedir } from "os";
-import { join } from "path";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { join, dirname } from "path";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 
 export interface Config {
   api_key?: string;
@@ -8,35 +8,70 @@ export interface Config {
   output_format?: "table" | "json" | "quiet";
 }
 
-const CONFIG_DIR = join(homedir(), ".lnr");
-const CONFIG_PATH = join(CONFIG_DIR, "config.json");
+const GLOBAL_CONFIG_PATH = join(homedir(), ".lnr.json");
+const LEGACY_CONFIG_PATH = join(homedir(), ".lnr", "config.json");
 
-export function ensureConfigDir(): void {
-  if (!existsSync(CONFIG_DIR)) {
-    mkdirSync(CONFIG_DIR, { recursive: true });
+export function ensureConfigDir(): void {}
+
+function getOverridePath(): string | undefined {
+  return process.env.LNR_CONFIG_PATH || undefined;
+}
+
+export function findNearestConfig(from?: string): string | null {
+  let dir = from ?? process.cwd();
+  while (true) {
+    const candidate = join(dir, ".lnr.json");
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      return null;
+    }
+    dir = parent;
   }
 }
 
 export function loadConfig(): Config {
-  ensureConfigDir();
-  if (!existsSync(CONFIG_PATH)) {
-    return {};
+  const override = getOverridePath();
+  if (override) {
+    if (!existsSync(override)) return {};
+    try {
+      return JSON.parse(readFileSync(override, "utf-8"));
+    } catch {
+      return {};
+    }
   }
-  try {
-    const raw = readFileSync(CONFIG_PATH, "utf-8");
-    return JSON.parse(raw);
-  } catch {
-    return {};
+
+  const nearest = findNearestConfig();
+  if (nearest) {
+    try {
+      const raw = readFileSync(nearest, "utf-8");
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
   }
+
+  if (existsSync(LEGACY_CONFIG_PATH)) {
+    try {
+      const raw = readFileSync(LEGACY_CONFIG_PATH, "utf-8");
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  }
+
+  return {};
 }
 
 export function saveConfig(config: Config): void {
-  ensureConfigDir();
-  writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
+  const target = getOverridePath() ?? GLOBAL_CONFIG_PATH;
+  writeFileSync(target, JSON.stringify(config, null, 2));
 }
 
 export function getApiKey(): string | undefined {
-  return process.env.LINEAR_API_KEY ?? loadConfig().api_key;
+  return loadConfig().api_key ?? process.env.LINEAR_API_KEY;
 }
 
 export function listConfig(): Config {
@@ -44,7 +79,7 @@ export function listConfig(): Config {
 }
 
 export function getConfigPath(): string {
-  return CONFIG_PATH;
+  return getOverridePath() ?? findNearestConfig() ?? GLOBAL_CONFIG_PATH;
 }
 
 export function setApiKey(key: string): void {

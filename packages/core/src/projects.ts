@@ -1,5 +1,5 @@
 import type { LinearClient } from "@linear/sdk";
-import type { Issue, Project, CreateProjectInput } from "./types";
+import type { Issue, Project, CreateProjectInput, UpdateProjectInput, ProjectUpdate, ProjectLabel, ProjectStatus, EntityExternalLink } from "./types";
 
 export async function listProjects(
   client: LinearClient,
@@ -145,4 +145,152 @@ export async function deleteProject(
 
   const result = await client.deleteProject(project.id);
   return result.success;
+}
+
+export async function updateProject(
+  client: LinearClient,
+  projectId: string,
+  input: UpdateProjectInput
+): Promise<Project | null> {
+  const result = await client.updateProject(projectId, {
+    name: input.name,
+    description: input.description,
+    content: input.content,
+    statusId: input.statusId,
+    startDate: input.startDate,
+    targetDate: input.targetDate,
+    priority: input.priority,
+    leadId: input.leadId,
+    teamIds: input.teamIds,
+  });
+
+  if (!result.success) {
+    return null;
+  }
+
+  const projectData = await result.project;
+  if (!projectData) {
+    return null;
+  }
+
+  return {
+    id: projectData.id,
+    name: projectData.name,
+    description: projectData.description,
+    state: projectData.state,
+    progress: projectData.progress,
+    targetDate: projectData.targetDate,
+    startDate: projectData.startDate,
+    createdAt: projectData.createdAt,
+  };
+}
+
+export async function getProjectUpdates(
+  client: LinearClient,
+  projectId: string
+): Promise<ProjectUpdate[]> {
+  const project = await client.project(projectId);
+
+  if (!project) {
+    return [];
+  }
+
+  const updatesConnection = await project.projectUpdates();
+
+  return Promise.all(
+    updatesConnection.nodes.map(async (u) => {
+      const user = await u.user;
+      return {
+        id: u.id,
+        body: u.body,
+        health: u.health as "onTrack" | "atRisk" | "offTrack",
+        createdAt: u.createdAt,
+        updatedAt: u.updatedAt,
+        url: u.url,
+        userId: user?.id,
+        userName: user?.name,
+      };
+    })
+  );
+}
+
+export async function getProjectLabels(
+  client: LinearClient,
+  projectId: string
+): Promise<ProjectLabel[]> {
+  const project = await client.project(projectId);
+
+  if (!project) {
+    return [];
+  }
+
+  const labelsConnection = await project.labels();
+
+  return labelsConnection.nodes.map((l) => ({
+    id: l.id,
+    name: l.name,
+    color: l.color,
+    description: l.description,
+    isGroup: l.isGroup,
+    createdAt: l.createdAt,
+    updatedAt: l.updatedAt,
+  }));
+}
+
+export async function getProjectStatus(
+  client: LinearClient,
+  projectId: string
+): Promise<ProjectStatus | null> {
+  const project = await client.project(projectId);
+
+  if (!project) {
+    return null;
+  }
+
+  const status = await project.status;
+
+  if (!status) {
+    return null;
+  }
+
+  return {
+    id: status.id,
+    name: status.name,
+    color: status.color,
+    description: status.description,
+    type: status.type as ProjectStatus["type"],
+    position: status.position,
+    indefinite: status.indefinite,
+    createdAt: status.createdAt,
+    updatedAt: status.updatedAt,
+  };
+}
+
+export async function getProjectExternalLinks(
+  client: LinearClient,
+  projectId: string
+): Promise<EntityExternalLink[]> {
+  const project = await client.project(projectId);
+
+  if (!project) {
+    return [];
+  }
+
+  const linksConnection = await project.externalLinks();
+
+  return Promise.all(
+    linksConnection.nodes.map(async (l) => {
+      const creator = await l.creator;
+      return {
+        id: l.id,
+        label: l.label,
+        url: l.url,
+        sortOrder: l.sortOrder,
+        createdAt: l.createdAt,
+        updatedAt: l.updatedAt,
+        creatorId: creator?.id,
+        creatorName: creator?.name,
+      };
+    })
+  );
 }

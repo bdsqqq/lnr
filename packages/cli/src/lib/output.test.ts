@@ -4,11 +4,13 @@ import {
   formatDate,
   formatPriority,
   formatRelativeTime,
+} from "./output";
+import {
   shortcodeToEmoji,
   formatReactions,
   wrapText,
   buildChildMap,
-} from "./output";
+} from "./renderers/comments";
 import type { Comment } from "@bdsqqq/lnr-core";
 
 describe("truncate", () => {

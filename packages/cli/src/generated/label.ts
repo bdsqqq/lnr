@@ -1,0 +1,273 @@
+/**
+ * GENERATED FILE - DO NOT EDIT
+ * Regenerate with: bun run packages/codegen/generate-commands.ts
+ */
+
+import "../lib/arktype-config";
+import { type } from "arktype";
+import {
+  getClient,
+  listLabels,
+  getLabel,
+  createLabel,
+  updateLabel,
+  deleteLabel,
+  resolveTeamByKey,
+  createSubscription,
+  deleteSubscription,
+  findUserSubscription,
+  type Label,
+} from "@bdsqqq/lnr-core";
+import { router, procedure } from "../router/trpc";
+import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
+import type { OperationSpec } from "../lib/operation-spec";
+import {
+  outputJson,
+  outputQuiet,
+  outputTable,
+  getOutputFormat,
+  truncate,
+  type OutputOptions,
+  type TableColumn,
+} from "../lib/output";
+import { outputDetail } from "../lib/renderers/detail";
+import { labelToDetail } from "../lib/adapters";
+
+
+export const listLabelsInput = type({
+  "team?": type("string").describe("filter by team key"),
+  "json?": type("boolean").describe("output as json"),
+  "quiet?": type("boolean").describe("output ids only"),
+  "verbose?": type("boolean").describe("show all columns"),
+});
+
+export const labelInput = type({
+  id: type("string").configure({ positional: true }).describe("label id or 'new'"),
+  "json?": type("boolean").describe("output as json"),
+  "delete?": type("boolean").describe("delete the label"),
+  "team?": type("string").describe("team key (required for new)"),
+  "name?": type("string").describe("label name (required for new)"),
+  "description?": type("string").describe("label description"),
+  "color?": type("string").describe("hex color code"),
+});
+
+type LabelInput = typeof labelInput.infer;
+
+
+
+const labelColumns: TableColumn<Label>[] = [
+  { header: "ID", value: (l) => l.id.slice(0, 8), width: 10 },
+  { header: "NAME", value: (l) => truncate(l.name, 30), width: 30 },
+  { header: "COLOR", value: (l) => l.color ?? "-", width: 10 },
+  { header: "DESCRIPTION", value: (l) => truncate(l.description ?? "-", 40), width: 40 },
+];
+
+export const labelOperations = ["create", "read", "update", "delete"] as const;
+type Operation = (typeof labelOperations)[number];
+
+export const labelMutationFlags: readonly (keyof LabelInput)[] = [
+  "name", "color", "description"
+] as const;
+
+export function inferOperation(input: LabelInput): Operation {
+  if (input.id === "new") return "create";
+  if (input.delete) return "delete";
+
+  for (const flag of labelMutationFlags) {
+    if (input[flag] !== undefined) return "update";
+  }
+
+  return "read";
+}
+
+export const labelOperationSpec: OperationSpec<LabelInput, Operation> = {
+  command: "label",
+  operations: labelOperations,
+  mutationFlags: labelMutationFlags,
+  inferOperation,
+};
+
+async function handleListLabels(
+  input: typeof listLabelsInput.infer
+): Promise<void> {
+  try {
+    const client = getClient();
+
+    const outputOpts: OutputOptions = {
+      format: input.json ? "json" : input.quiet ? "quiet" : undefined,
+      verbose: input.verbose,
+    };
+    const format = getOutputFormat(outputOpts);
+
+    let teamId: string | undefined;
+    if (input.team) {
+      teamId = await resolveTeamByKey(client, input.team);
+    }
+
+    const labels = await listLabels(client, teamId);
+
+    if (format === "json") {
+      outputJson(labels);
+      return;
+    }
+
+    if (format === "quiet") {
+      outputQuiet(labels.map((l) => l.id));
+      return;
+    }
+
+    outputTable(labels, labelColumns, outputOpts);
+  } catch (error) {
+    handleApiError(error);
+  }
+}
+
+async function handleShowLabel(
+  id: string,
+  input: LabelInput
+): Promise<void> {
+  try {
+    const client = getClient();
+
+    const outputOpts: OutputOptions = {
+      format: input.json ? "json" : undefined,
+    };
+    const format = getOutputFormat(outputOpts);
+
+    const label = await getLabel(client, id);
+
+    if (!label) {
+      exitWithError(`label "${id}" not found`, undefined, EXIT_CODES.NOT_FOUND);
+    }
+
+    if (format === "json") {
+      outputJson(label);
+      return;
+    }
+
+    outputDetail(labelToDetail(label));
+  } catch (error) {
+    handleApiError(error);
+  }
+}
+
+async function handleUpdateLabel(
+  id: string,
+  input: LabelInput
+): Promise<void> {
+  try {
+    const client = getClient();
+
+    const updatePayload: {
+      name?: string;
+      color?: string;
+      description?: string;
+    } = {};
+
+    if (input.name !== undefined) updatePayload.name = input.name;
+    if (input.color !== undefined) updatePayload.color = input.color;
+    if (input.description !== undefined) updatePayload.description = input.description;
+
+    if (Object.keys(updatePayload).length > 0) {
+      const success = await updateLabel(client, id, updatePayload);
+      if (!success) {
+        exitWithError(`label "${id}" not found`, undefined, EXIT_CODES.NOT_FOUND);
+      }
+      console.log(`updated label: ${id}`);
+    }
+  } catch (error) {
+    handleApiError(error);
+  }
+}
+
+async function handleCreateLabel(input: LabelInput): Promise<void> {
+  if (!input.name) {
+    exitWithError("--name is required", 'usage: lnr label new --name "..." --team <key>');
+  }
+
+  if (!input.team) {
+    exitWithError("--team is required", 'usage: lnr label new --name "..." --team <key>');
+  }
+
+  try {
+    const client = getClient();
+
+    const teamId = await resolveTeamByKey(client, input.team);
+
+    const label = await createLabel(client, {
+      name: input.name,
+      teamId,
+      color: input.color,
+      description: input.description,
+    });
+
+    if (label) {
+      console.log(`created label: ${label.name}`);
+    } else {
+      exitWithError("failed to create label");
+    }
+  } catch (error) {
+    handleApiError(error);
+  }
+}
+
+async function handleDeleteLabel(
+  id: string,
+  _input: LabelInput
+): Promise<void> {
+  try {
+    const client = getClient();
+    const success = await deleteLabel(client, id);
+
+    if (!success) {
+      exitWithError(`label "${id}" not found`, undefined, EXIT_CODES.NOT_FOUND);
+    }
+
+    console.log(`deleted label: ${id}`);
+  } catch (error) {
+    handleApiError(error);
+  }
+}
+
+
+
+
+
+export const generatedLabelsRouter = router({
+  labels: procedure
+    .meta({
+      description: "list labels",
+      
+    })
+    .input(listLabelsInput)
+    .query(async ({ input }) => {
+      await handleListLabels(input);
+    }),
+
+  label: procedure
+    .meta({
+      description: "show or update a label, or create with 'new'",
+    })
+    .input(labelInput)
+    .mutation(async ({ input }) => {
+      const operation = inferOperation(input);
+
+      switch (operation) {
+        case "create":
+          await handleCreateLabel(input);
+          break;
+        case "delete":
+          await handleDeleteLabel(input.id, input);
+          break;
+        
+        case "update":
+          await handleUpdateLabel(input.id, input);
+          break;
+        case "read":
+        default:
+          await handleShowLabel(input.id, input);
+          break;
+      }
+    }),
+
+});

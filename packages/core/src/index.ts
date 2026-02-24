@@ -10,6 +10,7 @@ export type {
   CreateIssueInput,
   UpdateIssueInput,
   CreateProjectInput,
+  UpdateProjectInput,
 } from "./types";
 
 // client
@@ -30,12 +31,14 @@ export {
   getConfigValue,
   setConfigValue,
   ensureConfigDir,
+  findNearestConfig,
   listConfig,
   getConfigPath,
   type Config,
 } from "./config";
 
 // issues
+export type { BatchIssueResult } from "./types";
 export {
   listIssues,
   getIssue,
@@ -47,15 +50,23 @@ export {
   getTeamLabels,
   archiveIssue,
   getSubIssues,
+  batchCreateIssues,
+  batchUpdateIssues,
 } from "./issues";
 
 // projects
+export type { ProjectUpdate, ProjectLabel, ProjectStatus, EntityExternalLink } from "./types";
 export {
   listProjects,
   getProject,
   getProjectIssues,
+  getProjectUpdates,
+  getProjectLabels,
+  getProjectStatus,
+  getProjectExternalLinks,
   createProject,
   deleteProject,
+  updateProject,
 } from "./projects";
 
 // teams
@@ -68,7 +79,17 @@ export {
 } from "./teams";
 
 // cycles
-export { listCycles, getCurrentCycle, getCycleIssues } from "./cycles";
+export type { CreateCycleInput, UpdateCycleInput } from "./types";
+export {
+  listCycles,
+  getCycle,
+  getCycleById,
+  getCurrentCycle,
+  getCycleIssues,
+  createCycle,
+  updateCycle,
+  deleteCycle,
+} from "./cycles";
 
 // me
 export { getViewer, getMyIssues, getMyCreatedIssues, getMyActivity } from "./me";
@@ -120,8 +141,159 @@ export {
 } from "./comments";
 
 // reactions
-export { createReaction, deleteReaction } from "./reactions";
+export type { ReactionTarget } from "./reactions";
+export { createReaction, createCommentReaction, deleteReaction } from "./reactions";
 
 // attachments
 export type { Attachment, CreateAttachmentInput } from "./attachments";
 export { createAttachment, getIssueAttachments, linkGitHubPR } from "./attachments";
+
+// milestones
+export type {
+  ProjectMilestone,
+  CreateProjectMilestoneInput,
+  UpdateProjectMilestoneInput,
+} from "./types";
+export {
+  listMilestones,
+  getMilestone,
+  createMilestone,
+  updateMilestone,
+  deleteMilestone,
+} from "./milestones";
+
+// templates
+export type { Template } from "./templates";
+export {
+  listTemplates,
+  getTemplate,
+  findTemplateByName,
+  getIssueTemplates,
+} from "./templates";
+
+// views
+export type {
+  CustomView,
+  CreateCustomViewInput,
+  UpdateCustomViewInput,
+  ViewPreferences,
+  ViewPreferencesValues,
+} from "./types";
+export type { ViewPreferencesResult } from "./views";
+export {
+  listViews,
+  getView,
+  getViewById,
+  createView,
+  updateView,
+  deleteView,
+  getViewPreferences,
+} from "./views";
+
+// resolvers
+export {
+  resolveIssueIdentifier,
+  IssueNotFoundError,
+  resolveStateName,
+  StateNotFoundError,
+  resolveAssignee,
+  AssigneeNotFoundError,
+  resolveTeamByKey,
+  TeamNotFoundError,
+  resolveProjectByName,
+  ProjectNotFoundError,
+  resolveCycleByName,
+  CycleNotFoundError,
+  resolveMilestoneByName,
+  MilestoneNotFoundError,
+} from "./resolvers";
+
+// users
+export {
+  listUsers,
+  getUser,
+  findUserByEmail,
+  findUserByNameOrEmail,
+} from "./users";
+
+// notifications
+export type { Notification } from "./types";
+export {
+  listNotifications,
+  getNotification,
+  markNotificationRead,
+  archiveNotification,
+} from "./notifications";
+
+// initiatives
+export type { Initiative, InitiativeUpdate } from "./types";
+export {
+  listInitiatives,
+  getInitiative,
+  findInitiativeByName,
+  getInitiativeUpdates,
+  getInitiativeExternalLinks,
+} from "./initiatives";
+
+// roadmaps
+export type { Roadmap } from "./types";
+export { listRoadmaps, getRoadmap, findRoadmapByName, getRoadmapProjects } from "./roadmaps";
+
+// subscriptions
+export type { SubscriptionTarget } from "./subscriptions";
+export {
+  createSubscription,
+  deleteSubscription,
+  findUserSubscription,
+  subscribeToIssue,
+  unsubscribeFromIssue,
+} from "./subscriptions";
+
+// git automation states
+export type {
+  GitAutomationState,
+  GitAutomationEvent,
+  CreateGitAutomationStateInput,
+  UpdateGitAutomationStateInput,
+} from "./types";
+export {
+  listGitAutomationStates,
+  getGitAutomationState,
+  findGitAutomationStateByEvent,
+  createGitAutomationState,
+  updateGitAutomationState,
+  deleteGitAutomationState,
+} from "./git-automation-states";
+
+// git automation target branches
+export type {
+  GitAutomationTargetBranch,
+  CreateGitAutomationTargetBranchInput,
+  UpdateGitAutomationTargetBranchInput,
+} from "./types";
+export {
+  listGitAutomationTargetBranches,
+  getGitAutomationTargetBranch,
+  findGitAutomationTargetBranchByPattern,
+  createGitAutomationTargetBranch,
+  updateGitAutomationTargetBranch,
+  deleteGitAutomationTargetBranch,
+} from "./git-automation-target-branches";
+
+// agent sessions (experimental)
+export type {
+  AgentSession,
+  AgentSessionStatus,
+  AgentSessionType,
+  UpdateAgentSessionInput,
+  AgentActivity,
+  AgentActivityType,
+  AgentActivitySignal,
+  AgentActivityContent,
+} from "./types";
+export {
+  listAgentSessions,
+  getAgentSession,
+  updateAgentSession,
+  getAgentSessionActivities,
+} from "./agent-sessions";

@@ -21,5 +21,23 @@ jobs:
       - uses: oven-sh/setup-bun@v1
 
       - run: bun install
+      - run: bun run generate
+      - run: git diff --exit-code docs/command-reference.md packages/cli/src/generated/
       - run: bun run check
       - run: bun run test
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+
+      - run: bun install
+      - run: bun test packages/cli/src/e2e-readonly.test.ts
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+      - run: bun test packages/cli/src/e2e-mutations.test.ts
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          LNR_E2E_CONFIRM_ORG: bdsqqq-sandbox
