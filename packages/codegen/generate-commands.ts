@@ -948,7 +948,7 @@ function getAdapterImport(entityKey: string): string {
 }
 
 function generateEntityFile(config: EntityConfig): string {
-  const timestamp = new Date().toISOString();
+  
   const entitySchema = schema.entities[config.entityKey];
   const updateFields = entitySchema?.updateInput?.fields || [];
   
@@ -978,8 +978,6 @@ function generateEntityFile(config: EntityConfig): string {
 
   return `/**
  * GENERATED FILE - DO NOT EDIT
- * Generated from extracted-schema.json at ${timestamp}
- *
  * Regenerate with: bun run packages/codegen/generate-commands.ts
  */
 
