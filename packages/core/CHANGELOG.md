@@ -1,5 +1,255 @@
 # @bdsqqq/lnr-core
 
+## 2.0.0
+
+### Major Changes
+
+- feat!: schema-driven CLI generation (#20)
+
+### Minor Changes
+
+- feat(agents): add AgentActivity embedded in session
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c1131-10bb-73fe-a5cb-03b1c14561c8
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(projects): add --show-status flag for project status
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c1113-baac-71d9-bc01-4ab05d43010b
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(reactions): extend reactions to all comment-like entities
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c111b-9884-728f-b86c-a3383dde459c
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(notifications): add notification read-only support
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c1105-c34a-7234-a7db-0332401fd16e
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(git-automation): add GitAutomationState support
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c1127-93e5-76ff-8b9e-a0e6c95c3b9c
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(core): add milestone CRUD operations
+
+  milestones.ts with list/get/create/update/delete functions.
+  ProjectMilestone type exported from types.ts.
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c0a99-51c8-7128-b3c9-16e991924210
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(core): add resolveMilestoneByName resolver
+
+  resolves milestone by name within project context.
+  updated field-resolvers registry: projectMilestoneId now resolved field.
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c0a99-51c8-7128-b3c9-16e991924210
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(initiatives): add initiative updates support
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c110a-b0a6-702c-826d-41072e7ebdc8
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(entity): add --links flag for external links on projects and initiatives
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c1116-47b4-73e3-a26d-f7d38b2da836
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(codegen): add field resolver registry and wire missing create fields
+
+  - add resolveTeamByKey, resolveProjectByName, resolveCycleByName to core
+  - create field-resolvers.ts registry mapping API fields to CLI handling
+  - create generate-payload.ts for shared payload construction
+  - wire --project, --cycle, --state, --estimate, --dueDate to issue create
+  - wire --blocks, --blockedBy, --relatesTo as post-create operations
+
+  issue create now supports all fields that issue update supports.
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c0649-4de7-75a4-a9e3-41d27762f791
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(projects): add --labels flag for project labels
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c1111-4df2-75eb-8cbf-f095d5c9b125
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(template): add template entity support
+
+  - add Template to SUPPORTED_ENTITIES and priorityTypes
+  - run introspection to fetch Template type from Linear API
+  - create core module with list/get/find template functions
+  - add CLI commands: lnr templates, lnr template <name>
+  - wire up generatedTemplatesRouter
+
+  template is read-only (no mutations in Linear API).
+  enables 'lnr issue new --template' in future PR.
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c10f1-6955-7429-8eff-45f24c78e5fc
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(cycle): add full CRUD support to cycle entity CLI
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c10f6-01f3-7113-a0c6-1f775409c22d
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(project): add project updates display
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c1101-51a2-74ad-87df-ea68f5789d2c
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(config): directory-scoped .lnr.json with nearest-wins resolution
+
+  - replace ~/.lnr/config.json with .lnr.json at any directory level
+  - walk up from cwd, first .lnr.json wins
+  - precedence: nearest config > legacy ~/.lnr/config.json > LINEAR_API_KEY env
+  - e2e readonly tests show org name at top of report
+  - e2e mutation tests require typing org name to confirm
+  - add .lnr.json to .gitignore (contains secrets)
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c2fe3-854e-720f-823c-61084b29c969
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(subscriptions): add notification subscription flags
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c111f-037d-7257-93b9-df79a09f67aa
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(user): add user entity CLI support
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c10ff-5e15-7129-bd2e-f7f26dbaca69
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(batch): add issue batch subcommand
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c1122-f5dd-7742-89e7-2eea4d52fda6
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(roadmaps): add --projects flag for roadmap-to-project mapping
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c110e-e440-74ae-b5b2-3348a836aa05
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(view): add customview entity CLI support
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c10fa-7fc0-728d-8bb3-57c81be9bc58
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(agents): add AgentSession support
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c112e-5336-775b-920e-de056bff62a8
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(initiatives): add initiative read-only support
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c1108-671b-710f-9ed0-080b637abf78
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(roadmaps): add roadmap read-only support
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c110c-db5a-7036-b0ce-0a0ebe0440c6
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(view): add --preferences flag for view preferences
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c1119-5cce-7063-af5d-45f7bdb63063
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- feat(git-automation): add GitAutomationTargetBranch support
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c112b-50c6-712d-94a4-52248737d592
+  Co-authored-by: Amp <amp@ampcode.com>
+
+### Patch Changes
+
+- fix(ci): add missing zod dep, isolate config tests, cleanup sandbox org
+
+  - add zod to cli deps (peer dep of trpc-cli, imported by generated code)
+  - add LNR_CONFIG_PATH env override for test isolation
+  - add cleanupPreviousRuns() to e2e mutations (deletes leftover teams/projects/views)
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c3849-f59d-72bc-82ec-90719cbe6994
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- refactor(core): replace as unknown casts with type-safe enum map for GitAutomationStates
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c4482-ebe0-71cc-940c-8fa2256f639f
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- refactor(core): use SDK lazy issue property instead of private \_issue cast
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c4482-ebe0-71cc-940c-8fa2256f639f
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- chore: merge origin/main into schema-codegen
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c062e-1179-72dd-ab35-7f44cb6f8e11
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- fix(subscriptions): auto-find user subscription for --unsubscribe
+
+  task 0038: --unsubscribe now auto-finds user's existing subscription for
+  the target entity instead of requiring subscription id as argument.
+
+  - add findUserSubscription() to core - queries notificationSubscriptions
+    and matches by entity type/id
+  - update project and initiative commands to use auto-find
+  - change --unsubscribe from string to boolean flag
+  - add e2e test for project unsubscribe
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c2e5f-df5d-713c-bbe0-b6ff8cadfe80
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- fix(subscriptions): use camelCase for notification types, split e2e tests
+
+  - notificationSubscriptionTypes must use camelCase (issueCreated not issuecreated)
+  - Linear API validates case-sensitively
+  - split e2e tests: e2e-readonly.test.ts (safe), e2e-mutations.test.ts (sandbox only)
+  - fix dev script to load .env from workspace root
+  - task 0037 complete
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c2e43-70aa-701b-9a7e-9dafc7cd3897
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- test(core): add tests for team, project, and cycle resolvers
+
+  15 new tests covering resolveTeamByKey, resolveProjectByName,
+  resolveCycleByName — happy paths and error cases with proper mocks.
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c0a99-51c8-7128-b3c9-16e991924210
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- refactor(cli): output rendering architecture with adapters and renderers
+
+  extract comment rendering into renderers/comments.ts, add generic
+  detail renderer in renderers/detail.ts, create entity adapters for
+  issue/project/label/doc. restores full issue show UX with threaded
+  comments, descriptions, and graceful error handling.
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c3a42-917f-71b8-b4d2-f6889accd4ef
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- fix(core): stop masking non-not-found errors in resolveIssueIdentifier
+
+  The catch block was wrapping ALL errors (auth, network, rate limit) as
+  IssueNotFoundError. Now only wraps errors whose message contains
+  'not found' or 'entity not accessible'; re-throws everything else.
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c6683-6425-7703-907e-7295a4179893
+  Co-authored-by: Amp <amp@ampcode.com>
+
+- test(e2e): add e2e tests for entity expansion (37 pass, 1 skip)
+
+  - creates sandbox team, exercises all CRUD operations, deletes team
+  - skipped: project --subscribe (notificationSubscriptionTypes needs schema derivation)
+  - added bugs 0037, 0038 to todo
+
+  Amp-Thread-ID: https://ampcode.com/threads/T-019c1144-4c4d-73c8-9c41-93e55f73bc4b
+  Co-authored-by: Amp <amp@ampcode.com>
+
 ## 1.6.0
 
 ### Minor Changes
