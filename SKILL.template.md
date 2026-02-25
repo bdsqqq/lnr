@@ -4,48 +4,51 @@ description: interact with Linear via lnr CLI
 ---
 # lnr
 
-query and update Linear from the terminal. covers issues, projects, cycles, teams, docs, and labels.
+CLI for Linear. query and mutate issues, projects, cycles, docs, labels, views, and more.
+
+## grammar
+
+commands follow a consistent pattern:
+
+- `lnr <entities>` — list (plural). filter with `--team`, `--state`, `--assignee`, etc.
+- `lnr <entity> <id>` — show one. add mutation flags to update: `--state "Done"`, `--assignee @me`
+- `lnr <entity> new` — create. required flags vary by entity (usually `--team`, `--title`).
+- `--archive` or `--delete` — remove. flag name varies by entity.
+- `--json` — structured output. `--quiet` — ids only. both work on all commands.
+
+operation is inferred from context: no flags → read, mutation flags → update, `new` → create.
 
 ## issues
 
 ```bash
-<!-- ISSUES_EXAMPLES -->
+lnr issues --team ENG --assignee @me --state "In Progress"
+lnr issue ENG-123                           # show
+lnr issue ENG-123 --state "Done"            # update
+lnr issue ENG-123 --comment "fixed in abc"  # comment
+lnr issue ENG-123 --label +bug              # add label (- to remove)
+lnr issue ENG-123 --branch                  # git branch name
+lnr issue ENG-123 --blocks ENG-456          # relation
+lnr issue new --team ENG --title "title"    # create
+lnr issue batch ENG-1,ENG-2 --state "Done"  # batch update
+lnr search "query" --team ENG               # full-text search
 ```
 
 ## projects
 
 ```bash
-<!-- PROJECTS_EXAMPLES -->
+lnr projects --team ENG --status started
+lnr project "Name" --issues                          # list project issues
+lnr project milestone new --project "Name" --name "v1"  # create milestone
 ```
 
-## docs
+## entities
 
-```bash
-<!-- DOCS_EXAMPLES -->
-```
-
-## labels
-
-```bash
-<!-- LABELS_EXAMPLES -->
-```
-
-## cycles
-
-```bash
-<!-- CYCLES_EXAMPLES -->
-```
-
-## teams
-
-```bash
-<!-- TEAMS_EXAMPLES -->
-```
+<!-- ENTITY_CATALOG -->
 
 ## rules
 
-- always specify `--team` when user context implies a specific team
-- use `--json` or `--quiet` when parsing output programmatically
-- issue IDs follow pattern `TEAM-####` (e.g., AXM-1234)
-- state names are case-sensitive strings from Linear (e.g., "In Progress", "Done", "Backlog")
-- operation is inferred from flags: no flags → READ, mutation flags → UPDATE, `new` → CREATE, `--archive`/`--delete` → DELETE
+- `--team` required for team-scoped entities (cycles, git-automations). inferred from config default when set.
+- issue IDs: `TEAM-####` (e.g., ENG-123). state names are case-sensitive Linear strings ("In Progress", "Done").
+- `@me` resolves to the authenticated user for `--assignee` and `--lead`.
+- `--label +name` adds, `--label -name` removes.
+- `--subscribe` / `--unsubscribe` for notification control on issues, projects, initiatives.

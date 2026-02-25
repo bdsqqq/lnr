@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
 /**
- * generates SKILL.md from SKILL.template.md + cli-spec.json
+ * generates SKILL.md from SKILL.template.md + command-reference.md
  *
- * replaces markers like <!-- ISSUES_EXAMPLES --> with actual CLI examples
- * derived from the spec. keeps skill documentation in sync with codegen.
+ * parses command-reference.md to extract entity names and aliases,
+ * then injects a compact entity catalog into the template. keeps
+ * the skill in sync with codegen without exhaustive flag listings.
  *
  * run: bun run packages/codegen/generate-skill.ts
  */
@@ -15,197 +16,215 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "../..");
 
-interface Flag {
-  name: string;
-  type: string;
-  required: boolean;
-  description: string;
-  positional: boolean;
+interface EntityInfo {
+  /** plural list command, e.g. "issues" */
+  listCmd: string;
+  /** singular show/mutate command, e.g. "issue" */
+  singularCmd: string | null;
+  /** short alias from command-reference, e.g. "i" */
+  alias: string | null;
+  /** has create/update/delete operations */
+  hasMutations: boolean;
+  /** subcommands like "batch", "milestone" */
+  subcommands: string[];
+  /** extra notes for the catalog */
+  notes: string | null;
 }
 
-interface Command {
-  entity: string;
-  command: string;
-  description: string;
-  flags: Flag[];
-  operations: { name: string; inferredWhen: string }[];
-}
+/**
+ * parses command-reference.md to extract entities.
+ *
+ * each line looks like:
+ *   | `lnr issues` | list issues (alias: i) |
+ *   | `lnr issue <idOrNew>` | show or update a issue, or create with 'new' |
+ *   | `lnr issue batch <issues>` | batch update multiple issues at once |
+ */
+function parseCommandReference(content: string): Map<string, EntityInfo> {
+  const entities = new Map<string, EntityInfo>();
+  const lines = content.split("\n");
 
-interface CliSpec {
-  commands: Command[];
-}
+  /** commands to skip — these are standalone and handled in the template */
+  const SKIP = new Set(["auth", "config", "me", "search"]);
 
-const spec: CliSpec = JSON.parse(
-  readFileSync(join(__dirname, "cli-spec.json"), "utf-8")
-);
+  for (const line of lines) {
+    const match = line.match(/\| `lnr (\S+?)(?:`|\s+(\S+?))?(?:`|\s+(\S+?))?`/);
+    if (!match) continue;
 
-function generateExamples(entity: string): string {
-  const commands = spec.commands.filter((c) => c.entity === entity);
-  const lines: string[] = [];
+    const [, cmd, arg1, arg2] = match;
 
-  for (const cmd of commands) {
-    const isList = cmd.command.endsWith("s") && cmd.command !== "teams";
-    const singular = cmd.command.replace(/s$/, "");
+    if (SKIP.has(cmd)) continue;
 
-    if (isList) {
-      // list command examples
-      lines.push(`lnr ${cmd.command}${padComment("list all")}`);
+    // detect alias from description: "(alias: X)"
+    const aliasMatch = line.match(/\(alias: (\w+)\)/);
 
-      const teamFlag = cmd.flags.find((f) => f.name === "team");
-      if (teamFlag) {
-        lines.push(`lnr ${cmd.command} --team AXM${padComment("filter by team")}`);
-      }
+    // detect mutations from description
+    const hasMutation =
+      line.includes("create") ||
+      line.includes("update") ||
+      line.includes("delete") ||
+      line.includes("archive") ||
+      line.includes("--state") ||
+      line.includes("--assignee");
 
-      const assigneeFlag = cmd.flags.find((f) => f.name === "assignee");
-      if (assigneeFlag) {
-        lines.push(`lnr ${cmd.command} --assignee @me${padComment("my items")}`);
-      }
-
-      const stateFlag = cmd.flags.find((f) => f.name === "state");
-      if (stateFlag) {
-        lines.push(`lnr ${cmd.command} --state "In Progress"${padComment("filter by state")}`);
-      }
-    } else {
-      // singular command examples
-      const positional = cmd.flags.find((f) => f.positional);
-      const posExample = getPositionalExample(entity);
-
-      // show
-      lines.push(`lnr ${cmd.command} ${posExample}${padComment("show details")}`);
-
-      // open in browser (if has --open)
-      if (cmd.flags.find((f) => f.name === "open")) {
-        lines.push(`lnr ${cmd.command} ${posExample} --open${padComment("open in browser")}`);
-      }
-
-      // update examples for key mutation flags
-      const mutationExamples = getMutationExamples(cmd, posExample);
-      lines.push(...mutationExamples);
-
-      // create example
-      const hasNew = cmd.operations.some((o) => o.name === "create");
-      if (hasNew) {
-        const createExample = getCreateExample(cmd);
-        if (createExample) {
-          lines.push(createExample);
+    // detect subcommand: "lnr issue batch", "lnr project milestone"
+    if (arg1 && arg2 && !arg1.startsWith("<") && !arg1.startsWith("-")) {
+      // this is a subcommand like "issue batch" or "project milestone"
+      const parentKey = findParentKey(entities, cmd);
+      if (parentKey) {
+        const parent = entities.get(parentKey)!;
+        if (!parent.subcommands.includes(arg1)) {
+          parent.subcommands.push(arg1);
         }
       }
+      continue;
+    }
 
-      // delete/archive example
-      const archiveFlag = cmd.flags.find((f) => f.name === "archive" || f.name === "delete");
-      if (archiveFlag) {
-        lines.push(`lnr ${cmd.command} ${posExample} --${archiveFlag.name}${padComment(archiveFlag.name)}`);
+    // plural (list) command — no positional arg or first arg is a flag
+    const isListCmd =
+      !arg1 || arg1.startsWith("-") || (arg1.startsWith("<") === false && arg1.startsWith("-") === false);
+
+    // actually: list commands have no <positional> arg typically
+    const hasPositional = arg1?.startsWith("<");
+
+    if (!hasPositional) {
+      // list command
+      const key = cmd;
+      if (!entities.has(key)) {
+        entities.set(key, {
+          listCmd: cmd,
+          singularCmd: null,
+          alias: aliasMatch?.[1] ?? null,
+          hasMutations: false,
+          subcommands: [],
+          notes: null,
+        });
+      } else {
+        // update alias if we found one
+        if (aliasMatch) {
+          entities.get(key)!.alias = aliasMatch[1];
+        }
+      }
+    } else {
+      // singular command — find or create parent
+      const parentKey = findParentKey(entities, cmd);
+      if (parentKey) {
+        const parent = entities.get(parentKey)!;
+        parent.singularCmd = cmd;
+        if (hasMutation) parent.hasMutations = true;
+      } else {
+        // singular without a known parent — create entry keyed by cmd
+        // e.g. "notification" might appear before "notifications"
+        entities.set(cmd, {
+          listCmd: cmd + "s",
+          singularCmd: cmd,
+          alias: aliasMatch?.[1] ?? null,
+          hasMutations: hasMutation,
+          subcommands: [],
+          notes: null,
+        });
       }
     }
   }
+
+  return entities;
+}
+
+/**
+ * naive pluralization for command names.
+ * handles: issue→issues, cycle→cycles, git-branch→git-branches
+ */
+function pluralize(cmd: string): string[] {
+  const candidates = [cmd + "s"];
+  if (cmd.endsWith("ch") || cmd.endsWith("sh") || cmd.endsWith("ss") || cmd.endsWith("x")) {
+    candidates.unshift(cmd + "es");
+  }
+  return candidates;
+}
+
+/**
+ * finds the parent entity key for a singular command.
+ * e.g. "issue" → "issues", "project" → "projects", "git-branch" → "git-branches"
+ */
+function findParentKey(
+  entities: Map<string, EntityInfo>,
+  singularCmd: string
+): string | null {
+  // direct match (e.g. entry keyed by "notification" before "notifications" was seen)
+  if (entities.has(singularCmd)) return singularCmd;
+
+  // try plural forms
+  for (const plural of pluralize(singularCmd)) {
+    if (entities.has(plural)) return plural;
+  }
+
+  // try matching listCmd or singularCmd
+  for (const [key, info] of entities) {
+    if (info.singularCmd === singularCmd) return key;
+    for (const plural of pluralize(singularCmd)) {
+      if (info.listCmd === plural) return key;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * formats the entity catalog as a compact grouped list.
+ *
+ * groups by capability (crud vs read-only) with aliases and subcommands noted.
+ */
+function formatCatalog(entities: Map<string, EntityInfo>): string {
+  const crud: string[] = [];
+  const readOnly: string[] = [];
+
+  for (const [, info] of entities) {
+    const name = info.listCmd;
+    const parts: string[] = [name];
+    if (info.alias) parts[0] += ` (${info.alias})`;
+    if (info.subcommands.length > 0) {
+      parts.push(`subcommands: ${info.subcommands.join(", ")}`);
+    }
+
+    const entry = parts.length > 1 ? `${parts[0]} — ${parts.slice(1).join("; ")}` : parts[0];
+
+    if (info.hasMutations) {
+      crud.push(entry);
+    } else {
+      readOnly.push(entry);
+    }
+  }
+
+  const lines: string[] = [];
+  if (crud.length) {
+    lines.push(`**crud:** ${crud.join(" · ")}`);
+  }
+  if (readOnly.length) {
+    lines.push(`**read-only:** ${readOnly.join(" · ")}`);
+  }
+
+  lines.push("");
+  lines.push(
+    "`me` — current user info (`--issues`, `--created`, `--activity`). " +
+    "`search` (s) — full-text issue search. " +
+    "`auth` — authenticate (`--whoami`, `--logout`). " +
+    "`config get|set|list` — manage settings."
+  );
 
   return lines.join("\n");
 }
 
-function getPositionalExample(entity: string): string {
-  switch (entity) {
-    case "issues":
-      return "AXM-1234";
-    case "projects":
-      return '"Project Name"';
-    case "docs":
-      return '"Doc Title"';
-    case "labels":
-      return '"bug"';
-    case "teams":
-      return "AXM";
-    case "cycles":
-      return "--team AXM --current";
-    default:
-      return "ID";
-  }
-}
+// --- main ---
 
-function getMutationExamples(cmd: Command, posExample: string): string[] {
-  const examples: string[] = [];
-  const entity = cmd.entity;
-
-  // entity-specific mutation examples
-  if (entity === "issues") {
-    if (cmd.flags.find((f) => f.name === "state")) {
-      examples.push(`lnr ${cmd.command} ${posExample} --state "Done"${padComment("update state")}`);
-    }
-    if (cmd.flags.find((f) => f.name === "assignee")) {
-      examples.push(`lnr ${cmd.command} ${posExample} --assignee @me${padComment("assign to self")}`);
-    }
-    if (cmd.flags.find((f) => f.name === "priority")) {
-      examples.push(`lnr ${cmd.command} ${posExample} --priority high${padComment("set priority")}`);
-    }
-    if (cmd.flags.find((f) => f.name === "comment")) {
-      examples.push(`lnr ${cmd.command} ${posExample} --comment "note"${padComment("add comment")}`);
-    }
-    if (cmd.flags.find((f) => f.name === "label")) {
-      examples.push(`lnr ${cmd.command} ${posExample} --label +bug${padComment("add label")}`);
-      examples.push(`lnr ${cmd.command} ${posExample} --label -bug${padComment("remove label")}`);
-    }
-    if (cmd.flags.find((f) => f.name === "branch")) {
-      examples.push(`lnr ${cmd.command} ${posExample} --branch${padComment("git branch name")}`);
-    }
-    if (cmd.flags.find((f) => f.name === "pr")) {
-      examples.push(`lnr ${cmd.command} ${posExample} --pr "https://..."${padComment("link PR")}`);
-    }
-  }
-
-  if (entity === "projects") {
-    if (cmd.flags.find((f) => f.name === "issues")) {
-      examples.push(`lnr ${cmd.command} ${posExample} --issues${padComment("list project issues")}`);
-    }
-  }
-
-  return examples;
-}
-
-function getCreateExample(cmd: Command): string | null {
-  const entity = cmd.entity;
-
-  switch (entity) {
-    case "issues":
-      return `lnr ${cmd.command} new --team AXM --title "title" --description "desc"${padComment("create")}`;
-    case "projects":
-      return `lnr ${cmd.command} new --team AXM --projectName "name"${padComment("create")}`;
-    case "docs":
-      return `lnr ${cmd.command} new --title "title" --content "..."${padComment("create")}`;
-    case "labels":
-      return `lnr ${cmd.command} new --team AXM --name "label" --color "#ff0000"${padComment("create")}`;
-    default:
-      return null;
-  }
-}
-
-function padComment(comment: string): string {
-  return `  # ${comment}`;
-}
-
-function generateCyclesExamples(): string {
-  return `lnr cycles --team AXM  # list team cycles
-lnr cycle --team AXM --current  # current active cycle
-lnr cycle --team AXM --current --issues  # issues in current cycle`;
-}
-
-function generateTeamsExamples(): string {
-  return `lnr teams  # list teams
-lnr team AXM  # team details
-lnr me  # current user`;
-}
-
-// read template
 const template = readFileSync(join(ROOT, "SKILL.template.md"), "utf-8");
+const commandRef = readFileSync(join(ROOT, "docs/command-reference.md"), "utf-8");
 
-// replace markers
-let output = template
-  .replace("<!-- ISSUES_EXAMPLES -->", generateExamples("issues"))
-  .replace("<!-- PROJECTS_EXAMPLES -->", generateExamples("projects"))
-  .replace("<!-- DOCS_EXAMPLES -->", generateExamples("docs"))
-  .replace("<!-- LABELS_EXAMPLES -->", generateExamples("labels"))
-  .replace("<!-- CYCLES_EXAMPLES -->", generateCyclesExamples())
-  .replace("<!-- TEAMS_EXAMPLES -->", generateTeamsExamples());
+const entities = parseCommandReference(commandRef);
+const catalog = formatCatalog(entities);
 
-// write output
+const output = template.replace("<!-- ENTITY_CATALOG -->", catalog);
+
 writeFileSync(join(ROOT, "SKILL.md"), output);
 
-console.log("generated SKILL.md from template + cli-spec.json");
+console.log(
+  `generated SKILL.md — ${entities.size} entities, ${output.split("\n").length} lines`
+);
