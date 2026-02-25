@@ -4,79 +4,54 @@ description: interact with Linear via lnr CLI
 ---
 # lnr
 
-query and update Linear from the terminal. covers issues, projects, cycles, teams, docs, and labels.
+CLI for Linear. query and mutate issues, projects, cycles, docs, labels, views, and more.
+
+## grammar
+
+commands follow a consistent pattern:
+
+- `lnr <entities>` — list (plural). filter with `--team`, `--state`, `--assignee`, etc.
+- `lnr <entity> <id>` — show one. add mutation flags to update: `--state "Done"`, `--assignee @me`
+- `lnr <entity> new` — create. required flags vary by entity (usually `--team`, `--title`).
+- `--archive` or `--delete` — remove. flag name varies by entity.
+- `--json` — structured output. `--quiet` — ids only. both work on all commands.
+
+operation is inferred from context: no flags → read, mutation flags → update, `new` → create.
 
 ## issues
 
 ```bash
-lnr issues  # list all
-lnr issues --team AXM  # filter by team
-lnr issues --assignee @me  # my items
-lnr issues --state "In Progress"  # filter by state
-lnr issue AXM-1234  # show details
-lnr issue AXM-1234 --open  # open in browser
-lnr issue AXM-1234 --state "Done"  # update state
-lnr issue AXM-1234 --assignee @me  # assign to self
-lnr issue AXM-1234 --priority high  # set priority
-lnr issue AXM-1234 --comment "note"  # add comment
-lnr issue AXM-1234 --label +bug  # add label
-lnr issue AXM-1234 --label -bug  # remove label
-lnr issue AXM-1234 --branch  # git branch name
-lnr issue AXM-1234 --pr "https://..."  # link PR
-lnr issue new --team AXM --title "title" --description "desc"  # create
-lnr issue AXM-1234 --archive  # archive
+lnr issues --team ENG --assignee @me --state "In Progress"
+lnr issue ENG-123                           # show
+lnr issue ENG-123 --state "Done"            # update
+lnr issue ENG-123 --comment "fixed in abc"  # comment
+lnr issue ENG-123 --label +bug              # add label (- to remove)
+lnr issue ENG-123 --branch                  # git branch name
+lnr issue ENG-123 --blocks ENG-456          # relation
+lnr issue new --team ENG --title "title"    # create
+lnr issue batch ENG-1,ENG-2 --state "Done"  # batch update
+lnr search "query" --team ENG               # full-text search
 ```
 
 ## projects
 
 ```bash
-lnr projects  # list all
-lnr projects --team AXM  # filter by team
-lnr project "Project Name"  # show details
-lnr project "Project Name" --issues  # list project issues
-lnr project new --team AXM --projectName "name"  # create
-lnr project "Project Name" --delete  # delete
+lnr projects --team ENG --status started
+lnr project "Name" --issues                          # list project issues
+lnr project milestone new --project "Name" --name "v1"  # create milestone
 ```
 
-## docs
+## entities
 
-```bash
-lnr docs  # list all
-lnr doc "Doc Title"  # show details
-lnr doc new --title "title" --content "..."  # create
-lnr doc "Doc Title" --delete  # delete
-```
+**crud:** cycles (c) · views (v) · docs · issues (i) — subcommands: batch · projects (p) — subcommands: milestone · labels · notifications (n) · initiatives (init) · git-automations (ga) · git-branches (gb)
+**read-only:** templates · teams (t) · users (u) · roadmaps (rm) · agent-sessions (as)
 
-## labels
-
-```bash
-lnr labels  # list all
-lnr labels --team AXM  # filter by team
-lnr label "bug"  # show details
-lnr label new --team AXM --name "label" --color "#ff0000"  # create
-lnr label "bug" --delete  # delete
-```
-
-## cycles
-
-```bash
-lnr cycles --team AXM  # list team cycles
-lnr cycle --team AXM --current  # current active cycle
-lnr cycle --team AXM --current --issues  # issues in current cycle
-```
-
-## teams
-
-```bash
-lnr teams  # list teams
-lnr team AXM  # team details
-lnr me  # current user
-```
+`me` — current user info (`--issues`, `--created`, `--activity`). `search` (s) — full-text issue search. `auth` — authenticate (`--whoami`, `--logout`). `config get|set|list` — manage settings.
 
 ## rules
 
-- always specify `--team` when user context implies a specific team
-- use `--json` or `--quiet` when parsing output programmatically
-- issue IDs follow pattern `TEAM-####` (e.g., AXM-1234)
-- state names are case-sensitive strings from Linear (e.g., "In Progress", "Done", "Backlog")
-- operation is inferred from flags: no flags → READ, mutation flags → UPDATE, `new` → CREATE, `--archive`/`--delete` → DELETE
+- `--team` required for team-scoped entities (cycles, git-automations). inferred from config default when set.
+- issue IDs: `TEAM-####` (e.g., ENG-123). state names are case-sensitive Linear strings ("In Progress", "Done").
+- `@me` resolves to the authenticated user for `--assignee` and `--lead`.
+- `--label +name` adds, `--label -name` removes.
+- `--subscribe` / `--unsubscribe` for notification control on issues, projects, initiatives.
