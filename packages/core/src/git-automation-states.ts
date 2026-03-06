@@ -19,36 +19,32 @@ export async function listGitAutomationStates(
   client: LinearClient,
   teamKey: string
 ): Promise<GitAutomationState[]> {
-  try {
-    const team = await client.team(teamKey);
+  const team = await client.team(teamKey);
 
-    if (!team) {
-      return [];
-    }
-
-    const connection = await team.gitAutomationStates();
-    return Promise.all(
-      connection.nodes.map(async (g) => {
-        const state = await g.state;
-        const targetBranch = g.targetBranch;
-        return {
-          id: g.id,
-          event: g.event.toLowerCase() as GitAutomationEvent,
-          stateId: state?.id ?? null,
-          stateName: state?.name ?? null,
-          targetBranchId: targetBranch?.id ?? null,
-          targetBranchPattern: targetBranch?.branchPattern ?? null,
-          teamId: team.id,
-          teamKey: team.key,
-          createdAt: g.createdAt,
-          updatedAt: g.updatedAt,
-          archivedAt: g.archivedAt ?? null,
-        };
-      })
-    );
-  } catch {
+  if (!team) {
     return [];
   }
+
+  const connection = await team.gitAutomationStates();
+  return Promise.all(
+    connection.nodes.map(async (g) => {
+      const state = await g.state;
+      const targetBranch = g.targetBranch;
+      return {
+        id: g.id,
+        event: g.event.toLowerCase() as GitAutomationEvent,
+        stateId: state?.id ?? null,
+        stateName: state?.name ?? null,
+        targetBranchId: targetBranch?.id ?? null,
+        targetBranchPattern: targetBranch?.branchPattern ?? null,
+        teamId: team.id,
+        teamKey: team.key,
+        createdAt: g.createdAt,
+        updatedAt: g.updatedAt,
+        archivedAt: g.archivedAt ?? null,
+      };
+    })
+  );
 }
 
 export async function getGitAutomationState(
@@ -56,12 +52,8 @@ export async function getGitAutomationState(
   teamKey: string,
   id: string
 ): Promise<GitAutomationState | null> {
-  try {
-    const states = await listGitAutomationStates(client, teamKey);
-    return states.find((s) => s.id === id) ?? null;
-  } catch {
-    return null;
-  }
+  const states = await listGitAutomationStates(client, teamKey);
+  return states.find((s) => s.id === id) ?? null;
 }
 
 export async function findGitAutomationStateByEvent(
@@ -69,12 +61,8 @@ export async function findGitAutomationStateByEvent(
   teamKey: string,
   event: GitAutomationEvent
 ): Promise<GitAutomationState | null> {
-  try {
-    const states = await listGitAutomationStates(client, teamKey);
-    return states.find((s) => s.event === event) ?? null;
-  } catch {
-    return null;
-  }
+  const states = await listGitAutomationStates(client, teamKey);
+  return states.find((s) => s.event === event) ?? null;
 }
 
 export async function createGitAutomationState(

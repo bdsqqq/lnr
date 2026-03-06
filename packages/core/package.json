@@ -1,6 +1,6 @@
 {
   "name": "@bdsqqq/lnr-core",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "description": "core business logic for lnr",
   "type": "module",
   "private": false,
