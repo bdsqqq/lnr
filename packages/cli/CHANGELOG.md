@@ -1,5 +1,14 @@
 # @bdsqqq/lnr-cli
 
+## 2.0.2
+
+### Patch Changes
+
+- Updated dependencies
+- Updated dependencies
+- Updated dependencies
+  - @bdsqqq/lnr-core@2.0.2
+
 ## 2.0.1
 
 ### Patch Changes

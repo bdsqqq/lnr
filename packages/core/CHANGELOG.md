@@ -1,5 +1,19 @@
 # @bdsqqq/lnr-core
 
+## 2.0.2
+
+### Patch Changes
+
+- fix(core): surface git automation read errors
+
+  Session-Id: 07818f35-f281-4873-b3ac-3ccba33207a7
+
+- fix(core): support linear oauth tokens
+
+  Session-Id: 07818f35-f281-4873-b3ac-3ccba33207a7
+
+- fix(core): support linear oauth tokens (#23)
+
 ## 2.0.0
 
 ### Major Changes
