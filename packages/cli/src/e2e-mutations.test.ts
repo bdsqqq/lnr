@@ -8,7 +8,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { getApiKey, getClient } from "@bdsqqq/lnr-core";
+import { getApiKey, getClient, type Cycle, type GitAutomationState } from "@bdsqqq/lnr-core";
 
 const API_KEY = getApiKey();
 if (!API_KEY) {
@@ -105,6 +105,9 @@ describe("e2e: mutations", () => {
     const result = await client.createTeam({
       name: TEST_TEAM_NAME,
       key: TEST_TEAM_KEY,
+      cyclesEnabled: true,
+      cycleDuration: 2,
+      upcomingCycleCount: 1,
     });
     const team = await result.team;
     if (!team) throw new Error("failed to create test team");
@@ -132,9 +135,30 @@ describe("e2e: mutations", () => {
     });
   });
 
-  describe("cycle CRUD", () => {
-    test("create cycle", async () => {
-      const out = await lnr(
+  describe("automatic cycles", () => {
+    let cycleId: string;
+    let cycleNumber: string;
+
+    beforeAll(async () => {
+      // linear creates cycles asynchronously; cycleCreate is deprecated and always rejects.
+      const team = await client.team(teamId);
+      for (let attempt = 0; attempt < 15; attempt++) {
+        const cycles = await team.cycles();
+        const cycle = cycles.nodes[0];
+        if (cycle) {
+          cycleId = cycle.id;
+          cycleNumber = String(cycle.number);
+          return;
+        }
+        await Bun.sleep(1000);
+      }
+      throw new Error("no automatically generated cycle found for the test team");
+    }, 30000);
+
+    test("direct cycle creation reports unsupported operation", async () => {
+      const startsAt = new Date(Date.now() + 86400000);
+      const endsAt = new Date(startsAt.getTime() + 14 * 86400000);
+      await expect(lnr(
         "cycle",
         "new",
         "--team",
@@ -142,31 +166,35 @@ describe("e2e: mutations", () => {
         "--name",
         "Test Cycle",
         "--starts-at",
-        "2026-03-01",
+        startsAt.toISOString(),
         "--ends-at",
-        "2026-03-14"
-      );
-      expect(out).toContain("created cycle");
+        endsAt.toISOString()
+      )).rejects.toThrow("cycle creation is not supported");
     });
 
     test("list cycles", async () => {
-      const out = await lnr("cycles", "--team", TEST_TEAM_KEY);
-      expect(out).toContain("Test Cycle");
+      const cycles: Cycle[] = JSON.parse(await lnr("cycles", "--team", TEST_TEAM_KEY, "--json"));
+      expect(cycles.some((cycle) => cycle.id === cycleId)).toBe(true);
     });
 
     test("show cycle by number", async () => {
-      const out = await lnr("cycle", "1", "--team", TEST_TEAM_KEY);
-      expect(out).toContain("Test Cycle");
+      const cycle = JSON.parse(await lnr("cycle", cycleNumber, "--team", TEST_TEAM_KEY, "--json"));
+      expect(cycle.id).toBe(cycleId);
     });
 
     test("update cycle name", async () => {
-      const out = await lnr("cycle", "1", "--team", TEST_TEAM_KEY, "--name", "Updated Cycle");
+      const out = await lnr("cycle", cycleNumber, "--team", TEST_TEAM_KEY, "--name", "Updated Cycle");
       expect(out).toContain("updated");
+      const cycle = JSON.parse(await lnr("cycle", cycleNumber, "--team", TEST_TEAM_KEY, "--json"));
+      expect(cycle).toMatchObject({ id: cycleId, name: "Updated Cycle" });
     });
 
     test("delete cycle", async () => {
-      const out = await lnr("cycle", "1", "--team", TEST_TEAM_KEY, "--delete");
+      const out = await lnr("cycle", cycleNumber, "--team", TEST_TEAM_KEY, "--delete");
       expect(out).toContain("archived");
+      // listCycles returns [] on read errors, so verify archival through a strict sdk read.
+      const cycle = await client.cycle(cycleId);
+      expect(cycle.archivedAt).toBeTruthy();
     });
   });
 
@@ -312,23 +340,31 @@ describe("e2e: mutations", () => {
   });
 
   describe("git automation", () => {
-    test("list git automations (empty ok)", async () => {
-      try {
-        const out = await lnr("git-automations", "--team", TEST_TEAM_KEY);
-        expect(out).toBeDefined();
-      } catch (e: any) {
-        expect(e.message).toContain("no git automation");
-      }
+    let automationId: string;
+
+    async function automations(): Promise<GitAutomationState[]> {
+      return JSON.parse(await lnr("git-automations", "--team", TEST_TEAM_KEY, "--json"));
+    }
+
+    test("list git automations", async () => {
+      expect(Array.isArray(await automations())).toBe(true);
     });
 
     test("create git automation state", async () => {
       const team = await client.team(teamId);
       const states = await team.states();
-      const inProgressState = states.nodes.find((s) => s.name === "In Progress");
-      if (!inProgressState) {
-        console.log("skipping: no In Progress state found");
-        return;
+      const inProgressState = states.nodes.find((s) => s.type === "started");
+      if (!inProgressState) throw new Error("test team has no started workflow state");
+
+      // fresh teams contain default rules; remove only this fixture's conflicting rule.
+      for (const automation of await automations()) {
+        if (automation.event === "start" && automation.targetBranchId === null) {
+          expect(automation.teamId).toBe(teamId);
+          const out = await lnr("git-automation", automation.id, "--team", TEST_TEAM_KEY, "--delete");
+          expect(out).toContain("deleted");
+        }
       }
+      expect((await automations()).some((a) => a.event === "start" && a.targetBranchId === null)).toBe(false);
 
       const out = await lnr(
         "git-automation",
@@ -338,19 +374,26 @@ describe("e2e: mutations", () => {
         "--event",
         "start",
         "--state",
-        "In Progress"
+        inProgressState.name
       );
       expect(out).toContain("created");
-    });
+      const created = (await automations()).filter((a) => a.event === "start" && a.targetBranchId === null);
+      expect(created).toHaveLength(1);
+      const automation = created[0]!;
+      expect(automation).toMatchObject({ teamId, stateId: inProgressState.id });
+      automationId = automation.id;
+    }, 15000);
 
     test("list git automations after create", async () => {
-      const out = await lnr("git-automations", "--team", TEST_TEAM_KEY);
-      expect(out).toContain("start");
+      expect(automationId).toBeDefined();
+      expect((await automations()).some((a) => a.id === automationId)).toBe(true);
     });
 
     test("delete git automation", async () => {
-      const out = await lnr("git-automation", "start", "--team", TEST_TEAM_KEY, "--delete");
+      expect(automationId).toBeDefined();
+      const out = await lnr("git-automation", automationId, "--team", TEST_TEAM_KEY, "--delete");
       expect(out).toContain("deleted");
+      expect((await automations()).some((a) => a.id === automationId)).toBe(false);
     });
   });
 

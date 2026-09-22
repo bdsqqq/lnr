@@ -11,3 +11,6 @@ and shared-access flags and label group type through to api payloads.
 
 cycle and git automation creation now propagate api and follow-up read errors
 instead of returning null for exceptions. callers must handle rejections.
+
+document linear's removal of direct cycle creation: use automatically generated
+team cycles for list/show/update/archive operations.

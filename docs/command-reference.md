@@ -15,7 +15,7 @@ generated for UX review. each row = one valid invocation.
 | `lnr cycles --json` | output as json |
 | `lnr cycles --quiet` | output ids only |
 | `lnr cycles --verbose` | show all columns |
-| `lnr cycle <nameOrNumber>` | show, create, update, or archive a cycle |
+| `lnr cycle <nameOrNumber>` | show, update, or archive an automatically generated cycle |
 | `lnr cycle <nameOrNumber> --team <string>` | team key |
 | `lnr cycle <nameOrNumber> --current` | show current active cycle |
 | `lnr cycle <nameOrNumber> --delete` | archive the cycle |
