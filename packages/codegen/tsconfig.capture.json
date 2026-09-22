@@ -1,0 +1,4 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["introspection.ts", "introspection.test.ts", "introspect-linear.ts", "import-sdk-schema.ts", "import-sdk-schema.test.ts", "api-inventory.ts", "api-inventory.test.ts"]
+}

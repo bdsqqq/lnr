@@ -24,6 +24,7 @@ jobs:
       - run: bun run generate
       - run: git diff --exit-code docs/command-reference.md packages/cli/src/generated/
       - run: bun run check
+      - run: bun run api:check
       - run: bun run test
 
   e2e:

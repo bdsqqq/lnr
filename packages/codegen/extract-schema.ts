@@ -97,7 +97,7 @@ interface ExtractedSchema {
   entities: Record<string, ExtractedEntity>;
   enums: Record<string, ExtractedEnum>;
   metadata: {
-    extractedAt: string;
+    extractedAt: string | null;
     totalEntities: number;
     totalEnums: number;
     totalDeprecatedFields: number;
@@ -294,7 +294,7 @@ async function main() {
     entities,
     enums,
     metadata: {
-      extractedAt: new Date().toISOString(),
+      extractedAt: schema.provenance?.captureCompletedAt ?? null,
       totalEntities: Object.keys(entities).length,
       totalEnums: Object.keys(enums).length,
       totalDeprecatedFields,
