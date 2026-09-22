@@ -74,10 +74,12 @@ two test files in `packages/cli/src/`:
 - `e2e-readonly.test.ts` — safe with any API key, read-only operations
 - `e2e-mutations.test.ts` — DANGER: creates/deletes data, sandbox org only
 
-mutation tests require `LNR_E2E_CONFIRM_ORG=<org-name>` env var in CI.
-locally they prompt interactively if the env var is unset.
+explicit live tests require `LINEAR_API_KEY`; mutation tests also require
+`LNR_E2E_CONFIRM_ORG=<org-name>`. missing credentials fail without prompting.
 
-cleanup of leftover state runs automatically at module level before tests.
+mutation teardown deletes only ids registered by the current run. unknown creation
+or deletion outcomes are reported for separately authorized recovery, never scavenged
+by name. ci serializes the shared sandbox; coordinate local runs separately.
 
 ci gives live e2e tests a 60s default per-test budget (`bun test --timeout 60000`)
 inside a 10-minute job cap. external api latency has exceeded the 5s unit
