@@ -6,21 +6,20 @@
  */
 
 import { describe, test, expect } from "bun:test";
-import { getApiKey, getClient } from "@bdsqqq/lnr-core";
+import { getClient } from "@bdsqqq/lnr-core";
+import { liveChildEnv, liveCredentials } from "./live-test-support";
 
-const API_KEY = getApiKey();
-if (!API_KEY) {
-  console.log("skipping e2e tests: no API key found (set LINEAR_API_KEY or add .lnr.json)");
-  process.exit(0);
-}
+const { key: API_KEY } = liveCredentials(process.env);
 
-const client = getClient();
+const client = getClient(API_KEY);
 const org = await client.organization;
 console.log(`testing org: ${org.name}`);
 
 async function lnr(...args: string[]): Promise<string> {
   const proc = Bun.spawn(["bun", "run", "dev", "--", ...args], {
     cwd: import.meta.dir + "/../..",
+    env: liveChildEnv(process.env, API_KEY),
+    stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
   });
@@ -56,39 +55,23 @@ describe("e2e: read-only", () => {
   });
 
   test("list views", async () => {
-    try {
-      const out = await lnr("views");
-      expect(out).toBeDefined();
-    } catch {
-      // empty is fine
-    }
+    const out = await lnr("views", "--json");
+    expect(Array.isArray(JSON.parse(out))).toBe(true);
   });
 
   test("list templates", async () => {
-    try {
-      const out = await lnr("templates");
-      expect(out).toBeDefined();
-    } catch {
-      // empty is fine
-    }
+    const out = await lnr("templates", "--json");
+    expect(Array.isArray(JSON.parse(out))).toBe(true);
   });
 
   test("list notifications", async () => {
-    try {
-      const out = await lnr("notifications");
-      expect(out).toBeDefined();
-    } catch {
-      // empty is fine
-    }
+    const out = await lnr("notifications", "--json");
+    expect(Array.isArray(JSON.parse(out))).toBe(true);
   });
 
   test("list agent sessions", async () => {
-    try {
-      const out = await lnr("agent-sessions");
-      expect(out).toBeDefined();
-    } catch {
-      // empty is fine
-    }
+    const out = await lnr("agent-sessions", "--json");
+    expect(Array.isArray(JSON.parse(out))).toBe(true);
   });
 
   test("list initiatives (enterprise)", async () => {

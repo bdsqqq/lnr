@@ -64,11 +64,11 @@ prove an operation has stopped working.
    smoke-test the compiled binary; compilation alone is not execution evidence.
 6. **verify against linear without broadening authorization.** run read-only e2e
    separately. run mutations only with explicit approval and the confirmed sandbox
-   identity; current mutation tests perform cleanup at module load.
-   until 0097 scopes ownership, use a disposable sandbox exclusively: no concurrent
-   local/ci runs, and inspect and authorize existing cleanup candidates first.
-   today's cleanup matches team/project prefixes and generic view names, not just
-   fixtures owned by this invocation.
+   identity. both suites require an explicit key; mutations also require an exact
+   `LNR_E2E_CONFIRM_ORG`. teardown deletes only ids registered by this run, never
+   prior fixtures matched by a name prefix. uncertain write outcomes require manual,
+   separately authorized recovery. ci serializes its sandbox jobs; local runs still
+   need coordination. persisted-effect coverage remains tracked in 0097.
 
    ```bash
    bun test --timeout 60000 packages/cli/src/e2e-readonly.test.ts

@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, "feat/**"]
 
 jobs:
   validate:
@@ -28,6 +28,9 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    concurrency:
+      group: lnr-e2e-bdsqqq-sandbox
+      cancel-in-progress: false
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
