@@ -26,8 +26,9 @@ prove an operation has stopped working.
 2. **compare contracts before editing.** compare the old/new sdk and upstream
    graphql schema, including root operations, arguments, input/output types,
    enums, nullability, and deprecations. review public non-graphql api methods too.
-   the current introspector fetches selected entity/input types and enums, not the
-   root operation definitions; until 0088 lands, this comparison is a manual gate.
+   introspection now captures all named types and roots, validates the graph, and
+   publishes atomically. the previous snapshot remains accepted until a complete
+   capture succeeds; inspect its provenance rather than assuming it was refreshed.
 3. **refresh dependencies and metadata.** update only `@linear/sdk` in
    `packages/core/package.json`, then:
 
@@ -41,6 +42,13 @@ prove an operation has stopped working.
    inspect fetch failures, missing/null type results, and schema changes before
    accepting the snapshot. “0 failed” does not prove complete coverage. reconcile
    sdk/schema differences instead of assuming their publication times match.
+
+   separately refresh the pinned sdk-release schema: resolve the new release's
+   immutable commit and source digest in `packages/codegen/import-sdk-schema.ts`,
+   then run `bun run api:schema`, `bun run api:inventory`, and `bun run api:check`.
+   these artifacts are labelled `sdk-release`, not live captures. the inventory
+   preserves subscription roots and unclassified capabilities; its drift check
+   does not yet enforce coverage evidence.
 4. **map every change to executable behavior.** trace schema → cli input → operation
    inference → resolver → core/sdk payload, and sdk response → output. inspect
    both generated and hand-written commands. fix `generate-commands.ts` /
