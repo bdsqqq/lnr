@@ -69,39 +69,36 @@ export async function createGitAutomationState(
   client: LinearClient,
   input: CreateGitAutomationStateInput
 ): Promise<GitAutomationState | null> {
-  try {
-    const payload = await client.createGitAutomationState({
-      teamId: input.teamId,
-      event: EVENT_TO_SDK[input.event],
-      stateId: input.stateId,
-      targetBranchId: input.targetBranchId,
-    });
+  const payload = await client.createGitAutomationState({
+    teamId: input.teamId,
+    event: EVENT_TO_SDK[input.event],
+    stateId: input.stateId,
+    targetBranchId: input.targetBranchId,
+  });
 
-    if (!payload.success) {
-      return null;
-    }
-
-    const g = payload.gitAutomationState;
-    const state = await g.state;
-    const targetBranch = g.targetBranch;
-    const team = await g.team;
-
-    return {
-      id: g.id,
-      event: g.event.toLowerCase() as GitAutomationEvent,
-      stateId: state?.id ?? null,
-      stateName: state?.name ?? null,
-      targetBranchId: targetBranch?.id ?? null,
-      targetBranchPattern: targetBranch?.branchPattern ?? null,
-      teamId: team?.id ?? input.teamId,
-      teamKey: team?.key,
-      createdAt: g.createdAt,
-      updatedAt: g.updatedAt,
-      archivedAt: g.archivedAt ?? null,
-    };
-  } catch {
+  if (!payload.success) {
     return null;
   }
+
+  const g = payload.gitAutomationState;
+  // relation getters make follow-up requests; don't disguise their errors as failed creation.
+  const state = await g.state;
+  const targetBranch = g.targetBranch;
+  const team = await g.team;
+
+  return {
+    id: g.id,
+    event: g.event.toLowerCase() as GitAutomationEvent,
+    stateId: state?.id ?? null,
+    stateName: state?.name ?? null,
+    targetBranchId: targetBranch?.id ?? null,
+    targetBranchPattern: targetBranch?.branchPattern ?? null,
+    teamId: team?.id ?? input.teamId,
+    teamKey: team?.key,
+    createdAt: g.createdAt,
+    updatedAt: g.updatedAt,
+    archivedAt: g.archivedAt ?? null,
+  };
 }
 
 export async function updateGitAutomationState(

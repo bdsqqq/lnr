@@ -38,7 +38,7 @@ export const agentSessionInput = type({
 
 const sessionColumns: TableColumn<AgentSession>[] = [
   { header: "STATUS", value: (s) => s.status, width: 14 },
-  { header: "TYPE", value: (s) => s.type, width: 14 },
+  { header: "TYPE", value: (s) => s.type ?? "-", width: 14 },
   { header: "ISSUE", value: (s) => s.issueIdentifier ?? "-", width: 12 },
   { header: "CREATOR", value: (s) => s.creatorName ?? "-", width: 16 },
   {
@@ -205,7 +205,7 @@ export const agentSessionsRouter = router({
         }
 
         console.log(`status: ${session.status}`);
-        console.log(`type: ${session.type}`);
+    console.log(`type: ${session.type ?? "-"}`);
         console.log(`created: ${session.createdAt.toISOString()}`);
         if (session.issueIdentifier) {
           console.log(`issue: ${session.issueIdentifier}`);

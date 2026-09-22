@@ -120,7 +120,7 @@ export function extractSyncMeta(service: string, metadata: unknown): SyncMeta {
   return { type: "unknown" } satisfies SyncMeta;
 }
 
-function extractSyncInfo(syncedWith?: ExternalEntityInfo[]): CommentSyncInfo[] {
+function extractSyncInfo(syncedWith?: ExternalEntityInfo[] | null): CommentSyncInfo[] {
   if (!syncedWith) return [];
   return syncedWith.map((s) => ({
     service: s.service,

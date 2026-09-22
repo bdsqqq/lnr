@@ -40,3 +40,7 @@ dist/
 
 
 .env.test
+
+# release declarations must remain visible even with global markdown ignores
+!.changeset/
+!.changeset/*.md

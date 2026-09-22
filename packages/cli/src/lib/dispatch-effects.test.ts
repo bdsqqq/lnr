@@ -1,6 +1,11 @@
 import { test, expect, mock, describe, beforeEach } from "bun:test";
 
 const mockUpdateIssue = mock(async () => true);
+const mockCreateIssue = mock(async (..._args: unknown[]) => ({
+  id: "I3", identifier: "ENG-3", title: "new",
+}));
+const mockUpdateLabel = mock(async (..._args: unknown[]) => true);
+const mockCreateLabel = mock(async (..._args: unknown[]) => ({ id: "L1", name: "group" }));
 const mockGetIssue = mock(
   async () =>
     ({
@@ -68,11 +73,13 @@ mock.module("@bdsqqq/lnr-core", () => ({
   getIssue: mockGetIssue,
   updateIssue: mockUpdateIssue,
   listIssues: mockListIssues,
-  createIssue: mock(async () => ({
-    id: "I3",
-    identifier: "ENG-3",
-    title: "new",
-  })),
+  createIssue: mockCreateIssue,
+  updateLabel: mockUpdateLabel,
+  createLabel: mockCreateLabel,
+  getLabel: mock(async () => ({ id: "L1", name: "group" })),
+  listLabels: mock(async () => []),
+  deleteLabel: mock(async () => true),
+  resolveTeamByKey: mock(async () => "T1"),
   archiveIssue: mock(async () => true),
   findTeamByKeyOrName: mock(async () => ({ id: "T1", key: "ENG" })),
   getAvailableTeamKeys: mock(async () => ["ENG"]),
@@ -137,6 +144,7 @@ mock.module("./renderers/detail", () => ({
 
 mock.module("./adapters", () => ({
   issueToDetail: mock(() => ({})),
+  labelToDetail: mock(() => ({})),
 }));
 
 mock.module("../../hand-crafted/issue", () => ({
@@ -146,9 +154,13 @@ mock.module("../../hand-crafted/issue", () => ({
 mock.module("./arktype-config", () => ({}));
 
 const { generatedIssuesRouter } = await import("../generated/issue");
+const { generatedLabelsRouter } = await import("../generated/label");
 
 function resetAll() {
   mockUpdateIssue.mockClear();
+  mockCreateIssue.mockClear();
+  mockUpdateLabel.mockClear();
+  mockCreateLabel.mockClear();
   mockGetIssue.mockClear();
   mockGetClient.mockClear();
   mockClientIssue.mockClear();
@@ -199,6 +211,77 @@ describe("property D: flag → payload effect (issue update)", () => {
     expect(mockUpdateIssue).toHaveBeenCalled();
     const payload = (mockUpdateIssue.mock.calls[0] as unknown as unknown[])[2] as Record<string, unknown>;
     expect(payload.stateId).toBe("S1");
+  });
+});
+
+describe("refreshed api flag payloads", () => {
+  beforeEach(resetAll);
+
+  for (const idOrNew of ["ENG-1", "new"]) {
+    test(`argv empty release list reaches ${idOrNew} payload`, async () => {
+      const { createCli, FailedToExitError } = await import("trpc-cli");
+      await expect(createCli({ router: generatedIssuesRouter }).run({
+        argv: ["issue", idOrNew, "--release-ids", "[]",
+          ...(idOrNew === "new" ? ["--team", "ENG", "--title", "new"] : [])],
+        process: {
+          exit(code): never {
+            throw new FailedToExitError("test exit", { exitCode: code, cause: undefined });
+          },
+        },
+        logger: { info: () => {}, error: () => {} },
+      })).rejects.toMatchObject({ exitCode: 0 });
+      const payload = idOrNew === "new"
+        ? mockCreateIssue.mock.calls[0]?.[1]
+        : (mockUpdateIssue.mock.calls[0] as unknown as unknown[])[2];
+      expect(payload).toMatchObject({ releaseIds: [] });
+    });
+  }
+
+  for (const field of ["releaseIds", "addedReleaseIds", "removedReleaseIds"] as const) {
+    for (const value of [[], ["R1", "R2"]]) {
+      test(`${field} dispatches update and preserves ${JSON.stringify(value)}`, async () => {
+        await generatedIssuesRouter.createCaller({}).issue({ idOrNew: "ENG-1", [field]: value });
+        expect(mockUpdateIssue).toHaveBeenCalledTimes(1);
+        expect((mockUpdateIssue.mock.calls[0] as unknown as unknown[])[2]).toEqual({ [field]: value });
+      });
+    }
+  }
+
+  for (const inheritsSharedAccess of [false, true]) {
+    test(`inheritance preserves ${inheritsSharedAccess} on create and update`, async () => {
+      const caller = generatedIssuesRouter.createCaller({});
+      await caller.issue({ idOrNew: "ENG-1", inheritsSharedAccess });
+      expect((mockUpdateIssue.mock.calls[0] as unknown as unknown[])[2]).toEqual({ inheritsSharedAccess });
+      await caller.issue({ idOrNew: "new", team: "ENG", title: "new", releaseIds: ["R1"], inheritsSharedAccess });
+      expect(mockCreateIssue.mock.calls[0]?.[1]).toMatchObject({ releaseIds: ["R1"], inheritsSharedAccess });
+    });
+  }
+
+  for (const field of ["addedReleaseIds", "removedReleaseIds"] as const) {
+    test(`${field} rejects creation rather than silently dropping input`, async () => {
+      await expect(generatedIssuesRouter.createCaller({}).issue({
+        idOrNew: "new", team: "ENG", title: "new", [field]: ["R1"],
+      })).rejects.toThrow("require an existing issue");
+      expect(mockCreateIssue).not.toHaveBeenCalled();
+    });
+  }
+
+  for (const groupType of ["singleSelect", "multiSelect", "null"] as const) {
+    test(`label group ${groupType} reaches create and update`, async () => {
+      const caller = generatedLabelsRouter.createCaller({});
+      const expected = groupType === "null" ? null : groupType;
+      await caller.label({ id: "L1", groupType });
+      expect(mockUpdateLabel.mock.calls[0]?.[2]).toEqual({ groupType: expected });
+      await caller.label({ id: "new", name: "group", team: "ENG", groupType });
+      expect(mockCreateLabel.mock.calls[0]?.[1]).toMatchObject({ groupType: expected });
+    });
+  }
+
+  test("invalid label group type fails before mutation", async () => {
+    await expect(generatedLabelsRouter.createCaller({}).label({
+      id: "L1", groupType: "invalid" as "singleSelect",
+    })).rejects.toThrow();
+    expect(mockUpdateLabel).not.toHaveBeenCalled();
   });
 });
 

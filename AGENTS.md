@@ -4,7 +4,7 @@
 
 ```bash
 bun run check    # typecheck all packages
-bun run test     # run tests
+bun run test     # offline unit tests; excludes live e2e
 bun run dev      # run cli in dev mode
 bun run build    # build binary
 bun run generate # codegen + command reference (docs/command-reference.md)
@@ -51,6 +51,13 @@ bun run packages/codegen/generate-commands.ts
 
 entity support configured in `packages/codegen/entity-config.ts`.
 
+### updating linear
+
+follow [the api update runbook](docs/updating-linear-api.md), including its
+schema → dispatch → payload checks and sdk 95.1.0 blind spots. parity tasks are
+0087–0098 in `.todo.md`. an sdk bump, generated flags, and green ci do not establish
+full api coverage; root operation introspection and the coverage gate remain TODOs.
+
 ### before shipping
 - run `bun run check` (typecheck)
 - run `bun run test` (tests)
@@ -58,6 +65,10 @@ entity support configured in `packages/codegen/entity-config.ts`.
 - load `git` skill before commit
 
 ### e2e tests
+
+cli unit suites run with `--isolate` because their module mocks replace shared
+core/output exports. keep live e2e excluded from the default test script:
+their module-level credential checks can exit before unit suites execute.
 
 two test files in `packages/cli/src/`:
 - `e2e-readonly.test.ts` — safe with any API key, read-only operations
@@ -67,6 +78,11 @@ mutation tests require `LNR_E2E_CONFIRM_ORG=<org-name>` env var in CI.
 locally they prompt interactively if the env var is unset.
 
 cleanup of leftover state runs automatically at module level before tests.
+
+ci gives live e2e tests a 60s default per-test budget (`bun test --timeout 60000`)
+inside a 10-minute job cap. external api latency has exceeded the 5s unit
+default and 15s multi-command budget. do not automatically retry mutations:
+an interrupted client does not prove that the server rejected the write.
 
 ### benchmarking
 

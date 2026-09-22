@@ -96,6 +96,8 @@ export interface CreateIssueInput {
   labelIds?: string[];
   parentId?: string;
   projectId?: string;
+  releaseIds?: string[];
+  inheritsSharedAccess?: boolean;
 }
 
 export interface UpdateIssueInput {
@@ -105,6 +107,10 @@ export interface UpdateIssueInput {
   labelIds?: string[];
   parentId?: string;
   prioritySortOrder?: number;
+  releaseIds?: string[];
+  addedReleaseIds?: string[];
+  removedReleaseIds?: string[];
+  inheritsSharedAccess?: boolean;
 }
 
 export interface BatchIssueResult {
@@ -369,7 +375,7 @@ export type AgentSessionType = "commentThread";
 export interface AgentSession {
   id: string;
   status: AgentSessionStatus;
-  type: AgentSessionType;
+  type: AgentSessionType | null;
   summary?: string | null;
   externalLink?: string | null;
   plan?: Record<string, unknown> | null;

@@ -135,7 +135,7 @@ export async function deleteView(
 }
 
 function mapPreferencesValues(
-  values: { issueGrouping?: string; showCompletedIssues?: string; viewOrdering?: string } | undefined
+  values: { issueGrouping?: string | null; showCompletedIssues?: string | null; viewOrdering?: string | null } | null | undefined
 ): ViewPreferencesValues {
   return {
     issueGrouping: values?.issueGrouping ?? null,

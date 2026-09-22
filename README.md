@@ -84,6 +84,11 @@ plus: `lnr auth`, `lnr config`, `lnr me`, `lnr search`.
 
 every list command supports `--json`, `--quiet`, and `--verbose`. see the full [command reference](docs/command-reference.md) for all flags and invocations.
 
+`cycle new` is no longer supported by linear's api
+([upstream deprecation](https://github.com/linear/linear/blob/44c3fa4791a617f8812ca83cdd64df057b74468a/packages/sdk/src/schema.graphql#L24048-L24056)).
+enable cycles in team settings so linear generates them automatically, then use
+`lnr cycles --team ENG` to find a cycle to view, update, or archive.
+
 ## architecture
 
 lnr uses **schema-driven code generation** to stay in sync with Linear's API while keeping full control over CLI UX.
@@ -105,7 +110,8 @@ Linear GraphQL Schema
 - **trpc router wiring** — command registration and dispatch
 - **handler dispatch** — routes to the right function
 
-when Linear adds a field to `IssueUpdateInput`, re-run codegen and the flag appears automatically.
+schema-derived flags still need dispatch and payload wiring. regeneration alone
+does not prove a new field works; see the [api update workflow](docs/updating-linear-api.md).
 
 ### what's hand-crafted (full control)
 
@@ -136,15 +142,19 @@ resolvers live in `packages/core/src/resolvers.ts` and throw typed errors with a
 ### regenerating commands
 
 ```bash
-# regenerate all entity commands (issue, project, label, doc)
-bun run packages/codegen/generate-commands.ts
-
 # refresh schema from Linear API (requires LINEAR_API_KEY)
 bun run packages/codegen/introspect-linear.ts
 bun run packages/codegen/extract-schema.ts
+
+# regenerate issue, project, label, doc commands and the command reference
+bun run generate
 ```
 
 generated files live in `packages/cli/src/generated/`.
+
+for sdk upgrades, compatibility checks, known coverage gaps, and verification,
+follow [updating the linear api](docs/updating-linear-api.md). full public api
+parity is tracked in [.todo.md](.todo.md); it is not implemented yet.
 
 ### CLI-only flags
 
@@ -160,6 +170,7 @@ architecture decisions in [`docs/adr/`](docs/adr/):
 - [0005-entity-expansion-roadmap](docs/adr/0005-entity-expansion-roadmap.md)
 - [0006-todo-task-tracking](docs/adr/0006-todo-task-tracking.md)
 - [0007-entity-config-v2-exploration](docs/adr/0007-entity-config-v2-exploration.md)
+- [0008-api-refresh-payload-coverage](docs/adr/0008-api-refresh-payload-coverage.md)
 
 ## development
 

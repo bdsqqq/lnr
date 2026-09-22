@@ -49,6 +49,7 @@ export const labelInput = type({
   "name?": type("string").describe("label name (required for new)"),
   "description?": type("string").describe("label description"),
   "color?": type("string").describe("hex color code"),
+  "groupType?": type("'singleSelect' | 'multiSelect' | 'null'").describe("label group type; null resets groups to singleSelect"),
 });
 
 type LabelInput = typeof labelInput.infer;
@@ -66,7 +67,7 @@ export const labelOperations = ["create", "read", "update", "delete"] as const;
 type Operation = (typeof labelOperations)[number];
 
 export const labelMutationFlags: readonly (keyof LabelInput)[] = [
-  "name", "color", "description"
+  "name", "color", "description", "groupType"
 ] as const;
 
 export function inferOperation(input: LabelInput): Operation {
@@ -162,11 +163,13 @@ async function handleUpdateLabel(
       name?: string;
       color?: string;
       description?: string;
+      groupType?: "singleSelect" | "multiSelect" | null;
     } = {};
 
     if (input.name !== undefined) updatePayload.name = input.name;
     if (input.color !== undefined) updatePayload.color = input.color;
     if (input.description !== undefined) updatePayload.description = input.description;
+    if (input.groupType !== undefined) updatePayload.groupType = input.groupType === "null" ? null : input.groupType;
 
     if (Object.keys(updatePayload).length > 0) {
       const success = await updateLabel(client, id, updatePayload);
@@ -199,6 +202,7 @@ async function handleCreateLabel(input: LabelInput): Promise<void> {
       teamId,
       color: input.color,
       description: input.description,
+      groupType: input.groupType === "null" ? null : input.groupType,
     });
 
     if (label) {

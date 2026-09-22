@@ -34,7 +34,7 @@ export const listCyclesInput = type({
 });
 
 export const cycleInput = type({
-  nameOrNumber: type("string").configure({ positional: true }).describe("cycle name, number, or 'new'"),
+  nameOrNumber: type("string").configure({ positional: true }).describe("cycle name or number; 'new' is no longer supported by Linear"),
   team: type("string").describe("team key"),
   "name?": type("string").describe("cycle name"),
   "description?": type("string").describe("cycle description"),
@@ -380,7 +380,7 @@ export const cyclesRouter = router({
 
   cycle: procedure
     .meta({
-      description: "show, create, update, or archive a cycle",
+      description: "show, update, or archive an automatically generated cycle",
     })
     .input(cycleInput)
     .mutation(async ({ input }) => {

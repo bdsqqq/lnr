@@ -30,7 +30,7 @@ export async function listAgentSessions(
     results.push({
       id: s.id,
       status: s.status,
-      type: s.type,
+      type: s.type ?? null,
       summary: s.summary ?? null,
       externalLink: s.externalLink ?? null,
       plan: s.plan ?? null,
@@ -67,7 +67,7 @@ export async function getAgentSession(
     return {
       id: s.id,
       status: s.status,
-      type: s.type,
+      type: s.type ?? null,
       summary: s.summary ?? null,
       externalLink: s.externalLink ?? null,
       plan: s.plan ?? null,

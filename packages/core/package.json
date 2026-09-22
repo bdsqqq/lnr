@@ -27,7 +27,7 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@linear/sdk": "^68.0.0"
+    "@linear/sdk": "^95.1.0"
   },
   "devDependencies": {
     "@types/bun": "^1.1.0"
