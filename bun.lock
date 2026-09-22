@@ -19,7 +19,7 @@
     },
     "packages/cli": {
       "name": "@bdsqqq/lnr-cli",
-      "version": "1.6.0",
+      "version": "2.0.2",
       "bin": {
         "lnr": "./src/cli.ts",
       },
@@ -36,9 +36,9 @@
     },
     "packages/core": {
       "name": "@bdsqqq/lnr-core",
-      "version": "1.6.0",
+      "version": "2.0.2",
       "dependencies": {
-        "@linear/sdk": "^68.0.0",
+        "@linear/sdk": "^95.1.0",
       },
       "devDependencies": {
         "@types/bun": "^1.1.0",
@@ -97,7 +97,7 @@
 
     "@inquirer/external-editor": ["@inquirer/external-editor@1.0.3", "", { "dependencies": { "chardet": "^2.1.1", "iconv-lite": "^0.7.0" }, "peerDependencies": { "@types/node": ">=18" }, "optionalPeers": ["@types/node"] }, "sha512-RWbSrDiYmO4LbejWY7ttpxczuwQyZLBUyygsA9Nsv95hpzUWwnNTVQmAq3xuh7vNwCp07UTmE5i11XAEExx4RA=="],
 
-    "@linear/sdk": ["@linear/sdk@68.0.0", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.1.0", "graphql": "^15.4.0" } }, "sha512-V3MMIcV3PkEoD/ZEjuPCQVk6dnmg7qHVTYsLLtuV32rRPkvpC3YEIhJ5K8RseOcJnuuQJlVTvuLPBu6e1gC+7w=="],
+    "@linear/sdk": ["@linear/sdk@95.1.0", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.2.0" } }, "sha512-c1BzIWqVEDcTV42EuEOVFYrYjmsqFBmaR/105xbOY9SmMPBrtcE4+BNHFfTa4WtrWN2cL3EJ9c+zcccZxNSWsQ=="],
 
     "@manypkg/find-root": ["@manypkg/find-root@1.1.0", "", { "dependencies": { "@babel/runtime": "^7.5.5", "@types/node": "^12.7.1", "find-up": "^4.1.0", "fs-extra": "^8.1.0" } }, "sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA=="],
 

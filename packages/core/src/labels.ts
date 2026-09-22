@@ -1,4 +1,10 @@
 import type { LinearClient } from "@linear/sdk";
+import { LinearDocument } from "@linear/sdk";
+
+const groupTypes = {
+  singleSelect: LinearDocument.LabelGroupType.SingleSelect,
+  multiSelect: LinearDocument.LabelGroupType.MultiSelect,
+};
 
 export interface Label {
   id: string;
@@ -53,13 +59,14 @@ export async function getLabel(
 
 export async function createLabel(
   client: LinearClient,
-  input: { name: string; teamId?: string; color?: string; description?: string }
+  input: { name: string; teamId?: string; color?: string; description?: string; groupType?: keyof typeof groupTypes | null }
 ): Promise<Label | null> {
   const payload = await client.createIssueLabel({
     name: input.name,
     teamId: input.teamId,
     color: input.color,
     description: input.description,
+    groupType: input.groupType == null ? input.groupType : groupTypes[input.groupType],
   });
 
   if (!payload.success) {
@@ -82,9 +89,12 @@ export async function createLabel(
 export async function updateLabel(
   client: LinearClient,
   id: string,
-  input: { name?: string; color?: string; description?: string }
+  input: { name?: string; color?: string; description?: string; groupType?: keyof typeof groupTypes | null }
 ): Promise<boolean> {
-  const payload = await client.updateIssueLabel(id, input);
+  const payload = await client.updateIssueLabel(id, {
+    ...input,
+    groupType: input.groupType == null ? input.groupType : groupTypes[input.groupType],
+  });
   return payload.success;
 }
 

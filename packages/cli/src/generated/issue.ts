@@ -86,6 +86,9 @@ export const issueInput = type({
   "parent?": type("string").describe("set parent issue identifier"),
   "priority?": type("string").describe("set priority (urgent, high, medium, low, none)"),
   "estimate?": type("number").describe("set estimate points"),
+  "releaseIds?": type("string[]").describe("replace release ids; pass '[]' to clear"),
+  "addedReleaseIds?": type("string[]").describe("The identifiers of the releases to be added to this issue."),
+  "removedReleaseIds?": type("string[]").describe("The identifiers of the releases to be removed from this issue."),
   "team?": type("string").describe("team key (required for new)"),
   "cycle?": type("string").describe("set cycle"),
   "project?": type("string").describe("set project name"),
@@ -93,6 +96,7 @@ export const issueInput = type({
   "state?": type("string").describe("set workflow state"),
   "prioritySortOrder?": type("number").describe("The position of the issue related to other issues, when ordered by priority."),
   "dueDate?": type("string").describe("set due date (YYYY-MM-DD)"),
+  "inheritsSharedAccess?": type("boolean").describe("Whether this issue should inherit shared access from its parent issue."),
   "label?": type("string").describe("set label (+name to add, -name to remove)"),
   "comment?": type("string").describe("add comment to issue"),
   "blocks?": type("string").describe("add blocks relation to issue"),
@@ -138,7 +142,7 @@ export const issueOperations = ["create", "read", "update", "archive"] as const;
 type Operation = (typeof issueOperations)[number];
 
 export const issueMutationFlags: readonly (keyof IssueInput)[] = [
-  "state", "assignee", "priority", "label", "comment", "editComment", "replyTo", "deleteComment", "parent", "blocks", "blockedBy", "relatesTo", "title", "description", "project", "cycle", "estimate", "dueDate", "milestone", "pr", "prioritySortOrder", "subscribe", "unsubscribe", "react", "emoji", "unreact"
+  "state", "assignee", "priority", "label", "comment", "editComment", "replyTo", "deleteComment", "parent", "blocks", "blockedBy", "relatesTo", "title", "description", "project", "cycle", "estimate", "dueDate", "milestone", "pr", "prioritySortOrder", "releaseIds", "addedReleaseIds", "removedReleaseIds", "inheritsSharedAccess", "subscribe", "unsubscribe", "react", "emoji", "unreact"
 ] as const;
 
 export function inferOperation(input: IssueInput): Operation {
@@ -337,6 +341,12 @@ async function handleUpdateIssue(
     }
 
     const updatePayload: Record<string, unknown> = {};
+    for (const field of ["releaseIds", "addedReleaseIds", "removedReleaseIds", "inheritsSharedAccess"] as const) {
+      if (input[field] !== undefined) updatePayload[field] = input[field];
+    }
+    if (input.releaseIds?.length === 1 && input.releaseIds[0] === "[]") {
+      updatePayload.releaseIds = [];
+    }
     const rawIssue = await client.issue(issue.id);
     const teamRef = await rawIssue.team;
     if (!teamRef) {
@@ -540,6 +550,9 @@ async function handleUpdateIssue(
 }
 
 async function handleCreateIssue(input: IssueInput): Promise<void> {
+  if (input.addedReleaseIds !== undefined || input.removedReleaseIds !== undefined) {
+    exitWithError("--added-release-ids and --removed-release-ids require an existing issue", "use --release-ids when creating an issue");
+  }
   if (!input.team) {
     exitWithError("--team is required", 'usage: lnr issue new --team ENG --title "..."');
   }
@@ -571,6 +584,8 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
       stateId?: string;
       estimate?: number;
       dueDate?: string;
+      releaseIds?: string[];
+      inheritsSharedAccess?: boolean;
     } = {
       teamId: team.id,
       title: input.title,
@@ -604,6 +619,10 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
     if (input.state) createPayload.stateId = await resolveStateName(client, team.id, input.state);
     if (input.estimate !== undefined) createPayload.estimate = input.estimate;
     if (input.dueDate) createPayload.dueDate = input.dueDate;
+    if (input.releaseIds !== undefined) {
+      createPayload.releaseIds = input.releaseIds.length === 1 && input.releaseIds[0] === "[]" ? [] : input.releaseIds;
+    }
+    if (input.inheritsSharedAccess !== undefined) createPayload.inheritsSharedAccess = input.inheritsSharedAccess;
 
     const issue = await createIssue(client, createPayload);
 

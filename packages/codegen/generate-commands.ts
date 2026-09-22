@@ -268,6 +268,8 @@ const issueConfig: EntityConfig = {
         arktypeExpr = 'type("number").describe("set estimate points")';
       } else if (cliName === "dueDate") {
         arktypeExpr = 'type("string").describe("set due date (YYYY-MM-DD)")';
+      } else if (cliName === "releaseIds") {
+        arktypeExpr = `type("string[]").describe("replace release ids; pass '[]' to clear")`;
       } else {
         const desc = field.description.replace(/"/g, '\\"');
         const baseType = graphqlTypeToArktype(field);
@@ -316,6 +318,7 @@ const issueConfig: EntityConfig = {
       "parent", "blocks", "blockedBy", "relatesTo", "title", "description",
       "project", "cycle", "estimate", "dueDate", "milestone",
       "pr", "prioritySortOrder",
+      "releaseIds", "addedReleaseIds", "removedReleaseIds", "inheritsSharedAccess",
       // issue-specific subscriptions (not from NotificationSubscription entity)
       "subscribe", "unsubscribe"
     ];
@@ -578,6 +581,8 @@ const labelConfig: EntityConfig = {
         arktypeExpr = 'type("string").describe("label name (required for new)")';
       } else if (cliName === "description") {
         arktypeExpr = 'type("string").describe("label description")';
+      } else if (cliName === "groupType") {
+        arktypeExpr = `type("'singleSelect' | 'multiSelect' | 'null'").describe("label group type; null resets groups to singleSelect")`;
       } else {
         const desc = field.description.replace(/"/g, '\\"');
         const baseType = graphqlTypeToArktype(field);
@@ -600,7 +605,7 @@ const labelConfig: EntityConfig = {
 type Operation = (typeof labelOperations)[number];
 
 export const labelMutationFlags: readonly (keyof LabelInput)[] = [
-  "name", "color", "description"
+  "name", "color", "description", "groupType"
 ] as const;
 
 export function inferOperation(input: LabelInput): Operation {
@@ -1255,6 +1260,12 @@ function generateIssueUpdateHandler(): string {
     }
 
     const updatePayload: Record<string, unknown> = {};
+    for (const field of ["releaseIds", "addedReleaseIds", "removedReleaseIds", "inheritsSharedAccess"] as const) {
+      if (input[field] !== undefined) updatePayload[field] = input[field];
+    }
+    if (input.releaseIds?.length === 1 && input.releaseIds[0] === "[]") {
+      updatePayload.releaseIds = [];
+    }
     const rawIssue = await client.issue(issue.id);
     const teamRef = await rawIssue.team;
     if (!teamRef) {
@@ -1460,6 +1471,9 @@ function generateIssueUpdateHandler(): string {
 
 function generateIssueCreateHandler(): string {
   return `async function handleCreateIssue(input: IssueInput): Promise<void> {
+  if (input.addedReleaseIds !== undefined || input.removedReleaseIds !== undefined) {
+    exitWithError("--added-release-ids and --removed-release-ids require an existing issue", "use --release-ids when creating an issue");
+  }
   if (!input.team) {
     exitWithError("--team is required", 'usage: lnr issue new --team ENG --title "..."');
   }
@@ -1491,6 +1505,8 @@ function generateIssueCreateHandler(): string {
       stateId?: string;
       estimate?: number;
       dueDate?: string;
+      releaseIds?: string[];
+      inheritsSharedAccess?: boolean;
     } = {
       teamId: team.id,
       title: input.title,
@@ -1524,6 +1540,10 @@ function generateIssueCreateHandler(): string {
     if (input.state) createPayload.stateId = await resolveStateName(client, team.id, input.state);
     if (input.estimate !== undefined) createPayload.estimate = input.estimate;
     if (input.dueDate) createPayload.dueDate = input.dueDate;
+    if (input.releaseIds !== undefined) {
+      createPayload.releaseIds = input.releaseIds.length === 1 && input.releaseIds[0] === "[]" ? [] : input.releaseIds;
+    }
+    if (input.inheritsSharedAccess !== undefined) createPayload.inheritsSharedAccess = input.inheritsSharedAccess;
 
     const issue = await createIssue(client, createPayload);
 
@@ -2187,11 +2207,13 @@ function generateLabelUpdateHandler(): string {
       name?: string;
       color?: string;
       description?: string;
+      groupType?: "singleSelect" | "multiSelect" | null;
     } = {};
 
     if (input.name !== undefined) updatePayload.name = input.name;
     if (input.color !== undefined) updatePayload.color = input.color;
     if (input.description !== undefined) updatePayload.description = input.description;
+    if (input.groupType !== undefined) updatePayload.groupType = input.groupType === "null" ? null : input.groupType;
 
     if (Object.keys(updatePayload).length > 0) {
       const success = await updateLabel(client, id, updatePayload);
@@ -2226,6 +2248,7 @@ function generateLabelCreateHandler(): string {
       teamId,
       color: input.color,
       description: input.description,
+      groupType: input.groupType === "null" ? null : input.groupType,
     });
 
     if (label) {

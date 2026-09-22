@@ -67,6 +67,7 @@ generated for UX review. each row = one valid invocation.
 | `lnr issues --team <string>` | filter by team key |
 | `lnr issues --verbose` | show all columns |
 | `lnr issue <idOrNew>` | show or update a issue, or create with 'new' |
+| `lnr issue <idOrNew> --added-release-ids <string>` | The identifiers of the releases to be added to this issue. |
 | `lnr issue <idOrNew> --archive` | archive the issue |
 | `lnr issue <idOrNew> --assignee <string>` | set assignee by email or @me |
 | `lnr issue <idOrNew> --blocked-by <string>` | add blocked-by relation to issue |
@@ -81,6 +82,7 @@ generated for UX review. each row = one valid invocation.
 | `lnr issue <idOrNew> --edit-comment <string>` | comment id to edit (requires --text) |
 | `lnr issue <idOrNew> --emoji <string>` | emoji for --react |
 | `lnr issue <idOrNew> --estimate <number>` | set estimate points |
+| `lnr issue <idOrNew> --inherits-shared-access` | Whether this issue should inherit shared access from its parent issue. |
 | `lnr issue <idOrNew> --json` | output as json |
 | `lnr issue <idOrNew> --label <string>` | set label (+name to add, -name to remove) |
 | `lnr issue <idOrNew> --milestone <string>` | set milestone name (requires --project) |
@@ -92,6 +94,8 @@ generated for UX review. each row = one valid invocation.
 | `lnr issue <idOrNew> --project <string>` | set project name |
 | `lnr issue <idOrNew> --react <string>` | entity id to add reaction (requires --emoji) |
 | `lnr issue <idOrNew> --relates-to <string>` | add relates-to relation to issue |
+| `lnr issue <idOrNew> --release-ids <string>` | replace release ids; pass '[]' to clear |
+| `lnr issue <idOrNew> --removed-release-ids <string>` | The identifiers of the releases to be removed from this issue. |
 | `lnr issue <idOrNew> --reply-to <string>` | comment id to reply to (requires --text) |
 | `lnr issue <idOrNew> --state <string>` | set workflow state |
 | `lnr issue <idOrNew> --sub-issues` | list sub-issues |
@@ -155,6 +159,7 @@ generated for UX review. each row = one valid invocation.
 | `lnr label <id> --color <string>` | hex color code |
 | `lnr label <id> --delete` | delete the label |
 | `lnr label <id> --description <string>` | label description |
+| `lnr label <id> --group-type <string>` | label group type; null resets groups to singleSelect |
 | `lnr label <id> --json` | output as json |
 | `lnr label <id> --name <string>` | label name (required for new) |
 | `lnr label <id> --team <string>` | team key (required for new) |

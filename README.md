@@ -160,6 +160,7 @@ architecture decisions in [`docs/adr/`](docs/adr/):
 - [0005-entity-expansion-roadmap](docs/adr/0005-entity-expansion-roadmap.md)
 - [0006-todo-task-tracking](docs/adr/0006-todo-task-tracking.md)
 - [0007-entity-config-v2-exploration](docs/adr/0007-entity-config-v2-exploration.md)
+- [0008-api-refresh-payload-coverage](docs/adr/0008-api-refresh-payload-coverage.md)
 
 ## development
 
