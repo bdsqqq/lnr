@@ -110,7 +110,8 @@ Linear GraphQL Schema
 - **trpc router wiring** — command registration and dispatch
 - **handler dispatch** — routes to the right function
 
-when Linear adds a field to `IssueUpdateInput`, re-run codegen and the flag appears automatically.
+schema-derived flags still need dispatch and payload wiring. regeneration alone
+does not prove a new field works; see the [api update workflow](docs/updating-linear-api.md).
 
 ### what's hand-crafted (full control)
 
@@ -141,15 +142,19 @@ resolvers live in `packages/core/src/resolvers.ts` and throw typed errors with a
 ### regenerating commands
 
 ```bash
-# regenerate all entity commands (issue, project, label, doc)
-bun run packages/codegen/generate-commands.ts
-
 # refresh schema from Linear API (requires LINEAR_API_KEY)
 bun run packages/codegen/introspect-linear.ts
 bun run packages/codegen/extract-schema.ts
+
+# regenerate issue, project, label, doc commands and the command reference
+bun run generate
 ```
 
 generated files live in `packages/cli/src/generated/`.
+
+for sdk upgrades, compatibility checks, known coverage gaps, and verification,
+follow [updating the linear api](docs/updating-linear-api.md). full public api
+parity is tracked in [.todo.md](.todo.md); it is not implemented yet.
 
 ### CLI-only flags
 

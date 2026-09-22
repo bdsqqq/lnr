@@ -51,6 +51,13 @@ bun run packages/codegen/generate-commands.ts
 
 entity support configured in `packages/codegen/entity-config.ts`.
 
+### updating linear
+
+follow [the api update runbook](docs/updating-linear-api.md), including its
+schema → dispatch → payload checks and sdk 95.1.0 blind spots. parity tasks are
+0087–0098 in `.todo.md`. an sdk bump, generated flags, and green ci do not establish
+full api coverage; root operation introspection and the coverage gate remain TODOs.
+
 ### before shipping
 - run `bun run check` (typecheck)
 - run `bun run test` (tests)
