@@ -279,7 +279,7 @@ describe("e2e: mutations", () => {
       const out = await lnr("issues", "--team", TEST_TEAM_KEY);
       expect(out).toContain("Batch Issue 1");
       expect(out).toContain("Batch Issue 2");
-    }, 15000);
+    }, 60000);
 
     test("batch update priority", async () => {
       const json = await lnr("issues", "--team", TEST_TEAM_KEY, "--json");
@@ -382,7 +382,7 @@ describe("e2e: mutations", () => {
       const automation = created[0]!;
       expect(automation).toMatchObject({ teamId, stateId: inProgressState.id });
       automationId = automation.id;
-    }, 15000);
+    }, 60000);
 
     test("list git automations after create", async () => {
       expect(automationId).toBeDefined();

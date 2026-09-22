@@ -72,6 +72,11 @@ locally they prompt interactively if the env var is unset.
 
 cleanup of leftover state runs automatically at module level before tests.
 
+ci gives live e2e tests a 60s default per-test budget (`bun test --timeout 60000`)
+inside a 10-minute job cap. external api latency has exceeded the 5s unit
+default and 15s multi-command budget. do not automatically retry mutations:
+an interrupted client does not prove that the server rejected the write.
+
 ### benchmarking
 
 `packages/cli/src/bench-lnr-overhead.ts` measures per-call cost of the `lnr()`
