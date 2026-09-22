@@ -111,34 +111,30 @@ export async function createCycle(
   client: LinearClient,
   input: CreateCycleInput
 ): Promise<Cycle | null> {
-  try {
-    const payload = await client.createCycle({
-      teamId: input.teamId,
-      name: input.name,
-      description: input.description,
-      startsAt: new Date(input.startsAt),
-      endsAt: new Date(input.endsAt),
-    });
+  const payload = await client.createCycle({
+    teamId: input.teamId,
+    name: input.name,
+    description: input.description,
+    startsAt: new Date(input.startsAt),
+    endsAt: new Date(input.endsAt),
+  });
 
-    const cycle = await payload.cycle;
+  if (!payload.success) return null;
 
-    if (!cycle) {
-      return null;
-    }
+  // this sdk getter makes another request; let the cli report failures from either phase.
+  const cycle = await payload.cycle;
+  if (!cycle) return null;
 
-    return {
-      id: cycle.id,
-      number: cycle.number,
-      name: cycle.name,
-      description: cycle.description,
-      startsAt: cycle.startsAt,
-      endsAt: cycle.endsAt,
-      completedAt: cycle.completedAt,
-      progress: cycle.progress,
-    };
-  } catch {
-    return null;
-  }
+  return {
+    id: cycle.id,
+    number: cycle.number,
+    name: cycle.name,
+    description: cycle.description,
+    startsAt: cycle.startsAt,
+    endsAt: cycle.endsAt,
+    completedAt: cycle.completedAt,
+    progress: cycle.progress,
+  };
 }
 
 export async function updateCycle(

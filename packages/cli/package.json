@@ -22,7 +22,7 @@
     "dev": "bun run src/cli.ts",
     "check": "tsc --noEmit",
     "build": "bun build ./src/cli.ts --compile --outfile lnr",
-    "test": "bun test"
+    "test": "bun test --isolate --path-ignore-patterns '**/e2e-*.test.ts'"
   },
   "dependencies": {
     "@bdsqqq/lnr-core": "workspace:*",

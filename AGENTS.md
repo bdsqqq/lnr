@@ -4,7 +4,7 @@
 
 ```bash
 bun run check    # typecheck all packages
-bun run test     # run tests
+bun run test     # offline unit tests; excludes live e2e
 bun run dev      # run cli in dev mode
 bun run build    # build binary
 bun run generate # codegen + command reference (docs/command-reference.md)
@@ -58,6 +58,10 @@ entity support configured in `packages/codegen/entity-config.ts`.
 - load `git` skill before commit
 
 ### e2e tests
+
+cli unit suites run with `--isolate` because their module mocks replace shared
+core/output exports. keep live e2e excluded from the default test script:
+their module-level credential checks can exit before unit suites execute.
 
 two test files in `packages/cli/src/`:
 - `e2e-readonly.test.ts` — safe with any API key, read-only operations
