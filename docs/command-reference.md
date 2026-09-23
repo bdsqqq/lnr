@@ -14,6 +14,16 @@ generated for UX review. each row = one valid invocation.
 | `lnr upload <file> --filename <string>` | remote filename; defaults to local basename |
 | `lnr upload <file> --metadata <string>` | json metadata file |
 | `lnr upload <file> --public` | explicitly request public asset visibility |
+| `lnr webhook verify <file>` | verify signed webhook bytes locally and print their payload |
+| `lnr webhook verify <file> --signature <string>` | linear-signature header value |
+| `lnr webhook verify <file> --max-body-bytes <number>` | accepted body limit; default 1048576 bytes |
+| `lnr webhook verify <file> --secret-env <string>` | signing-secret environment variable; default LINEAR_WEBHOOK_SECRET |
+| `lnr webhook serve` | preview or explicitly start a signed webhook receiver |
+| `lnr webhook serve --execute` | explicitly authorize opening the listener |
+| `lnr webhook serve --host <string>` | bind address; default 127.0.0.1 |
+| `lnr webhook serve --max-body-bytes <number>` | accepted body limit; default 1048576 bytes |
+| `lnr webhook serve --port <number>` | bind port; default 8787; zero selects a free port |
+| `lnr webhook serve --secret-env <string>` | signing-secret environment variable; default LINEAR_WEBHOOK_SECRET |
 | `lnr auth [apiKey]` | authenticate with Linear API |
 | `lnr auth [apiKey] --logout` | clear stored credentials |
 | `lnr auth [apiKey] --whoami` | show current authenticated user |

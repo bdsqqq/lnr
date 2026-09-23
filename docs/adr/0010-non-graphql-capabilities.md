@@ -2,7 +2,7 @@
 
 ## status
 
-accepted; upload binding implemented, other bindings and live proof incomplete.
+accepted; upload and webhook bindings implemented; OAuth and live proof incomplete.
 
 ## decision
 
