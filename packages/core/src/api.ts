@@ -184,7 +184,9 @@ export async function executeApi(
     const client = clientFactory();
     attempted = true;
     const response = await client.client.rawRequest(options.document, options.variables);
-    if (!record(response) || !Object.hasOwn(response, "data")) throw new Error("missing response data");
+    if (!record(response) || (response.data !== null && !record(response.data))) {
+      throw new Error("missing or malformed response data");
+    }
     const errors = response.errors?.map(error => sanitizeApiError(error, selectedNames));
     return {
       ok: !errors?.length, executed: true, operation, data: response.data,

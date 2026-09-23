@@ -28,11 +28,14 @@ export const listAgentSessionsInput = type({
 });
 
 export const agentSessionInput = type({
+  "+": "reject",
   id: type("string").configure({ positional: true }).describe("agent session id"),
   "json?": type("boolean").describe("output as json"),
   "quiet?": type("boolean").describe("output id only"),
   "verbose?": type("boolean").describe("show all fields"),
   "externalLink?": type("string").describe("set external link url"),
+  "summary?": type("string").describe("set session title (1–255 characters, single line; owning OAuth app only)"),
+  "clearSummary?": type("boolean").describe("clear title; summary-only updates do not acknowledge the session"),
   "activities?": type("boolean").describe("show session activities"),
 });
 
@@ -135,11 +138,27 @@ export const agentSessionsRouter = router({
     .input(agentSessionInput)
     .mutation(async ({ input }) => {
       try {
+        const updates = input.externalLink !== undefined ||
+          input.summary !== undefined || input.clearSummary === true;
+        if (input.summary !== undefined && input.clearSummary) {
+          throw new Error("use either --summary or --clear-summary");
+        }
+        if (input.summary !== undefined && (
+          !input.summary.trim() || input.summary.length > 255 ||
+          /[\r\n\u2028\u2029\0]/u.test(input.summary)
+        )) {
+          throw new Error("summary must contain 1–255 characters, non-whitespace text, and no line breaks or NUL bytes");
+        }
+        if (updates && (input.activities || input.id === "new")) {
+          throw new Error("session updates require an existing id and cannot use --activities");
+        }
         const client = getClient();
 
-        if (input.externalLink !== undefined) {
+        if (updates) {
           const success = await updateAgentSession(client, input.id, {
-            externalLink: input.externalLink,
+            ...(input.externalLink !== undefined ? { externalLink: input.externalLink } : {}),
+            ...(input.clearSummary ? { summary: null } :
+              input.summary !== undefined ? { summary: input.summary } : {}),
           });
           if (!success) {
             exitWithError(

@@ -55,6 +55,7 @@ generated for UX review. each row = one valid invocation.
 | `lnr doc <id> --content <string>` | document content |
 | `lnr doc <id> --delete` | delete the document |
 | `lnr doc <id> --json` | output as json |
+| `lnr doc <id> --owner-id <string>` | owner user id; 'null' creates without an owner or clears the existing owner |
 | `lnr doc <id> --project <string>` | project name or id to attach document to |
 | `lnr doc <id> --quiet` | output ids only |
 | `lnr doc <id> --title <string>` | document title (required for new) |
@@ -274,7 +275,9 @@ generated for UX review. each row = one valid invocation.
 | `lnr agent-sessions --verbose` | show all columns |
 | `lnr agent-session <id>` | show agent session details (experimental) |
 | `lnr agent-session <id> --activities` | show session activities |
+| `lnr agent-session <id> --clear-summary` | clear title; summary-only updates do not acknowledge the session |
 | `lnr agent-session <id> --external-link <string>` | set external link url |
 | `lnr agent-session <id> --json` | output as json |
 | `lnr agent-session <id> --quiet` | output id only |
+| `lnr agent-session <id> --summary <string>` | set session title (1–255 characters, single line; owning OAuth app only) |
 | `lnr agent-session <id> --verbose` | show all fields |

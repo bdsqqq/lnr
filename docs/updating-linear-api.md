@@ -115,7 +115,12 @@ verified in [pr #24](https://github.com/bdsqqq/lnr/pull/24);
 | e2e credential checks exited the unit process early | exclude live e2e from default discovery; 0097 still tracks honest failure behavior for explicit e2e runs |
 | fixed unit budgets were used for live api latency | separate bounded live-test budgets; do not turn timeouts into passing results or mutation retries |
 
-still open: complete root/type introspection, a source-derived coverage inventory,
-missing fields such as agent-session summary and document owner, deferred entities,
-and automated drift gates. `entity-config.ts` categories and exclusion reasons are
-historical design choices, not proof of current upstream capabilities or cli coverage.
+complete graphql capture, the source inventory, and explicit `lnr api` access now
+exist. document ownership and agent-session summary flags have argv-to-sdk payload
+coverage. summary updates require the owning OAuth application; live verification
+of that path remains blocked without its credential.
+
+still open: exhaustive bindings and accepted-flag auditing, auth/plan/scope
+classification, subscriptions, upload reconciliation, lifecycle verification, and
+the coverage gate. `entity-config.ts` categories and exclusion reasons are historical
+design choices, not proof of current upstream capabilities or cli coverage.

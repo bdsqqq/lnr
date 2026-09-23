@@ -64,12 +64,13 @@ export async function getDocument(
 
 export async function createDocument(
   client: LinearClient,
-  input: { title: string; content?: string; projectId?: string }
+  input: { title: string; content?: string; projectId?: string; ownerId?: string | null }
 ): Promise<Document | null> {
   const result = await client.createDocument({
     title: input.title,
     content: input.content,
     projectId: input.projectId,
+    ...(input.ownerId !== undefined ? { ownerId: input.ownerId } : {}),
   });
 
   if (!result.success) {
@@ -95,7 +96,7 @@ export async function createDocument(
 export async function updateDocument(
   client: LinearClient,
   id: string,
-  input: { title?: string; content?: string }
+  input: { title?: string; content?: string; ownerId?: string | null }
 ): Promise<boolean> {
   const result = await client.updateDocument(id, input);
   return result.success;

@@ -657,9 +657,11 @@ const docConfig: EntityConfig = {
   "verbose?": type("boolean").describe("show all columns"),
 });`,
   inputSchema: () => `export const docInput = type({
+  "+": "reject",
   id: type("string").configure({ positional: true }).describe("document id or 'new'"),
   "title?": type("string").describe("document title (required for new)"),
   "content?": type("string").describe("document content"),
+  "ownerId?": type("string").describe("owner user id; 'null' creates without an owner or clears the existing owner"),
   "project?": type("string").describe("project name or id to attach document to"),
   "delete?": type("boolean").describe("delete the document"),
   "json?": type("boolean").describe("output as json"),
@@ -674,10 +676,14 @@ const docConfig: EntityConfig = {
 type Operation = (typeof docOperations)[number];
 
 export const docMutationFlags: readonly (keyof DocInput)[] = [
-  "title", "content"
+  "title", "content", "ownerId"
 ] as const;
 
 export function inferOperation(input: DocInput): Operation {
+  if (input.ownerId !== undefined) {
+    if (!input.ownerId.trim()) throw new Error("--owner-id must be a user id or 'null'");
+    if (input.delete) throw new Error("--owner-id cannot be combined with --delete");
+  }
   if (input.id === "new") return "create";
   if (input.delete) return "delete";
 
@@ -2365,6 +2371,7 @@ function generateDocUpdateHandler(): string {
     const success = await updateDocument(client, id, {
       title: input.title,
       content: input.content,
+      ...(input.ownerId !== undefined ? { ownerId: input.ownerId === "null" ? null : input.ownerId } : {}),
     });
 
     if (!success) {
@@ -2391,11 +2398,13 @@ function generateDocCreateHandler(): string {
       title: string;
       content?: string;
       projectId?: string;
+      ownerId?: string | null;
     } = {
       title: input.title,
     };
 
     if (input.content) createPayload.content = input.content;
+    if (input.ownerId !== undefined) createPayload.ownerId = input.ownerId === "null" ? null : input.ownerId;
     if (input.project) {
       try {
         createPayload.projectId = await resolveProjectByName(client, input.project);

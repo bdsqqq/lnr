@@ -191,7 +191,9 @@ describe("api execution", () => {
     expect(JSON.stringify(result)).not.toContain("SECRET");
   });
   test("malformed responses fail and untrusted paths are omitted", async () => {
-    expect((await executeApi({ document: "{ _legitimate }", execute: true }, harness({}).factory, schema)).ok).toBe(false);
+    for (const response of [{}, { data: undefined }, { data: [] }, { data: "not a result" }]) {
+      expect((await executeApi({ document: "{ _legitimate }", execute: true }, harness(response).factory, schema)).ok).toBe(false);
+    }
     expect(sanitizeApiError({ message: "SECRET", path: ["SECRET"] })).not.toHaveProperty("path");
   });
 });

@@ -124,14 +124,17 @@ function generateRandomInput(
     }
   }
 
-  return { ...input, ...overrides };
+  const result = { ...input, ...overrides };
+  // owner/delete is rejected rather than resolved by precedence; exercise it separately.
+  if (sws.spec.command === "doc" && result.delete) delete result.ownerId;
+  return result;
 }
 
 // === property A: operation dispatch determinism ===
 describe("property A: operation dispatch determinism", () => {
   for (const sws of specsWithSchemas) {
     describe(sws.spec.command, () => {
-      test(`inferOperation returns a value in operations for ${ITERATIONS} random inputs`, () => {
+      test(`inferOperation returns a value in operations for ${ITERATIONS} valid random inputs`, () => {
         for (let i = 0; i < ITERATIONS; i++) {
           const input = generateRandomInput(sws, rng);
           const result = sws.spec.inferOperation(input);
@@ -155,6 +158,17 @@ describe("property A: operation dispatch determinism", () => {
 
 // === property B: precedence under contradictory flags ===
 describe("property B: precedence under contradictory flags", () => {
+  test("document owner/delete conflicts reject for both create and existing ids", () => {
+    for (let i = 0; i < 50; i++) {
+      const input = {
+        id: i % 2 ? "new" : `document-${i}`,
+        ownerId: `owner-${i}`,
+        delete: true,
+      };
+      expect(() => docOperationSpec.inferOperation(input)).toThrow("--owner-id cannot be combined with --delete");
+    }
+  });
+
   for (const sws of specsWithSchemas) {
     const highPrecedenceFlags = sws.extraHighPrecedence.map((hp) => hp.flag);
 
