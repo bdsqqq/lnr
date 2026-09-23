@@ -107,6 +107,12 @@ export async function createProject(
     name: input.name,
     description: input.description,
     teamIds: input.teamIds ?? [],
+    content: input.content,
+    leadId: input.leadId,
+    startDate: input.startDate,
+    targetDate: input.targetDate,
+    priority: input.priority,
+    statusId: input.statusId,
   });
 
   if (!result.success) {

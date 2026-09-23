@@ -237,6 +237,9 @@ describe("e2e: mutations", () => {
   });
 
   describe("issue batch", () => {
+    const ownedLabels: OwnedFixture[] = [];
+    afterAll(async () => { await cleanupOwned(ownedLabels); }, 60000);
+
     test("create additional issues for batch", async () => {
       await lnr("issue", "new", "--team", TEST_TEAM_KEY, "--title", "Batch Issue 1");
       await lnr("issue", "new", "--team", TEST_TEAM_KEY, "--title", "Batch Issue 2");
@@ -253,12 +256,57 @@ describe("e2e: mutations", () => {
       const out = await lnr("issue batch", ids, "--priority", "high");
       expect(out).toContain("updated");
     });
+
+    test("label deltas preserve distinct existing labels; bare batch labels replace", async () => {
+      const issues = (await (await client.team(teamId)).issues()).nodes.filter(
+        issue => ["Batch Issue 1", "Batch Issue 2"].includes(issue.title),
+      );
+      expect(issues).toHaveLength(2);
+      for (const issue of issues) expect((await issue.team)?.id).toBe(teamId);
+      const labelIds: string[] = [];
+      for (const suffix of ["first", "second", "added"]) {
+        const fixture: OwnedFixture = {
+          name: `e2e-${suffix}-${RUN_ID}`, remove: id => client.deleteIssueLabel(id),
+        };
+        ownedLabels.push(fixture);
+        fixtures.push(fixture);
+        const result = await client.createIssueLabel({ name: fixture.name, teamId });
+        const label = await result.issueLabel;
+        if (!label) throw new Error("label creation returned no id");
+        fixture.id = label.id;
+        labelIds.push(label.id);
+        expect(result.success).toBe(true);
+      }
+      for (const [index, issue] of issues.entries()) {
+        expect((await client.updateIssue(issue.id, { labelIds: [labelIds[index]!] })).success).toBe(true);
+      }
+      const labelsFor = async (id: string) =>
+        (await (await client.issue(id)).labels()).nodes.map(label => label.id).sort();
+      const addedName = ownedLabels[2]!.name;
+      const addedId = labelIds[2]!;
+      const identifiers = issues.map(issue => issue.identifier).join(",");
+      await lnr("issue batch", identifiers, "--label", `+${addedName}`);
+      for (const [index, issue] of issues.entries()) {
+        expect(await labelsFor(issue.id)).toEqual([labelIds[index]!, addedId].sort());
+      }
+      await lnr("issue", issues[0]!.identifier, `--label=-${addedName}`);
+      expect(await labelsFor(issues[0]!.id)).toEqual([labelIds[0]!]);
+      await lnr("issue", issues[0]!.identifier, "--label", `+${addedName}`);
+      expect(await labelsFor(issues[0]!.id)).toEqual([labelIds[0]!, addedId].sort());
+      await lnr("issue batch", identifiers, "--label", addedName);
+      for (const issue of issues) expect(await labelsFor(issue.id)).toEqual([addedId]);
+    });
   });
 
   describe("project + scoped entities", () => {
     test("create project", async () => {
+      const status = (await client.projectStatuses()).nodes.find(status => status.type === "planned");
+      if (!status) throw new Error("sandbox has no planned project status");
+      const leadId = (await client.viewer).id;
       fixtures.push(projectFixture);
-      const out = await lnr("project", "new", "--new-name", TEST_PROJECT_NAME, "--team", TEST_TEAM_KEY);
+      const out = await lnr("project", "new", "--new-name", TEST_PROJECT_NAME, "--team", TEST_TEAM_KEY,
+        "--content", "e2e payload content", "--lead", "@me", "--priority", "0",
+        "--start-date", "2026-10-01", "--target-date", "2026-11-01", "--status", status.id);
       const json = await lnr("projects", "--json");
       const projects = JSON.parse(json);
       const matches = projects.filter((p: any) => p.name === TEST_PROJECT_NAME);
@@ -268,6 +316,14 @@ describe("e2e: mutations", () => {
       projectId = testProject.id;
       projectFixture.id = projectId;
       expect(out).toContain("created");
+      const read = await client.client.rawRequest<{ project: unknown }, { id: string }>(
+        "query($id: String!) { project(id: $id) { id content startDate targetDate priority lead { id } status { id } } }",
+        { id: projectId },
+      );
+      expect(read.data?.project).toEqual({
+        id: projectId, content: "e2e payload content", startDate: "2026-10-01",
+        targetDate: "2026-11-01", priority: 0, lead: { id: leadId }, status: { id: status.id },
+      });
     });
 
     test("show project labels (scoped)", async () => {

@@ -317,7 +317,7 @@ async function handleUpdateProject(
       teamIds?: string[];
     } = {};
 
-    if (input.newName) updatePayload.name = input.newName;
+    if (input.newName !== undefined) updatePayload.name = input.newName;
     if (input.description !== undefined) updatePayload.description = input.description;
     if (input.content !== undefined) updatePayload.content = input.content;
     if (input.status !== undefined) updatePayload.statusId = input.status;
@@ -328,7 +328,9 @@ async function handleUpdateProject(
     if (input.team !== undefined) updatePayload.teamIds = [await resolveTeamByKey(client, input.team)];
 
     if (Object.keys(updatePayload).length > 0) {
-      await updateProject(client, project.id, updatePayload);
+      if (!await updateProject(client, project.id, updatePayload)) {
+        exitWithError("project update was not confirmed; verify the outcome before retrying");
+      }
       console.log(`updated ${name}`);
     }
 
@@ -395,24 +397,26 @@ async function handleCreateProject(input: ProjectInput): Promise<void> {
       startDate?: string;
       targetDate?: string;
       priority?: number;
+      statusId?: string;
     } = {
       name: projectName,
     };
 
-    if (input.description) createPayload.description = input.description;
-    if (input.content) createPayload.content = input.content;
-    if (input.team) createPayload.teamIds = [await resolveTeamByKey(client, input.team)];
-    if (input.lead) createPayload.leadId = await resolveAssignee(client, input.lead);
-    if (input.startDate) createPayload.startDate = input.startDate;
-    if (input.targetDate) createPayload.targetDate = input.targetDate;
+    if (input.description !== undefined) createPayload.description = input.description;
+    if (input.content !== undefined) createPayload.content = input.content;
+    if (input.team !== undefined) createPayload.teamIds = [await resolveTeamByKey(client, input.team)];
+    if (input.lead !== undefined) createPayload.leadId = await resolveAssignee(client, input.lead);
+    if (input.startDate !== undefined) createPayload.startDate = input.startDate;
+    if (input.targetDate !== undefined) createPayload.targetDate = input.targetDate;
     if (input.priority !== undefined) createPayload.priority = input.priority;
+    if (input.status !== undefined) createPayload.statusId = input.status;
 
     const project = await createProject(client, createPayload);
 
     if (project) {
       console.log(`created project: ${project.name}`);
     } else {
-      console.log("created project");
+      exitWithError("project creation returned no project; verify the outcome before retrying");
     }
   } catch (error) {
     handleApiError(error);

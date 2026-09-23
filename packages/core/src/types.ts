@@ -96,15 +96,29 @@ export interface CreateIssueInput {
   labelIds?: string[];
   parentId?: string;
   projectId?: string;
+  projectMilestoneId?: string;
+  cycleId?: string;
+  stateId?: string;
+  estimate?: number;
+  dueDate?: string;
   releaseIds?: string[];
   inheritsSharedAccess?: boolean;
 }
 
 export interface UpdateIssueInput {
+  title?: string;
+  description?: string;
   stateId?: string;
   assigneeId?: string;
   priority?: number;
   labelIds?: string[];
+  addedLabelIds?: string[];
+  removedLabelIds?: string[];
+  projectId?: string;
+  projectMilestoneId?: string;
+  cycleId?: string;
+  estimate?: number;
+  dueDate?: string;
   parentId?: string;
   prioritySortOrder?: number;
   releaseIds?: string[];
@@ -122,6 +136,12 @@ export interface CreateProjectInput {
   name: string;
   description?: string;
   teamIds?: string[];
+  content?: string;
+  leadId?: string;
+  startDate?: string;
+  targetDate?: string;
+  priority?: number;
+  statusId?: string;
 }
 
 export interface UpdateProjectInput {
