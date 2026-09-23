@@ -43,6 +43,18 @@ remain separate. a generic transport does not grant credentials or prove every
 operation works. queries can have effects; live verification uses approved scenarios,
 not automatically executed inventory entries. no implicit pagination or write retries.
 
+join a sparse, reviewed coverage ledger onto every inventory coordinate. absent
+records stay unresolved. source hashes and literal test anchors detect stale
+references, not whether assertions prove the contract. classify implementation,
+authorization requirements, and live evidence separately; structural root tests
+cannot discharge input/output obligations.
+
+`api:coverage:check` validates ledger integrity and may pass with gaps.
+`api:accept` first checks artifacts, then requires gap-free coverage evidence.
+even that is only the coverage prerequisite: task 0098 additionally requires
+reviewed classifications, reproducible generation and passing exact-head CI.
+the initial ledger deliberately contains no inferred coverage credits.
+
 ## consequences
 
 capture failures leave the last snapshot intact. descriptions/default values and

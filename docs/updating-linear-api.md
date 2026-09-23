@@ -124,3 +124,6 @@ still open: exhaustive bindings and accepted-flag auditing, auth/plan/scope
 classification, subscriptions, upload reconciliation, lifecycle verification, and
 the coverage gate. `entity-config.ts` categories and exclusion reasons are historical
 design choices, not proof of current upstream capabilities or cli coverage.
+
+see [coverage evidence](api-coverage.md) for the sparse ledger and failing
+`api:accept` prerequisite. `api:check` includes ledger integrity, not completeness.
