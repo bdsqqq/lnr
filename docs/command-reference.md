@@ -24,6 +24,13 @@ generated for UX review. each row = one valid invocation.
 | `lnr webhook serve --max-body-bytes <number>` | accepted body limit; default 1048576 bytes |
 | `lnr webhook serve --port <number>` | bind port; default 8787; zero selects a free port |
 | `lnr webhook serve --secret-env <string>` | signing-secret environment variable; default LINEAR_WEBHOOK_SECRET |
+| `lnr oauth authorize <file>` | build an authorization URL locally; caller must validate callback state |
+| `lnr oauth authorize <file> --show-secrets` | explicitly allow token/verifier output on stdout |
+| `lnr oauth pkce` | generate a local PKCE verifier/challenge; verifier output requires consent |
+| `lnr oauth pkce --show-secrets` | explicitly allow token/verifier output on stdout |
+| `lnr oauth request <file>` | validate or explicitly execute an OAuth token/revocation request |
+| `lnr oauth request <file> --execute` | explicitly authorize one OAuth request |
+| `lnr oauth request <file> --show-secrets` | explicitly allow token/verifier output on stdout |
 | `lnr auth [apiKey]` | authenticate with Linear API |
 | `lnr auth [apiKey] --logout` | clear stored credentials |
 | `lnr auth [apiKey] --whoami` | show current authenticated user |
