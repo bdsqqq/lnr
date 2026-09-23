@@ -570,6 +570,23 @@ export const generatedProjectsRouter = router({
     .input(projectInput)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);
+      // companion flags must be validated before an otherwise valid write.
+      for (const flag of ["react", "emoji", "unreact"] as const) {
+        if (input[flag] === "") throw new Error(flag + " must not be empty");
+      }
+      if (input.emoji !== undefined && input.react === undefined) {
+        throw new Error("--emoji requires --react");
+      }
+      if (input.react !== undefined && input.emoji === undefined) {
+        throw new Error("--emoji is required with --react");
+      }
+      if (operation === "create" && (
+        input.react !== undefined || input.unreact !== undefined ||
+        input.delete === true || input.subscribe === true || input.unsubscribe === true
+      )) {
+        throw new Error("reaction, deletion and subscription actions require an existing project");
+      }
+
 
       switch (operation) {
         case "create":

@@ -1052,7 +1052,52 @@ export const generated${TypeName}sRouter = router({
     })
     .input(${config.singularCommand}Input)
     .mutation(async ({ input }) => {
-      const operation = inferOperation(input);
+      const operation = inferOperation(input);${config.singularCommand === "issue" ? `
+      // reject ignored actions before handlers acquire credentials or create a resource.
+      for (const flag of [
+        "comment", "editComment", "replyTo", "deleteComment",
+        "react", "emoji", "unreact", "text", "blocks", "blockedBy", "relatesTo", "pr",
+      ] as const) {
+        if (input[flag] === "") throw new Error(flag + " must not be empty");
+      }
+      if (input.text !== undefined && input.editComment === undefined && input.replyTo === undefined) {
+        throw new Error("--text requires --edit-comment or --reply-to");
+      }
+      if ((input.editComment !== undefined || input.replyTo !== undefined) && input.text === undefined) {
+        throw new Error("--text is required with --edit-comment or --reply-to");
+      }
+      if (input.emoji !== undefined && input.react === undefined) {
+        throw new Error("--emoji requires --react");
+      }
+      if (input.react !== undefined && input.emoji === undefined) {
+        throw new Error("--emoji is required with --react");
+      }
+      if (operation === "create") {
+        for (const flag of ["comment", "editComment", "replyTo", "deleteComment", "react", "unreact"] as const) {
+          if (input[flag] !== undefined) throw new Error(flag + " requires an existing issue");
+        }
+        if (input.archive === true || input.subscribe === true || input.unsubscribe === true) {
+          throw new Error("--archive, --subscribe and --unsubscribe require an existing issue");
+        }
+      }
+` : config.singularCommand === "project" ? `
+      // companion flags must be validated before an otherwise valid write.
+      for (const flag of ["react", "emoji", "unreact"] as const) {
+        if (input[flag] === "") throw new Error(flag + " must not be empty");
+      }
+      if (input.emoji !== undefined && input.react === undefined) {
+        throw new Error("--emoji requires --react");
+      }
+      if (input.react !== undefined && input.emoji === undefined) {
+        throw new Error("--emoji is required with --react");
+      }
+      if (operation === "create" && (
+        input.react !== undefined || input.unreact !== undefined ||
+        input.delete === true || input.subscribe === true || input.unsubscribe === true
+      )) {
+        throw new Error("reaction, deletion and subscription actions require an existing project");
+      }
+` : ""}
 
       switch (operation) {
         case "create":
@@ -1508,6 +1553,7 @@ function generateIssueCreateHandler(): string {
       description?: string;
       assigneeId?: string;
       priority?: number;
+      prioritySortOrder?: number;
       labelIds?: string[];
       parentId?: string;
       projectId?: string;
@@ -1526,6 +1572,7 @@ function generateIssueCreateHandler(): string {
     if (input.description) createPayload.description = input.description;
     if (input.assignee) createPayload.assigneeId = await resolveAssignee(client, input.assignee);
     if (input.priority) createPayload.priority = priorityFromString(input.priority);
+    if (input.prioritySortOrder !== undefined) createPayload.prioritySortOrder = input.prioritySortOrder;
 
     if (input.label) {
       const labels = await getTeamLabels(client, team.id);
