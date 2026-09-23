@@ -8,7 +8,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { getClient, type Cycle, type GitAutomationState } from "@bdsqqq/lnr-core";
+import { executeApi, getClient, type Cycle, type GitAutomationState } from "@bdsqqq/lnr-core";
 import { cleanupOwned, liveChildEnv, liveCredentials, type OwnedFixture } from "./live-test-support";
 
 const { key: API_KEY, confirmOrg } = liveCredentials(process.env, true);
@@ -304,6 +304,51 @@ describe("e2e: mutations", () => {
         // may fail if not subscribed
         expect(e.message).toMatch(/no subscription found|not subscribed/);
       }
+    });
+  });
+
+  describe("document ownership", () => {
+    const fixture: OwnedFixture = {
+      name: `e2e-document-${RUN_ID}`, remove: id => client.deleteDocument(id),
+    };
+    afterAll(async () => {
+      // remove the owned document before the later project-deletion scenario.
+      if (fixtures.includes(fixture)) await cleanupOwned([fixture]);
+    }, 60000);
+
+    test("owner assignment and clearing persist through curated and raw API paths", async () => {
+      expect(projectId).toBeTruthy();
+      const ownerId = (await client.viewer).id;
+      fixtures.push(fixture);
+      const created = await client.createDocument({ title: fixture.name, projectId, ownerId: null });
+      const document = await created.document;
+      if (!document) throw new Error("document creation returned no id");
+      const documentId = document.id;
+      fixture.id = documentId;
+      expect(created.success).toBe(true);
+      async function readOwner() {
+        const result = await client.client.rawRequest<{
+          document: { id: string; owner: { id: string } | null };
+        }, { id: string }>("query($id: String!) { document(id: $id) { id owner { id } } }", { id: documentId });
+        if (!result.data) throw new Error("document read returned no data");
+        expect(result.data.document.id).toBe(documentId);
+        const owner = result.data.document.owner;
+        if (owner === null) return null;
+        expect(owner.id).toBeString();
+        return owner.id;
+      }
+      expect(await readOwner()).toBeNull();
+      await lnr("doc", documentId, "--owner-id", ownerId);
+      expect(await readOwner()).toBe(ownerId);
+      await lnr("doc", documentId, "--owner-id", "null");
+      expect(await readOwner()).toBeNull();
+      expect(await executeApi({
+        document: "mutation($id: String!, $owner: String) { documentUpdate(id: $id, input: {ownerId: $owner}) { success } }",
+        variables: { id: documentId, owner: ownerId }, execute: true,
+      }, () => client)).toMatchObject({
+        ok: true, executed: true, data: { documentUpdate: { success: true } },
+      });
+      expect(await readOwner()).toBe(ownerId);
     });
   });
 

@@ -397,6 +397,8 @@ export interface AgentSession {
 
 export interface UpdateAgentSessionInput {
   externalLink?: string;
+  /** null restores automatic titles; summary-only updates do not acknowledge the session. */
+  summary?: string | null;
   plan?: Record<string, unknown>;
 }
 
