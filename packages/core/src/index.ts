@@ -4,6 +4,8 @@ export { executeUpload, UploadExecutionError } from "./upload";
 export type { UploadOptions, UploadResult } from "./upload";
 export { createWebhookReceiver } from "./webhooks";
 export type { WebhookOptions, WebhookPayload } from "./webhooks";
+export { createOAuthAuthorizationUrl, createOAuthPkce, pkceChallenge, executeOAuth } from "./oauth";
+export type { OAuthAuthorizeInput, OAuthInput, OAuthRequest, OAuthResult, OAuthTokens } from "./oauth";
 
 // types
 export type {

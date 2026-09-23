@@ -2,7 +2,7 @@
 
 ## status
 
-accepted; upload and webhook bindings implemented; OAuth and live proof incomplete.
+accepted; upload, webhook and canonical OAuth bindings implemented; live proof incomplete.
 
 ## decision
 
@@ -23,8 +23,10 @@ live upload verification requires an authorized retention/cleanup scenario.
 
 reuse SDK webhook verification and adapters rather than inventing signing rules.
 verification, parsing, and receiver delivery remain separately evidenced. existing
-OAuth-token consumption does not implement authorization, token exchange/refresh,
-client-credentials issuance, or revocation; those need separately sourced bindings.
+OAuth-token consumption alone does not implement authorization, token exchange/refresh,
+client-credentials issuance, or revocation. those have separately sourced
+[low-level bindings](../oauth.md), with explicit execution and secret-output consent,
+not an automatic login or credential-persistence flow.
 
 public graphql subscription transport remains unresolved. SDK HTTP-only behavior
 and webhook availability do not prove upstream subscriptions unavailable.
