@@ -648,6 +648,7 @@ const docConfig: EntityConfig = {
     "updateDocument",
     "deleteDocument",
     "resolveProjectByName",
+    "ProjectNotFoundError",
   ],
   coreTypes: ["Document"],
   listInputSchema: () => `export const listDocsInput = type({
@@ -676,10 +677,14 @@ const docConfig: EntityConfig = {
 type Operation = (typeof docOperations)[number];
 
 export const docMutationFlags: readonly (keyof DocInput)[] = [
-  "title", "content", "ownerId"
+  "title", "content", "ownerId", "project"
 ] as const;
 
 export function inferOperation(input: DocInput): Operation {
+  if (input.project !== undefined) {
+    if (!input.project.trim()) throw new Error("--project must be a project name or id");
+    if (input.delete) throw new Error("--project cannot be combined with --delete");
+  }
   if (input.ownerId !== undefined) {
     if (!input.ownerId.trim()) throw new Error("--owner-id must be a user id or 'null'");
     if (input.delete) throw new Error("--owner-id cannot be combined with --delete");
@@ -2429,10 +2434,20 @@ function generateDocUpdateHandler(): string {
   try {
     const client = getClient();
 
+    let projectId: string | undefined;
+    if (input.project !== undefined) {
+      try {
+        projectId = await resolveProjectByName(client, input.project);
+      } catch (error) {
+        if (!(error instanceof ProjectNotFoundError)) throw error;
+        projectId = input.project;
+      }
+    }
     const success = await updateDocument(client, id, {
       title: input.title,
       content: input.content,
       ...(input.ownerId !== undefined ? { ownerId: input.ownerId === "null" ? null : input.ownerId } : {}),
+      ...(projectId !== undefined ? { projectId } : {}),
     });
 
     if (!success) {
@@ -2464,12 +2479,13 @@ function generateDocCreateHandler(): string {
       title: input.title,
     };
 
-    if (input.content) createPayload.content = input.content;
+    if (input.content !== undefined) createPayload.content = input.content;
     if (input.ownerId !== undefined) createPayload.ownerId = input.ownerId === "null" ? null : input.ownerId;
     if (input.project) {
       try {
         createPayload.projectId = await resolveProjectByName(client, input.project);
-      } catch {
+      } catch (error) {
+        if (!(error instanceof ProjectNotFoundError)) throw error;
         createPayload.projectId = input.project;
       }
     }

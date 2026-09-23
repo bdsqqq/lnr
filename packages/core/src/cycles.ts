@@ -188,22 +188,39 @@ export async function getCycleIssues(
 
     const issuesConnection = await activeCycle.issues();
 
-    return Promise.all(
-      issuesConnection.nodes.map(async (i) => ({
-        id: i.id,
-        identifier: i.identifier,
-        title: i.title,
-        description: i.description,
-        state: (await i.state)?.name ?? null,
-        assignee: (await i.assignee)?.name ?? null,
-        priority: i.priority,
-        createdAt: i.createdAt,
-        updatedAt: i.updatedAt,
-        url: i.url,
-        branchName: i.branchName,
-      }))
-    );
+    return mapCycleIssues(issuesConnection.nodes);
   } catch {
     return [];
   }
+}
+
+/** Pin the resolved cycle rather than re-read a team's possibly different active cycle. */
+export async function getCycleIssuesById(
+  client: LinearClient,
+  cycleId: string
+): Promise<Issue[]> {
+  const cycle = await client.cycle(cycleId);
+  const issuesConnection = await cycle.issues();
+  return mapCycleIssues(issuesConnection.nodes);
+}
+
+type SdkCycle = Awaited<ReturnType<LinearClient["cycle"]>>;
+type CycleIssueNodes = Awaited<ReturnType<SdkCycle["issues"]>>["nodes"];
+
+function mapCycleIssues(nodes: CycleIssueNodes): Promise<Issue[]> {
+  return Promise.all(
+    nodes.map(async (issue) => ({
+      id: issue.id,
+      identifier: issue.identifier,
+      title: issue.title,
+      description: issue.description,
+      state: (await issue.state)?.name ?? null,
+      assignee: (await issue.assignee)?.name ?? null,
+      priority: issue.priority,
+      createdAt: issue.createdAt,
+      updatedAt: issue.updatedAt,
+      url: issue.url,
+      branchName: issue.branchName,
+    }))
+  );
 }

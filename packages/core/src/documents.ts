@@ -96,7 +96,7 @@ export async function createDocument(
 export async function updateDocument(
   client: LinearClient,
   id: string,
-  input: { title?: string; content?: string; ownerId?: string | null }
+  input: { title?: string; content?: string; ownerId?: string | null; projectId?: string | null }
 ): Promise<boolean> {
   const result = await client.updateDocument(id, input);
   return result.success;

@@ -79,6 +79,8 @@ export async function createView(
       shared: input.shared,
     });
 
+    if (payload.success !== true) return null;
+
     const view = await payload.customView;
 
     if (!view) {

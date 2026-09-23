@@ -5,7 +5,7 @@ import {
   listCycles,
   getCycle,
   getCurrentCycle,
-  getCycleIssues,
+  getCycleIssuesById,
   createCycle,
   updateCycle,
   deleteCycle,
@@ -152,7 +152,7 @@ async function handleShowCycle(
     }
 
     if (input.issues) {
-      const issues = await getCycleIssues(client, input.team);
+      const issues = await getCycleIssuesById(client, cycle.id);
 
       if (format === "json") {
         outputJson(issues);
@@ -216,7 +216,7 @@ async function handleCurrentCycle(input: CycleInput): Promise<void> {
     }
 
     if (input.issues) {
-      const issues = await getCycleIssues(client, input.team);
+      const issues = await getCycleIssuesById(client, cycle.id);
 
       if (format === "json") {
         outputJson(issues);
