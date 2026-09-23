@@ -361,7 +361,7 @@ async function handleDeleteCycle(
       );
     }
 
-    console.log(`archived cycle: ${cycle.name ?? `Cycle ${cycle.number}`}`);
+    console.log(`archived cycle: ${cycle.name ?? `Cycle ${cycle.number}`} (${cycle.id})`);
   } catch (error) {
     handleApiError(error);
   }

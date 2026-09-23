@@ -1,0 +1,14 @@
+{
+  "formatVersion": 1,
+  "pins": {
+    "sdkVersion": "95.1.0",
+    "schemaSha256": "3d752013e460b853f839aa6f156f23ff85cad8f74035ef5675072c509f53a76d",
+    "snapshotSha256": "efb8ea40dc6bdeb5d9abd21e40875a934a2ec0d5dcb40d63567a084c442f5028"
+  },
+  "nonGraph": {
+    "status": "unknown",
+    "reason": "non-graphql implementation and live verification remain unresolved",
+    "sources": []
+  },
+  "records": []
+}

@@ -92,6 +92,16 @@ describe("e2e: mutations", () => {
   describe("automatic cycles", () => {
     let cycleId: string;
     let cycleNumber: string;
+    type Observation = {
+      id: string; number: number; startsAt: Date | string; endsAt: Date | string;
+      archivedAt?: Date | string | null;
+    };
+    const snapshot = (cycle: Observation) => ({
+      id: cycle.id, number: cycle.number, startsAt: cycle.startsAt, endsAt: cycle.endsAt,
+      archivedAt: cycle.archivedAt ?? null, archiveFieldUndefined: cycle.archivedAt === undefined,
+    });
+    let initialCycles: ReturnType<typeof snapshot>[] = [];
+    let fixtureObservedAt: string;
 
     beforeAll(async () => {
       // linear creates cycles asynchronously; cycleCreate is deprecated and always rejects.
@@ -100,6 +110,8 @@ describe("e2e: mutations", () => {
         const cycles = await team.cycles();
         const cycle = cycles.nodes[0];
         if (cycle) {
+          fixtureObservedAt = new Date().toISOString();
+          initialCycles = cycles.nodes.map(snapshot);
           cycleId = cycle.id;
           cycleNumber = String(cycle.number);
           return;
@@ -146,8 +158,51 @@ describe("e2e: mutations", () => {
     test("delete cycle", async () => {
       const out = await lnr("cycle", cycleNumber, "--team", TEST_TEAM_KEY, "--delete");
       expect(out).toContain("archived");
+      const targetId = out.match(/\(([^()]+)\)$/)?.[1];
       // listCycles returns [] on read errors, so verify archival through a strict sdk read.
       const cycle = await client.cycle(cycleId);
+      const observations: unknown[] = [];
+      if (!cycle.archivedAt || targetId !== cycleId) {
+        // Diagnostic reads do not retry the write or replace the original assertion.
+        const probe = async (source: string, read: () => Promise<Observation>) => {
+          let timer: ReturnType<typeof setTimeout> | undefined;
+          try {
+            const result = await Promise.race([
+              read(),
+              new Promise<never>((_, reject) => {
+                timer = setTimeout(() => reject(new Error("diagnostic timeout")), 2000);
+              }),
+            ]);
+            return { source, observedAt: new Date().toISOString(), cycle: snapshot(result) };
+          } catch {
+            // SDK errors can carry request credentials; never serialize them.
+            return { source, observedAt: new Date().toISOString(), error: "read failed or timed out" };
+          } finally {
+            clearTimeout(timer);
+          }
+        };
+        const samples = await Promise.all([0, 1000, 3000].map(async offsetMs => {
+          await Bun.sleep(offsetMs);
+          const pair = await Promise.all([
+            probe("sdk", () => client.cycle(cycleId)),
+            probe("raw", async () => {
+              const result = await client.client.rawRequest<{ cycle: Observation }, { id: string }>(
+                "query($id: String!) { cycle(id: $id) { id number startsAt endsAt archivedAt } }",
+                { id: cycleId },
+              );
+              if (!result.data?.cycle) throw new Error("missing cycle");
+              return result.data.cycle;
+            }),
+          ]);
+          return pair.map(result => ({ ...result, offsetMs }));
+        }));
+        observations.push(...samples.flat());
+      }
+      console.log(JSON.stringify({
+        event: "cycle.archive.readback", runId: RUN_ID, teamId, expectedId: cycleId, targetId,
+        fixtureObservedAt, initialCycles, immediate: snapshot(cycle), observations,
+      }));
+      expect(targetId).toBe(cycleId);
       expect(cycle.archivedAt).toBeTruthy();
     });
   });
