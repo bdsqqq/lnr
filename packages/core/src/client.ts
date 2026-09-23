@@ -20,15 +20,19 @@ export class NotAuthenticatedError extends Error {
   }
 }
 
-export function getClient(apiKeyOverride?: string): LinearClient {
+/** Per-call transport policies use an uncached client rather than mutate shared defaults. */
+export function getClient(
+  apiKeyOverride?: string,
+  requestOptions?: Pick<RequestInit, "redirect">,
+): LinearClient {
   const apiKey = apiKeyOverride ?? getApiKey();
   if (!apiKey) {
     throw new NotAuthenticatedError();
   }
 
-  const authOptions = getClientAuthOptions(apiKey);
+  const authOptions = { ...getClientAuthOptions(apiKey), ...requestOptions };
 
-  if (apiKeyOverride) {
+  if (apiKeyOverride || requestOptions) {
     return new LinearClient(authOptions);
   }
 

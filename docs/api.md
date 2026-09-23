@@ -54,3 +54,5 @@ lossless fake-transport access for 152 query and 328 mutation roots. it separate
 checks the unavailable, blocked, and subscription cases. these are NOT 480 live
 verification results, nor complete optional-field, auth, upload, or lifecycle coverage.
 full parity remains tracked in [.todo.md](../.todo.md).
+
+file bytes use the separate [`lnr upload` workflow](uploads.md), not graphql alone.

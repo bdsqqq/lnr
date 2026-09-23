@@ -24,7 +24,7 @@
   "author": "bdsqqq",
   "scripts": {
     "check": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test --isolate"
   },
   "dependencies": {
     "@linear/sdk": "^95.1.0",

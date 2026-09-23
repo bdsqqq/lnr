@@ -4,6 +4,7 @@ import { type } from "arktype";
 import { TRPCError } from "@trpc/server";
 import { ApiExecutionError, executeApi, type ApiResult } from "@bdsqqq/lnr-core";
 import { procedure, router } from "./trpc";
+import { writeStdout } from "../lib/stdout";
 
 export const apiInput = type({
   file: type("string").configure({ positional: true }).describe("graphql file or - for stdin"),
@@ -17,13 +18,6 @@ class InputError extends Error {}
 function readInput(file: string | number, message: string): string {
   try { return readFileSync(file, "utf8"); }
   catch { throw new InputError(message); }
-}
-
-/** trpc-cli exits immediately afterward; flush piped output before resolving. */
-function writeStdout(text: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    process.stdout.write(text, error => error ? reject(error) : resolve());
-  });
 }
 
 export function createApiRouter(run: typeof executeApi = executeApi) {
