@@ -125,8 +125,11 @@ function generateRandomInput(
   }
 
   const result = { ...input, ...overrides };
-  // owner/delete is rejected rather than resolved by precedence; exercise it separately.
-  if (sws.spec.command === "doc" && result.delete) delete result.ownerId;
+  // Attachment/owner deletion conflicts are rejected rather than resolved by precedence.
+  if (sws.spec.command === "doc" && result.delete) {
+    delete result.ownerId;
+    delete result.project;
+  }
   return result;
 }
 

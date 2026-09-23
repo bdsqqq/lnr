@@ -11,7 +11,13 @@ const document = {
 };
 const createDocument = mock(async (..._args: unknown[]) => ({ success: true, document }));
 const updateDocument = mock(async (..._args: unknown[]) => ({ success: true }));
-const getClient = mock(() => ({ agentSession, createDocument, updateDocument }));
+const projectId = "11111111-1111-4111-8111-111111111111";
+let projectLookupError: Error | undefined;
+const projects = mock(async () => {
+  if (projectLookupError) throw projectLookupError;
+  return { nodes: [{ id: projectId, name: "Destination", createdAt: new Date(0) }] };
+});
+const getClient = mock(() => ({ agentSession, createDocument, updateDocument, projects }));
 
 mock.module("@bdsqqq/lnr-core", () => ({ ...core, getClient }));
 mock.module("../lib/error", () => ({
@@ -26,7 +32,8 @@ const sessions = agentSessionsRouter.createCaller({});
 const docs = generatedDocsRouter.createCaller({});
 
 beforeEach(() => {
-  for (const fn of [sessionUpdate, agentSession, createDocument, updateDocument, getClient]) fn.mockClear();
+  projectLookupError = undefined;
+  for (const fn of [sessionUpdate, agentSession, createDocument, updateDocument, getClient, projects]) fn.mockClear();
 });
 
 describe("agent session summary payload", () => {
@@ -133,4 +140,42 @@ test("argv reaches SDK payloads, including explicit nulls", async () => {
   expect(createDocument).toHaveBeenLastCalledWith({
     title: "title", content: undefined, projectId: undefined, ownerId: "user-id",
   });
+});
+
+test("document project-only and combined argv updates reach the real core and SDK", async () => {
+  for (const project of ["Destination", projectId]) {
+    expect(await argv(["doc", "document-id", "--project", project])).toBe(0);
+    expect(updateDocument).toHaveBeenLastCalledWith("document-id", {
+      title: undefined, content: undefined, projectId,
+    });
+    expect(await argv(["doc", "document-id", "--project", project, "--title", "renamed"])).toBe(0);
+    expect(updateDocument).toHaveBeenLastCalledWith("document-id", {
+      title: "renamed", content: undefined, projectId,
+    });
+    expect(await argv(["doc", "new", "--title", "title", "--content", "", "--project", project])).toBe(0);
+    expect(createDocument).toHaveBeenLastCalledWith({ title: "title", content: "", projectId });
+  }
+});
+test("document project omission and explicit core null remain distinct", async () => {
+  await docs.doc({ id: "document-id", title: "title" });
+  expect(updateDocument.mock.calls[0]![1]).not.toHaveProperty("projectId");
+  await core.updateDocument(getClient() as unknown as Parameters<typeof core.updateDocument>[0],
+    "document-id", { projectId: null });
+  expect(updateDocument).toHaveBeenLastCalledWith("document-id", { projectId: null });
+});
+test("document project validation rejects empty and deletion combinations before client access", async () => {
+  for (const id of ["new", "document-id"]) {
+    for (const input of [
+      { id, project: "" }, { id, project: " " }, { id, project: "Destination", delete: true },
+    ]) await expect(docs.doc(input)).rejects.toThrow();
+  }
+  expect(getClient).not.toHaveBeenCalled();
+});
+test("document project lookup failures cannot fall through to an uncertain target write", async () => {
+  projectLookupError = new Error("lookup unavailable");
+  expect(await argv(["doc", "new", "--title", "title", "--project", "Destination"])).toBe(1);
+  expect(await argv(["doc", "document-id", "--project", "Destination"])).toBe(1);
+  expect(createDocument).not.toHaveBeenCalled();
+  expect(updateDocument).not.toHaveBeenCalled();
+  expect(projects).toHaveBeenCalledTimes(2);
 });

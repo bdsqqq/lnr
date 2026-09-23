@@ -95,6 +95,7 @@ export {
   getCycleById,
   getCurrentCycle,
   getCycleIssues,
+  getCycleIssuesById,
   createCycle,
   updateCycle,
   deleteCycle,
