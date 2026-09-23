@@ -2,6 +2,8 @@ export { executeApi, getApiSchema, ApiExecutionError, sanitizeApiError } from ".
 export type { ApiOptions, ApiResult } from "./api";
 export { executeUpload, UploadExecutionError } from "./upload";
 export type { UploadOptions, UploadResult } from "./upload";
+export { createWebhookReceiver } from "./webhooks";
+export type { WebhookOptions, WebhookPayload } from "./webhooks";
 
 // types
 export type {
