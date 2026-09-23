@@ -93,6 +93,7 @@ export interface CreateIssueInput {
   description?: string;
   assigneeId?: string;
   priority?: number;
+  prioritySortOrder?: number;
   labelIds?: string[];
   parentId?: string;
   projectId?: string;

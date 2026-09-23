@@ -130,3 +130,15 @@ test("a rejected issue creation does not report success or retry", async () => {
     .rejects.toThrow("verify the outcome before retrying");
   expect(createIssue).toHaveBeenCalledTimes(1);
 });
+
+test("create priority sort order reaches the sdk, including zero", async () => {
+  for (const prioritySortOrder of [0, 2.5]) {
+    await expect(caller.issue({
+      idOrNew: "new", team: "ENG", title: "test", prioritySortOrder,
+    })).rejects.toThrow("verify the outcome before retrying");
+    expect(createIssue).toHaveBeenLastCalledWith({
+      teamId: "team-id", title: "test", prioritySortOrder,
+    });
+  }
+  expect(createIssue).toHaveBeenCalledTimes(2);
+});
