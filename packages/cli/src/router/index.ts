@@ -1,5 +1,6 @@
 import { router } from "./trpc";
 import { apiRouter } from "./api";
+import { uploadRouter } from "./upload";
 import { authRouter } from "./auth";
 import { configRouter } from "./config";
 import { cyclesRouter } from "./cycles";
@@ -22,6 +23,7 @@ import { agentSessionsRouter } from "./agent-sessions";
 
 export const appRouter = router({
   ...apiRouter._def.procedures,
+  ...uploadRouter._def.procedures,
   ...authRouter._def.procedures,
   ...configRouter._def.procedures,
   ...cyclesRouter._def.procedures,

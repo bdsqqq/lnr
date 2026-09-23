@@ -1,5 +1,7 @@
 export { executeApi, getApiSchema, ApiExecutionError, sanitizeApiError } from "./api";
 export type { ApiOptions, ApiResult } from "./api";
+export { executeUpload, UploadExecutionError } from "./upload";
+export type { UploadOptions, UploadResult } from "./upload";
 
 // types
 export type {

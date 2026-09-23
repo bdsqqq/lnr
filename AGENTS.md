@@ -69,8 +69,9 @@ inventory. unresolved capability classifications remain gaps.
 
 ### e2e tests
 
-cli unit suites run with `--isolate` because their module mocks replace shared
-core/output exports. keep live e2e excluded from the default test script:
+core and cli unit suites run with `--isolate`: constructor/core/output module
+mocks must not replace the real SDK used by transport regressions in other files.
+keep live e2e excluded from the default test script:
 their module-level credential checks can exit before unit suites execute.
 
 two test files in `packages/cli/src/`:
@@ -103,6 +104,11 @@ baseline finding (2026-02-07): ~300ms module loading + ~300ms API per call.
 compiling the binary saves only ~38ms/call. the bottleneck is sequential API
 round-trips, not subprocess overhead. parallelizing independent test groups
 is the only approach that meaningfully reduces total time.
+
+local macos builds with nix bun 1.3.13 have produced an invalid embedded signature
+(`codesign --verify` fails) and exited with signal 9. ad-hoc signing a fresh
+temporary build with `codesign --force --sign - <binary>` enabled the offline
+upload smoke test. this is local verification, not notarization or release proof.
 
 ### config isolation
 

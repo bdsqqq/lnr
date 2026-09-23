@@ -8,6 +8,12 @@ generated for UX review. each row = one valid invocation.
 | `lnr api <file> --execute` | explicitly authorize network execution |
 | `lnr api <file> --validate-only` | validate offline; incompatible with --execute |
 | `lnr api <file> --variables <string>` | json variables file containing an object |
+| `lnr upload <file>` | validate an upload offline or explicitly transfer a file |
+| `lnr upload <file> --content-type <string>` | mime type; defaults to detected type or application/octet-stream |
+| `lnr upload <file> --execute` | authorize descriptor allocation and one storage PUT |
+| `lnr upload <file> --filename <string>` | remote filename; defaults to local basename |
+| `lnr upload <file> --metadata <string>` | json metadata file |
+| `lnr upload <file> --public` | explicitly request public asset visibility |
 | `lnr auth [apiKey]` | authenticate with Linear API |
 | `lnr auth [apiKey] --logout` | clear stored credentials |
 | `lnr auth [apiKey] --whoami` | show current authenticated user |
