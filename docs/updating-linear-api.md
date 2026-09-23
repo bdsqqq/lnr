@@ -37,18 +37,22 @@ prove an operation has stopped working.
    # authenticated, read-only introspection; do not print credentials
    bun run packages/codegen/introspect-linear.ts
    bun run packages/codegen/extract-schema.ts
+   bun run api:schema
+   bun run api:inventory
+   bun run api:check
    ```
 
    inspect fetch failures, missing/null type results, and schema changes before
    accepting the snapshot. “0 failed” does not prove complete coverage. reconcile
    sdk/schema differences instead of assuming their publication times match.
 
-   separately refresh the pinned sdk-release schema: resolve the new release's
-   immutable commit and source digest in `packages/codegen/import-sdk-schema.ts`,
-   then run `bun run api:schema`, `bun run api:inventory`, and `bun run api:check`.
-   these artifacts are labelled `sdk-release`, not live captures. the inventory
+   separately refresh the pinned sdk-release comparison schema: resolve the new
+   release's immutable commit, source digest, and normalized digest in
+   `packages/codegen/import-sdk-schema.ts`, then run `bun run api:sdk-schema`.
+   that artifact is labelled `sdk-release`, not a live capture. the live inventory
    preserves subscription roots and unclassified capabilities; its drift check
-   does not yet enforce coverage evidence.
+   does not yet enforce coverage evidence. compare fields and visibility descriptions,
+   not just root names: sdk 95.1.0's schema lagged the complete live capture.
 4. **map every change to executable behavior.** trace schema → cli input → operation
    inference → resolver → core/sdk payload, and sdk response → output. inspect
    both generated and hand-written commands. fix `generate-commands.ts` /

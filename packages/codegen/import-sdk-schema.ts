@@ -10,8 +10,8 @@ const release = {
   sourceSha256: "354098d4acd5859524f0f9a77e5b29691e4b4f186b5334e97125ef8c4a2719da",
 };
 const url = `https://raw.githubusercontent.com/linear/linear/${release.commit}/packages/sdk/src/schema.graphql`;
-const output = new URL("../core/src/api-schema.graphql", import.meta.url);
-const metadata = new URL("../core/src/api-schema.provenance.json", import.meta.url);
+const output = new URL("./sdk-schema.graphql", import.meta.url);
+const metadata = new URL("./sdk-schema.provenance.json", import.meta.url);
 const sha256 = (text: string) => createHash("sha256").update(text).digest("hex");
 const normalizedSha256 = "6f944e957c16e6d7fa485208d158cf13645bb90bd3bb9bf87d688be7b1e652dc";
 

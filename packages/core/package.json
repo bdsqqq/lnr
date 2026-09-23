@@ -27,7 +27,8 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@linear/sdk": "^95.1.0"
+    "@linear/sdk": "^95.1.0",
+    "graphql": "^16.14.2"
   },
   "devDependencies": {
     "@types/bun": "^1.1.0"

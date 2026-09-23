@@ -84,6 +84,9 @@ plus: `lnr auth`, `lnr config`, `lnr me`, `lnr search`.
 
 every list command supports `--json`, `--quiet`, and `--verbose`. see the full [command reference](docs/command-reference.md) for all flags and invocations.
 
+for schema-validated graphql access, see [`lnr api`](docs/api.md). it validates
+offline by default; both queries and mutations require `--execute` for network access.
+
 `cycle new` is no longer supported by linear's api
 ([upstream deprecation](https://github.com/linear/linear/blob/44c3fa4791a617f8812ca83cdd64df057b74468a/packages/sdk/src/schema.graphql#L24048-L24056)).
 enable cycles in team settings so linear generates them automatically, then use

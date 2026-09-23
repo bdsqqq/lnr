@@ -7,10 +7,16 @@ import {
   type ASTNode, type GraphQLArgument, type GraphQLInputField,
 } from "graphql";
 
-type Provenance = {
+type ReleaseProvenance = {
   source: "sdk-release"; sdkVersion: string; commit: string;
   sourceSha256: string; schemaSha256: string; url: string;
 };
+type LiveProvenance = {
+  source: "live-introspection"; sdkVersion: string; schemaSha256: string;
+  endpoint: string; captureStartedAt: string; captureCompletedAt: string;
+  consistency: string; snapshotSha256: string;
+};
+type Provenance = ReleaseProvenance | LiveProvenance;
 type Scope = "internal" | "public-candidate";
 type Item = {
   name: string; description?: string | null;
@@ -27,8 +33,8 @@ const input = (field: GraphQLArgument | GraphQLInputField) => ({
 
 /** scope candidates are not proven public; coverage needs separate binding evidence. */
 export function generateInventory(sdl: string, provenance: Provenance, file = schemaFile): string {
-  if (provenance.source !== "sdk-release" || !provenance.sdkVersion ||
-      provenance.schemaSha256 !== sha256(sdl)) throw new Error("invalid sdk schema provenance");
+  if (!["sdk-release", "live-introspection"].includes(provenance.source) || !provenance.sdkVersion ||
+      provenance.schemaSha256 !== sha256(sdl)) throw new Error("invalid schema provenance");
   const schema = buildSchema(sdl);
   assertValidSchema(schema);
   const references = new Map<string, ASTNode>();
@@ -93,8 +99,14 @@ export function generateInventory(sdl: string, provenance: Provenance, file = sc
   return `${JSON.stringify({
     formatVersion: 1,
     source: {
-      kind: "sdk-release", sdkVersion: provenance.sdkVersion, schemaSha256: provenance.schemaSha256,
-      commit: provenance.commit, sourceSha256: provenance.sourceSha256, url: provenance.url,
+      kind: provenance.source, sdkVersion: provenance.sdkVersion, schemaSha256: provenance.schemaSha256,
+      ...(provenance.source === "sdk-release" ? {
+        commit: provenance.commit, sourceSha256: provenance.sourceSha256, url: provenance.url,
+      } : {
+        endpoint: provenance.endpoint, snapshotSha256: provenance.snapshotSha256,
+        captureStartedAt: provenance.captureStartedAt, captureCompletedAt: provenance.captureCompletedAt,
+        consistency: provenance.consistency,
+      }),
     },
     roots, coordinates,
   }, null, 2)}\n`;

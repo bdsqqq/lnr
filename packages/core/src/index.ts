@@ -1,3 +1,6 @@
+export { executeApi, getApiSchema, ApiExecutionError, sanitizeApiError } from "./api";
+export type { ApiOptions, ApiResult } from "./api";
+
 // types
 export type {
   Issue,

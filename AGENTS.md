@@ -56,9 +56,10 @@ entity support configured in `packages/codegen/entity-config.ts`.
 follow [the api update runbook](docs/updating-linear-api.md), including its
 schema → dispatch → payload checks and sdk 95.1.0 blind spots. parity tasks are
 0087–0098 in `.todo.md`. an sdk bump, generated flags, and green ci do not establish
-full api coverage. `bun run api:check` checks the pinned sdk-release schema and
-inventory, not live behavior or complete coverage evidence. live captures retain
-their own provenance; unresolved capability classifications remain gaps.
+full api coverage. `bun run api:check` checks the sdk-release comparison, captured
+runtime schema, and inventory—not live behavior or complete coverage evidence.
+`lnr api` requires explicit `--execute` even for queries; never bulk-execute its
+inventory. unresolved capability classifications remain gaps.
 
 ### before shipping
 - run `bun run check` (typecheck)
