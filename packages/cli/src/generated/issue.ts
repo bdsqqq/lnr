@@ -353,11 +353,11 @@ async function handleUpdateIssue(
       exitWithError(`issue ${identifier} has no team`);
     }
 
-    if (input.title) {
+    if (input.title !== undefined) {
       updatePayload.title = input.title;
     }
 
-    if (input.description) {
+    if (input.description !== undefined) {
       updatePayload.description = input.description;
     }
 
@@ -409,16 +409,8 @@ async function handleUpdateIssue(
         exitWithError(`label "${labelName}" not found`, `available labels: ${available}`);
       }
 
-      const currentLabelsData = rawIssue ? await rawIssue.labels() : { nodes: [] };
-      const currentLabelIds = currentLabelsData.nodes.map((l) => l.id);
-
-      if (isRemove) {
-        updatePayload.labelIds = currentLabelIds.filter((id) => id !== targetLabel.id);
-      } else {
-        if (!currentLabelIds.includes(targetLabel.id)) {
-          updatePayload.labelIds = [...currentLabelIds, targetLabel.id];
-        }
-      }
+      // atomic deltas preserve labels added concurrently by other clients.
+      updatePayload[isRemove ? "removedLabelIds" : "addedLabelIds"] = [targetLabel.id];
     }
 
     if (input.parent) {
@@ -429,16 +421,27 @@ async function handleUpdateIssue(
       updatePayload.parentId = parentIssue.id;
     }
 
+    const projectId = input.project !== undefined
+      ? await resolveProjectByName(client, input.project)
+      : undefined;
+    if (projectId !== undefined) updatePayload.projectId = projectId;
+    if (input.cycle !== undefined) {
+      updatePayload.cycleId = await resolveCycleByName(client, teamRef.id, input.cycle);
+    }
+    if (input.estimate !== undefined) updatePayload.estimate = input.estimate;
+    if (input.dueDate !== undefined) updatePayload.dueDate = input.dueDate;
+
     if (input.milestone) {
-      if (!input.project) {
+      if (!projectId) {
         exitWithError("--project is required when using --milestone");
       }
-      const projectId = await resolveProjectByName(client, input.project);
       updatePayload.projectMilestoneId = await resolveMilestoneByName(client, projectId, input.milestone);
     }
 
     if (Object.keys(updatePayload).length > 0) {
-      await updateIssue(client, issue.id, updatePayload);
+      if (!await updateIssue(client, issue.id, updatePayload)) {
+        exitWithError("issue update was not confirmed; verify the outcome before retrying");
+      }
       console.log(`updated ${identifier}`);
     }
 
@@ -536,7 +539,9 @@ async function handleUpdateIssue(
     }
 
     if (input.prioritySortOrder !== undefined) {
-      await updateIssue(client, issue.id, { prioritySortOrder: input.prioritySortOrder });
+      if (!await updateIssue(client, issue.id, { prioritySortOrder: input.prioritySortOrder })) {
+        exitWithError("issue update was not confirmed; verify the outcome before retrying");
+      }
       console.log(`updated priority sort order for ${identifier}`);
     }
 
@@ -651,7 +656,7 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
 
       console.log(`created ${issue.identifier}: ${issue.title}`);
     } else {
-      console.log("created issue");
+      exitWithError("issue creation returned no issue; verify the outcome before retrying");
     }
   } catch (error) {
     handleApiError(error);
@@ -712,6 +717,7 @@ async function handleBatchUpdate(input: BatchUpdateInput): Promise<void> {
       assigneeId?: string;
       priority?: number;
       labelIds?: string[];
+      addedLabelIds?: string[];
     } = {};
 
     const firstIssue = await getIssue(client, firstIdentifier);
@@ -746,7 +752,11 @@ async function handleBatchUpdate(input: BatchUpdateInput): Promise<void> {
         const available = labels.map((l) => l.name).join(", ");
         exitWithError(`label "${labelName}" not found`, `available labels: ${available}`);
       }
-      updateInput.labelIds = [targetLabel.id];
+      if (input.label.startsWith("+")) {
+        updateInput.addedLabelIds = [targetLabel.id];
+      } else {
+        updateInput.labelIds = [targetLabel.id];
+      }
     }
 
     if (Object.keys(updateInput).length === 0) {
