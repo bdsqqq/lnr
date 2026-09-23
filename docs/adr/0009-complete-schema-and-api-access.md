@@ -2,7 +2,7 @@
 
 ## status
 
-accepted direction; capture is the first implementation slice.
+accepted; capture and explicit query/mutation access implemented, parity evidence incomplete.
 
 ## context
 
@@ -20,7 +20,9 @@ do not infer operation support from input-type existence.
 keep the live capture and sdk-release schema distinct. the latter comes from the
 immutable upstream commit linked by the npm release provenance and annotated tag;
 it supports offline validation, not claims about current live behavior.
-`api-schema.graphql` and its inventory are derived from that release source.
+the release schema remains a comparison artifact. the runtime `api-schema.graphql`
+and inventory derive from the accepted live capture: sdk 95.1.0 omitted live
+fields and retained stale internal markers on public-candidate project-label fields.
 an absent `[Internal]` marker means public-candidate, not confirmed public.
 
 live introspection batches up to eight named types per request to reduce quota
@@ -30,10 +32,11 @@ two full passes must agree before publication. this detects observed field-only
 drift, but is not an upstream atomic snapshot: the endpoint exposes no revision
 binding here. provenance records this consistency limit.
 
-retain curated commands. a later additive `api` command will use the sdk's public
+retain curated commands. the additive `api` command uses the sdk's public
 graphql transport with schema/document/variable validation and caller-selected
 json output. graphql's parser and validators own syntax/type rules, not custom
 string parsing. a generic path can provide access without hundreds of wrappers.
+offline validation is the default; `--execute` is required for every request.
 
 structural reachability, offline contract coverage, and authorized live verification
 remain separate. a generic transport does not grant credentials or prove every

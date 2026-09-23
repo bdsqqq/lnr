@@ -34,6 +34,13 @@ async function lnr(...args: string[]): Promise<string> {
 }
 
 describe("e2e: read-only", () => {
+  test("explicit api execution returns the authenticated viewer", async () => {
+    const out = await lnr("api", `${import.meta.dir}/fixtures/api-viewer.graphql`, "--execute");
+    expect(JSON.parse(out)).toEqual({
+      ok: true, executed: true, operation: "query", data: { viewer: { id: (await client.viewer).id } },
+    });
+  });
+
   test("me command", async () => {
     const out = await lnr("me");
     expect(out).toContain("@");

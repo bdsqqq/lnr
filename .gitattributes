@@ -1,2 +1,4 @@
 packages/core/src/api-schema.graphql linguist-generated=true
+packages/codegen/sdk-schema.graphql linguist-generated=true
+packages/codegen/schema.json linguist-generated=true
 packages/codegen/api-inventory.json linguist-generated=true

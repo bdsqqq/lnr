@@ -46,10 +46,10 @@ export const labelInput = type({
   "json?": type("boolean").describe("output as json"),
   "delete?": type("boolean").describe("delete the label"),
   "team?": type("string").describe("team key (required for new)"),
-  "name?": type("string").describe("label name (required for new)"),
-  "description?": type("string").describe("label description"),
   "color?": type("string").describe("hex color code"),
+  "description?": type("string").describe("label description"),
   "groupType?": type("'singleSelect' | 'multiSelect' | 'null'").describe("label group type; null resets groups to singleSelect"),
+  "name?": type("string").describe("label name (required for new)"),
 });
 
 type LabelInput = typeof labelInput.infer;

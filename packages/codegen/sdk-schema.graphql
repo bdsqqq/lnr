@@ -529,6 +529,44 @@ enum AgentActivityType {
   thought
 }
 
+"""Payload for an agent activity webhook."""
+type AgentActivityWebhookPayload {
+  """The ID of the agent session that this activity belongs to."""
+  agentSessionId: String!
+
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The content of the agent activity."""
+  content: JSONObject!
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the entity."""
+  id: String!
+
+  """
+  An optional modifier that provides additional instructions on how the activity should be interpreted.
+  """
+  signal: String
+
+  """Metadata about this agent activity's signal."""
+  signalMetadata: JSONObject
+
+  """The ID of the comment this activity is linked to."""
+  sourceCommentId: String
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The user who created this agent activity."""
+  user: UserChildWebhookPayload!
+
+  """The ID of the user who created this agent activity."""
+  userId: String!
+}
+
 """
 The outcome of retrying a loop run blocked by its trusted-source policy.
 """
@@ -808,6 +846,54 @@ type AgentSessionEdge {
   node: AgentSession!
 }
 
+"""Payload for agent session webhook events."""
+type AgentSessionEventWebhookPayload {
+  """The type of action that triggered the webhook."""
+  action: String!
+
+  """The agent activity that was created."""
+  agentActivity: AgentActivityWebhookPayload
+
+  """The agent session that the event belongs to."""
+  agentSession: AgentSessionWebhookPayload!
+
+  """ID of the app user the agent session belongs to."""
+  appUserId: String!
+
+  """The time the payload was created."""
+  createdAt: DateTime!
+
+  """
+  Guidance to inform the agent's behavior, which comes from configuration at the level of the workspace, parent teams, and/or current team for this session. The nearest team-specific guidance should take highest precendence.
+  """
+  guidance: [GuidanceRuleWebhookPayload!]
+
+  """ID of the OAuth client the app user is tied to."""
+  oauthClientId: String!
+
+  """ID of the organization for which the webhook belongs to."""
+  organizationId: String!
+
+  """
+  The previous comments in the thread before this agent was mentioned and the session was initiated, if any. Present only for `created` events where the session was initiated by mentioning the agent in a child comment of a thread.
+  """
+  previousComments: [CommentChildWebhookPayload!]
+
+  """
+  A formatted prompt string containing the relevant context for the agent session, including issue details, comments, and guidance. Present only for `created` events.
+  """
+  promptContext: String
+
+  """The type of resource."""
+  type: String!
+
+  """The ID of the webhook that sent this event."""
+  webhookId: String!
+
+  """Unix timestamp in milliseconds when the webhook was sent."""
+  webhookTimestamp: Float!
+}
+
 """An external link associated with an agent session."""
 type AgentSessionExternalLink {
   """Label for the link."""
@@ -958,6 +1044,77 @@ input AgentSessionUserStateInput {
 
   """The ID of the user this state belongs to."""
   userId: String!
+}
+
+"""Payload for an agent session webhook."""
+type AgentSessionWebhookPayload {
+  """The ID of the agent that the agent session belongs to."""
+  appUserId: String!
+
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The root comment of the thread this agent session is attached to."""
+  comment: CommentChildWebhookPayload
+
+  """
+  The ID of the root comment of the thread this agent session is attached to.
+  """
+  commentId: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """
+  The human user responsible for the agent session. Unset if the session was initiated via automation or by an agent user, with no responsible human user.
+  """
+  creator: UserChildWebhookPayload
+
+  """
+  The ID of the human user responsible for the agent session. Unset if the session was initiated via automation or by an agent user, with no responsible human user.
+  """
+  creatorId: String
+
+  """The time the agent session ended."""
+  endedAt: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The issue this agent session is associated with."""
+  issue: IssueWithDescriptionChildWebhookPayload
+
+  """The ID of the issue this agent session is associated with."""
+  issueId: String
+
+  """The ID of the organization that the agent session belongs to."""
+  organizationId: String!
+
+  """
+  The ID of the comment that this agent session was spawned from, if from a different thread.
+  """
+  sourceCommentId: String
+
+  """Metadata about the external source that created this agent session."""
+  sourceMetadata: JSONObject
+
+  """The time the agent session started working."""
+  startedAt: String
+
+  """The current status of the agent session."""
+  status: String!
+
+  """A summary of the activities in this session."""
+  summary: String
+
+  """The type of the agent session."""
+  type: String!
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The URL of the agent session."""
+  url: String
 }
 
 """
@@ -1167,11 +1324,6 @@ type AiConversation implements Node {
 
   """The time at which the entity was created."""
   createdAt: DateTime!
-
-  """
-  [Internal] The live diff that owns this conversation. Ownership moves to the review on promotion.
-  """
-  diff: Diff
 
   """
   [Internal] The document this shared conversation is attached to. Null if the conversation is private.
@@ -3293,6 +3445,72 @@ input AirbyteConfigurationInput {
   apiKey: String!
 }
 
+"""Payload for app user notification webhook events."""
+type AppUserNotificationWebhookPayload {
+  """The type of action that triggered the webhook."""
+  action: String!
+
+  """ID of the app user the notification is for."""
+  appUserId: String!
+
+  """The time the payload was created."""
+  createdAt: DateTime!
+
+  """Details of the notification."""
+  notification: NotificationWebhookPayload!
+
+  """ID of the OAuth client the app user is tied to."""
+  oauthClientId: String!
+
+  """ID of the organization for which the webhook belongs to."""
+  organizationId: String!
+
+  """The type of resource."""
+  type: String!
+
+  """The ID of the webhook that sent this event."""
+  webhookId: String!
+
+  """Unix timestamp in milliseconds when the webhook was sent."""
+  webhookTimestamp: Float!
+}
+
+"""Payload for app user team access change webhook events."""
+type AppUserTeamAccessChangedWebhookPayload {
+  """The type of action that triggered the webhook."""
+  action: String!
+
+  """IDs of the teams the app user was added to."""
+  addedTeamIds: [String!]!
+
+  """ID of the app user the notification is for."""
+  appUserId: String!
+
+  """Whether the app user can access all public teams."""
+  canAccessAllPublicTeams: Boolean!
+
+  """The time the payload was created."""
+  createdAt: DateTime!
+
+  """ID of the OAuth client the app user is tied to."""
+  oauthClientId: String!
+
+  """ID of the organization for which the webhook belongs to."""
+  organizationId: String!
+
+  """IDs of the teams the app user was removed from."""
+  removedTeamIds: [String!]!
+
+  """The type of resource."""
+  type: String!
+
+  """The ID of the webhook that sent this event."""
+  webhookId: String!
+
+  """Unix timestamp in milliseconds when the webhook was sent."""
+  webhookTimestamp: Float!
+}
+
 """
 Public-facing information about an OAuth application. Contains only the fields that are safe to display to users during the authorization flow, excluding sensitive data like client secrets and internal configuration.
 """
@@ -3659,6 +3877,56 @@ input AttachmentUpdateInput {
   title: String!
 }
 
+"""Payload for an attachment webhook."""
+type AttachmentWebhookPayload {
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the creator of the attachment."""
+  creatorId: String
+
+  """The ID of the non-Linear user who created the attachment."""
+  externalUserCreatorId: String
+
+  """
+  Whether attachments for the same source application should be grouped in the Linear UI.
+  """
+  groupBySource: Boolean!
+
+  """The ID of the entity."""
+  id: String!
+
+  """The ID of the issue this attachment belongs to."""
+  issueId: String!
+
+  """Custom metadata related to the attachment."""
+  metadata: JSONObject!
+
+  """The ID of the issue this attachment belonged to originally."""
+  originalIssueId: String
+
+  """Information about the source which created the attachment."""
+  source: JSONObject
+
+  """The source type of the attachment."""
+  sourceType: String
+
+  """Optional subtitle of the attachment."""
+  subtitle: String
+
+  """The title of the attachment."""
+  title: String!
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The URL of the attachment."""
+  url: String!
+}
+
 """
 A workspace audit log entry recording a security or compliance-relevant action. Audit entries capture who performed an action, when, from what IP address and country, and include type-specific metadata. The audit log is partitioned by time for performance and is accessible only to workspace administrators. Examples of audited actions include user authentication events, permission changes, data exports, and workspace setting modifications.
 """
@@ -3770,6 +4038,44 @@ type AuditEntryType {
 
   """The audit entry type."""
   type: String!
+}
+
+"""Payload for an audit entry webhook."""
+type AuditEntryWebhookPayload {
+  """The ID of the user that caused the audit entry to be created."""
+  actorId: String
+
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """Country code of request resulting to audit entry."""
+  countryCode: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the entity."""
+  id: String!
+
+  """IP from actor when entry was recorded."""
+  ip: String
+
+  """Additional metadata related to the audit entry."""
+  metadata: JSONObject
+
+  """The ID of the organization that the audit entry belongs to."""
+  organizationId: String!
+
+  """
+  Additional information related to the request which performed the action.
+  """
+  requestInformation: JSONObject
+
+  """The type of the audit entry."""
+  type: String!
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
 }
 
 """An identity provider."""
@@ -4040,6 +4346,21 @@ enum AuthenticationSessionType {
   desktop
   ios
   web
+}
+
+"""Base fields for all webhook payloads."""
+type BaseWebhookPayload {
+  """The time the payload was created."""
+  createdAt: DateTime!
+
+  """ID of the organization for which the webhook belongs to."""
+  organizationId: String!
+
+  """The ID of the webhook that sent this event."""
+  webhookId: String!
+
+  """Unix timestamp in milliseconds when the webhook was sent."""
+  webhookTimestamp: Float!
 }
 
 """Comparator for booleans."""
@@ -4467,6 +4788,36 @@ type Comment implements Node {
   user: User
 }
 
+"""Certain properties of a comment."""
+type CommentChildWebhookPayload {
+  """The body of the comment."""
+  body: String!
+
+  """The ID of the document content this comment belongs to."""
+  documentContentId: String
+
+  """The ID of the comment."""
+  id: String!
+
+  """[Internal] The ID of the initiative this comment belongs to."""
+  initiativeId: String
+
+  """The ID of the initiative update this comment belongs to."""
+  initiativeUpdateId: String
+
+  """The ID of the issue this comment belongs to."""
+  issueId: String
+
+  """[Internal] The ID of the project this comment belongs to."""
+  projectId: String
+
+  """The ID of the project update this comment belongs to."""
+  projectUpdateId: String
+
+  """The ID of the user who created this comment."""
+  userId: String
+}
+
 """Comment filtering options."""
 input CommentCollectionFilter {
   """Compound filters, all of which need to be matched by the comment."""
@@ -4705,6 +5056,99 @@ input CommentUpdateInput {
   subscriberIds: [String!]
 }
 
+"""Payload for a comment webhook."""
+type CommentWebhookPayload {
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The body of the comment."""
+  body: String!
+
+  """The bot actor data for this comment."""
+  botActor: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The document content for this comment."""
+  documentContent: DocumentContentChildWebhookPayload
+
+  """The ID of the document content this comment belongs to."""
+  documentContentId: String
+
+  """When the comment was last edited."""
+  editedAt: String
+
+  """The external user who created this comment."""
+  externalUser: ExternalUserChildWebhookPayload
+
+  """The ID of the external user who created this comment."""
+  externalUserId: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """[Internal] The ID of the initiative this comment belongs to."""
+  initiativeId: String
+
+  """The initiative update this comment belongs to."""
+  initiativeUpdate: InitiativeUpdateChildWebhookPayload
+
+  """The ID of the initiative update this comment belongs to."""
+  initiativeUpdateId: String
+
+  """The issue this comment belongs to."""
+  issue: IssueChildWebhookPayload
+
+  """The ID of the issue this comment belongs to."""
+  issueId: String
+
+  """The parent comment."""
+  parent: CommentChildWebhookPayload
+
+  """The ID of the parent comment."""
+  parentId: String
+
+  """The ID of the post this comment belongs to."""
+  postId: String
+
+  """[Internal] The ID of the project this comment belongs to."""
+  projectId: String
+
+  """The project update this comment belongs to."""
+  projectUpdate: ProjectUpdateChildWebhookPayload
+
+  """The ID of the project update this comment belongs to."""
+  projectUpdateId: String
+
+  """The quoted text in this comment."""
+  quotedText: String
+
+  """The reaction data for this comment."""
+  reactionData: JSONObject!
+
+  """When the comment was resolved."""
+  resolvedAt: String
+
+  """The ID of the comment that resolved this comment."""
+  resolvingCommentId: String
+
+  """The ID of the user who resolved this comment."""
+  resolvingUserId: String
+
+  """The entity this comment is synced with."""
+  syncedWith: JSONObject
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The user who created this comment."""
+  user: UserChildWebhookPayload
+
+  """The ID of the user who created this comment."""
+  userId: String
+}
+
 """Issue completion date sorting options."""
 input CompletedAtSort {
   """Whether nulls should be sorted first or last"""
@@ -4857,6 +5301,27 @@ input CreatedAtSort {
 
   """The order for the individual sort"""
   order: PaginationSortOrder
+}
+
+"""Payload for custom webhook resource events."""
+type CustomResourceWebhookPayload {
+  """The type of action that triggered the webhook."""
+  action: String!
+
+  """The time the payload was created."""
+  createdAt: DateTime!
+
+  """ID of the organization for which the webhook belongs to."""
+  organizationId: String!
+
+  """The type of resource."""
+  type: String!
+
+  """The ID of the webhook that sent this event."""
+  webhookId: String!
+
+  """Unix timestamp in milliseconds when the webhook was sent."""
+  webhookTimestamp: Float!
 }
 
 """
@@ -5145,9 +5610,6 @@ input CustomViewCreateInput {
   """The filter applied to issues in the custom view."""
   filterData: IssueFilter
 
-  """The filters applied to issues in the custom view."""
-  filters: JSONObject @deprecated(reason: "Use `filterData` instead.")
-
   """The icon of the custom view."""
   icon: String
 
@@ -5395,9 +5857,6 @@ input CustomViewUpdateInput {
   """The filter applied to issues in the custom view."""
   filterData: IssueFilter
 
-  """The filters applied to issues in the custom view."""
-  filters: JSONObject @deprecated(reason: "Use `filterData` instead.")
-
   """The icon of the custom view."""
   icon: String
 
@@ -5529,6 +5988,21 @@ type Customer implements Node {
 
   """The URL of the customer's page in the Linear application."""
   url: String!
+}
+
+"""Certain properties of a customer."""
+type CustomerChildWebhookPayload {
+  """The domains associated with this customer."""
+  domains: [String!]!
+
+  """The ids of the customers in external systems."""
+  externalIds: [String!]!
+
+  """The ID of the customer."""
+  id: String!
+
+  """The name of the customer."""
+  name: String!
 }
 
 type CustomerConnection {
@@ -5762,6 +6236,24 @@ type CustomerNeedArchivePayload implements ArchivePayload {
 
   """Whether the operation was successful."""
   success: Boolean!
+}
+
+"""Certain properties of a customer need."""
+type CustomerNeedChildWebhookPayload {
+  """The ID of the attachment this need is referencing."""
+  attachmentId: String
+
+  """The ID of the customer that this need is attached to."""
+  customerId: String
+
+  """The ID of the customer need."""
+  id: String!
+
+  """The ID of the issue this need is referencing."""
+  issueId: String
+
+  """The ID of the project this need is referencing."""
+  projectId: String
 }
 
 """Customer needs filtering options."""
@@ -6154,6 +6646,65 @@ type CustomerNeedUpdatePayload {
   updatedRelatedNeeds: [CustomerNeed!]!
 }
 
+"""Payload for a customer need webhook."""
+type CustomerNeedWebhookPayload {
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The attachment this need is referencing."""
+  attachment: AttachmentWebhookPayload
+
+  """The ID of the attachment this need is referencing."""
+  attachmentId: String
+
+  """The body of the need in Markdown format."""
+  body: String
+
+  """The ID of the comment this need is referencing."""
+  commentId: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the creator of the customer need."""
+  creatorId: String
+
+  """The customer that this need is attached to."""
+  customer: CustomerChildWebhookPayload
+
+  """The ID of the customer that this need is attached to."""
+  customerId: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The issue this need is referencing."""
+  issue: IssueChildWebhookPayload
+
+  """The ID of the issue this need is referencing."""
+  issueId: String
+
+  """
+  The issue ID this customer need was originally created on. Will be undefined if the customer need hasn't been moved.
+  """
+  originalIssueId: String
+
+  """The priority of the need."""
+  priority: Float!
+
+  """The project this need is referencing."""
+  project: ProjectChildWebhookPayload
+
+  """The ID of the project attachment this need is referencing."""
+  projectAttachmentId: String
+
+  """The ID of the project this need is referencing."""
+  projectId: String
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+}
+
 """
 A notification related to a customer, such as being added as the customer owner.
 """
@@ -6466,6 +7017,27 @@ type CustomerStatus implements Node {
   updatedAt: DateTime!
 }
 
+"""Certain properties of a customer status."""
+type CustomerStatusChildWebhookPayload {
+  """The color of the customer status."""
+  color: String!
+
+  """The description of the customer status."""
+  description: String
+
+  """The display name of the customer status."""
+  displayName: String!
+
+  """The ID of the customer status."""
+  id: String!
+
+  """The name of the customer status."""
+  name: String!
+
+  """The type of the customer status."""
+  type: String @deprecated(reason: "Customer statuses are no longer grouped by type.")
+}
+
 type CustomerStatusConnection {
   edges: [CustomerStatusEdge!]!
   nodes: [CustomerStatus!]!
@@ -6644,6 +7216,24 @@ type CustomerTier implements Node {
   updatedAt: DateTime!
 }
 
+"""Certain properties of a customer tier."""
+type CustomerTierChildWebhookPayload {
+  """The color of the customer tier."""
+  color: String!
+
+  """The description of the customer tier."""
+  description: String
+
+  """The display name of the customer tier."""
+  displayName: String!
+
+  """The ID of the customer tier."""
+  id: String!
+
+  """The name of the customer tier."""
+  name: String!
+}
+
 type CustomerTierConnection {
   edges: [CustomerTierEdge!]!
   nodes: [CustomerTier!]!
@@ -6710,9 +7300,6 @@ input CustomerTierFilter {
 
   """Comparator for the identifier."""
   id: IDComparator
-
-  """[Deprecated] Comparator for the customer tier name."""
-  name: StringComparator @deprecated(reason: "Use displayName instead.")
 
   """
   Compound filters, one of which needs to be matched by the customer tier.
@@ -6858,6 +7445,73 @@ enum CustomerVisibilityMode {
   SlackMembersAndGuests
 }
 
+"""Payload for a customer webhook."""
+type CustomerWebhookPayload {
+  """
+  The approximate number of distinct requests associated with this customer, deduplicated per issue or project. This is a denormalized counter and may not reflect the exact count at all times.
+  """
+  approximateNeedCount: Float!
+
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The domains associated with this customer."""
+  domains: [String!]!
+
+  """The ids of the customers in external systems."""
+  externalIds: [String!]!
+
+  """The ID of the entity."""
+  id: String!
+
+  """The customer's logo URL."""
+  logoUrl: String
+
+  """
+  The ID of the main source, when a customer has multiple sources. Must be one of externalIds.
+  """
+  mainSourceId: String
+
+  """The name of the customer."""
+  name: String!
+
+  """The ID of the user who owns the customer."""
+  ownerId: String
+
+  """The annual revenue generated by the customer."""
+  revenue: Float
+
+  """The size of the customer."""
+  size: Float
+
+  """The ID of the Slack channel used to interact with the customer."""
+  slackChannelId: String
+
+  """The customer's unique URL slug."""
+  slugId: String!
+
+  """The customer status."""
+  status: CustomerStatusChildWebhookPayload
+
+  """The ID of the customer status."""
+  statusId: String
+
+  """The customer tier."""
+  tier: CustomerTierChildWebhookPayload
+
+  """The ID of the customer tier."""
+  tierId: String
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The URL of the customer."""
+  url: String!
+}
+
 """[Internal] Configuration for the customer attributes data source."""
 input CustomersAttributesDataSourceConfigurationInput {
   """
@@ -6906,11 +7560,6 @@ input CustomersConfigurationInput {
   [Internal] Domains or email addresses excluded entirely from the Customers feature.
   """
   excludeList: [String!]
-
-  """
-  [DEPRECATED] Legacy hidden sources list. Use `excludeList` or `ignoreList` instead.
-  """
-  hiddenSources: [String!] @deprecated(reason: "Use excludeList or ignoreList instead.")
 
   """
   [Internal] Domains or email addresses ignored when matching to a customer.
@@ -7177,6 +7826,24 @@ type CycleArchivePayload implements ArchivePayload {
 
   """Whether the operation was successful."""
   success: Boolean!
+}
+
+"""Certain properties of a cycle."""
+type CycleChildWebhookPayload {
+  """The end date of the cycle."""
+  endsAt: String!
+
+  """The ID of the cycle."""
+  id: String!
+
+  """The name of the cycle."""
+  name: String
+
+  """The number of the cycle."""
+  number: Float!
+
+  """The start date of the cycle."""
+  startsAt: String!
 }
 
 type CycleConnection {
@@ -7447,6 +8114,70 @@ input CycleUpdateInput {
   startsAt: DateTime
 }
 
+"""Payload for a cycle webhook."""
+type CycleWebhookPayload {
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """
+  The time at which the cycle was automatically archived by the auto pruning process.
+  """
+  autoArchivedAt: String
+
+  """
+  The completion time of the cycle. If null, the cycle hasn't been completed.
+  """
+  completedAt: String
+
+  """The number of completed issues in the cycle after each day."""
+  completedIssueCountHistory: [Float!]!
+
+  """The number of completed estimation points after each day."""
+  completedScopeHistory: [Float!]!
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The cycle's description."""
+  description: String
+
+  """The end date of the cycle."""
+  endsAt: String!
+
+  """The ID of the entity."""
+  id: String!
+
+  """The number of in progress estimation points after each day."""
+  inProgressScopeHistory: [Float!]!
+
+  """The ID of the cycle inherited from."""
+  inheritedFromId: String
+
+  """The total number of issues in the cycle after each day."""
+  issueCountHistory: [Float!]!
+
+  """The name of the cycle."""
+  name: String
+
+  """The number of the cycle."""
+  number: Float!
+
+  """The total number of estimation points after each day."""
+  scopeHistory: [Float!]!
+
+  """The start date of the cycle."""
+  startsAt: String!
+
+  """The team ID of the cycle."""
+  teamId: String!
+
+  """The IDs of the uncompleted issues upon close."""
+  uncompletedIssuesUponCloseIds: [String!]!
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+}
+
 """
 [Internal] A configurable dashboard composed of widgets that display analytics, metrics, and insights. Dashboards can be personal or shared with the workspace, and optionally scoped to one or more teams. Each dashboard contains a set of widget configurations that define what data is visualized.
 """
@@ -7531,6 +8262,9 @@ type Dashboard implements Node {
   widgets: JSONObject!
 }
 
+"""Union type for all possible webhook entity data payloads"""
+union DataWebhookPayload = AgentActivityWebhookPayload | AgentSessionWebhookPayload | AttachmentWebhookPayload | AuditEntryWebhookPayload | CommentWebhookPayload | CustomerNeedWebhookPayload | CustomerWebhookPayload | CycleWebhookPayload | DocumentWebhookPayload | InitiativeUpdateWebhookPayload | InitiativeWebhookPayload | IssueLabelWebhookPayload | IssueWebhookPayload | ProjectLabelWebhookPayload | ProjectUpdateWebhookPayload | ProjectWebhookPayload | ReactionWebhookPayload | ReleaseNoteWebhookPayload | ReleaseWebhookPayload | UserWebhookPayload
+
 """Comparator for dates."""
 input DateComparator {
   """Equals constraint."""
@@ -7575,12 +8309,12 @@ enum DateResolutionType {
 }
 
 """
-Represents a date and time in ISO 8601 format. Accepts shortcuts like `2021` to represent midnight Fri Jan 01 2021. Also accepts ISO 8601 durations strings which are added to the current date to create the represented date (e.g '-P2W1D' represents the date that was two weeks and 1 day ago) 
+Represents a date and time in ISO 8601 format. Accepts shortcuts like `2021` to represent midnight Fri Jan 01 2021. Also accepts ISO 8601 durations strings which are added to the current date to create the represented date (e.g '-P2W1D' represents the date that was two weeks and 1 day ago)
 """
 scalar DateTime
 
 """
-Represents a date and time in ISO 8601 format. Accepts shortcuts like `2021` to represent midnight Fri Jan 01 2021. Also accepts ISO 8601 durations strings which are added to the current date to create the represented date (e.g '-P2W1D' represents the date that was two weeks and 1 day ago) 
+Represents a date and time in ISO 8601 format. Accepts shortcuts like `2021` to represent midnight Fri Jan 01 2021. Also accepts ISO 8601 durations strings which are added to the current date to create the represented date (e.g '-P2W1D' represents the date that was two weeks and 1 day ago)
 """
 scalar DateTimeOrDuration
 
@@ -7917,6 +8651,27 @@ type DocumentArchivePayload implements ArchivePayload {
   success: Boolean!
 }
 
+"""Certain properties of a document."""
+type DocumentChildWebhookPayload {
+  """The ID of the document."""
+  id: String!
+
+  """The initiative this document belongs to."""
+  initiative: InitiativeChildWebhookPayload
+
+  """The ID of the initiative this document belongs to."""
+  initiativeId: String
+
+  """The project this document belongs to."""
+  project: ProjectChildWebhookPayload
+
+  """The ID of the project this document belongs to."""
+  projectId: String
+
+  """The title of the document."""
+  title: String!
+}
+
 type DocumentConnection {
   edges: [DocumentEdge!]!
   nodes: [Document!]!
@@ -8011,6 +8766,15 @@ Whether the checkpoint belongs to a draft-only or live document agent flow.
 enum DocumentContentAgentCheckpointMode {
   draft
   live
+}
+
+"""Certain properties of a document content."""
+type DocumentContentChildWebhookPayload {
+  """The document this document content belongs to."""
+  document: DocumentChildWebhookPayload
+
+  """The project this document belongs to."""
+  project: ProjectChildWebhookPayload
 }
 
 """
@@ -8204,9 +8968,6 @@ input DocumentCreateInput {
 
   """The document content as markdown."""
   content: String
-
-  """[Internal] The document content as a Prosemirror document."""
-  contentData: JSONObject @deprecated(reason: "Use content instead")
 
   """[Internal] Related cycle for the document."""
   cycleId: String
@@ -8724,9 +9485,6 @@ input DocumentUpdateInput {
   """The document content as markdown."""
   content: String
 
-  """[Internal] The document content as a Prosemirror document."""
-  contentData: JSONObject @deprecated(reason: "Use content instead")
-
   """[Internal] Related cycle for the document."""
   cycleId: String
 
@@ -8784,6 +9542,69 @@ input DocumentUpdatedAtSort {
 
   """The order for the individual sort"""
   order: PaginationSortOrder
+}
+
+"""Payload for a document webhook."""
+type DocumentWebhookPayload {
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The color of the document."""
+  color: String
+
+  """The content of the document."""
+  content: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the user who created the document."""
+  creatorId: String
+
+  """The description of the document."""
+  description: String
+
+  """The time at which the document was hidden."""
+  hiddenAt: String
+
+  """The icon of the document."""
+  icon: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The ID of the initiative this document belongs to."""
+  initiativeId: String
+
+  """The ID of the last template that was applied to this document."""
+  lastAppliedTemplateId: String
+
+  """The ID of the project this document belongs to."""
+  projectId: String
+
+  """The ID of the resource folder this document belongs to."""
+  resourceFolderId: String
+
+  """The document's unique URL slug."""
+  slugId: String!
+
+  """The order of the item in the resources list."""
+  sortOrder: Float!
+
+  """The IDs of the users who are subscribed to this document."""
+  subscriberIds: [String!]
+
+  """The title of the document."""
+  title: String!
+
+  """A flag that indicates whether the document is in the trash bin."""
+  trashed: Boolean
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The ID of the user who last updated the document."""
+  updatedById: String
 }
 
 """
@@ -9222,9 +10043,6 @@ input EmailUserAccountAuthChallengeInput {
 
   """PostHog session ID for attribution tracking."""
   sessionId: String
-
-  """Signup code."""
-  signupCode: String @deprecated(reason: "Not used anymore")
 }
 
 type EmailUserAccountAuthChallengeResponse {
@@ -9370,6 +10188,9 @@ interface Entity implements Node {
   updatedAt: DateTime!
 }
 
+"""Union type for webhook actor payloads"""
+union EntityActorWebhookPayload = ExternalUserActorWebhookPayload | IntegrationActorWebhookPayload | OauthClientActorWebhookPayload | UserActorWebhookPayload
+
 """
 An external link attached to a Linear entity such as an initiative, project, team, release, or cycle. External links provide a way to reference related resources outside of Linear (e.g., documentation, design files, dashboards) directly from the entity's resources section. Each link has a URL, display label, and sort order within its parent entity.
 """
@@ -9505,6 +10326,39 @@ input EntityIdentifierIDComparator {
 
   """Not-in-array constraint."""
   nin: [ID!]
+}
+
+"""Payload for entity-related webhook events."""
+type EntityWebhookPayload {
+  """The type of action that triggered the webhook."""
+  action: String!
+
+  """The actor who triggered the action."""
+  actor: EntityActorWebhookPayload
+
+  """The time the payload was created."""
+  createdAt: DateTime!
+
+  """The entity that was changed."""
+  data: DataWebhookPayload!
+
+  """ID of the organization for which the webhook belongs to."""
+  organizationId: String!
+
+  """The type of resource, i.e., the name of the entity."""
+  type: String!
+
+  """In case of an update event, previous values of all updated properties."""
+  updatedFrom: JSONObject
+
+  """URL for the entity."""
+  url: String
+
+  """The ID of the webhook that sent this event."""
+  webhookId: String!
+
+  """Unix timestamp in milliseconds when the webhook was sent."""
+  webhookTimestamp: Float!
 }
 
 """Comparator for estimates."""
@@ -9691,6 +10545,33 @@ type ExternalUser implements Node {
       been updated after creation.
   """
   updatedAt: DateTime!
+}
+
+"""External user actor payload for webhooks."""
+type ExternalUserActorWebhookPayload {
+  """The email of the external user."""
+  email: String!
+
+  """The ID of the external user."""
+  id: String!
+
+  """The name of the external user."""
+  name: String!
+
+  """The type of actor."""
+  type: String!
+}
+
+"""Certain properties of an external user."""
+type ExternalUserChildWebhookPayload {
+  """The email of the external user."""
+  email: String!
+
+  """The ID of the external user."""
+  id: String!
+
+  """The name of the external user."""
+  name: String!
 }
 
 type ExternalUserConnection {
@@ -10336,11 +11217,6 @@ type GitAutomationStateConnection {
 
 """Input for creating a new Git automation rule."""
 input GitAutomationStateCreateInput {
-  """
-  [DEPRECATED] The target branch pattern. If null, all branches are targeted.
-  """
-  branchPattern: String @deprecated(reason: "Use targetBranchId instead.")
-
   """The event that triggers the automation."""
   event: GitAutomationStates!
 
@@ -10381,11 +11257,6 @@ type GitAutomationStatePayload {
 
 """Input for updating an existing Git automation rule."""
 input GitAutomationStateUpdateInput {
-  """
-  [DEPRECATED] The target branch pattern. If null, all branches are targeted.
-  """
-  branchPattern: String @deprecated(reason: "Use targetBranchId instead.")
-
   """The event that triggers the automation."""
   event: GitAutomationStates
 
@@ -10852,14 +11723,20 @@ input GoogleUserAccountAuthInput {
   """PostHog session ID for attribution tracking."""
   sessionId: String
 
-  """Signup code."""
-  signupCode: String @deprecated(reason: "Not used anymore")
-
-  """The identifiers of the teams to auto-join."""
-  teamIdsToJoin: [String!] @deprecated(reason: "Not used anymore")
-
   """The timezone of the user's browser."""
   timezone: String!
+}
+
+"""Union type for all possible guidance rule origins"""
+union GuidanceRuleOriginWebhookPayload = OrganizationOriginWebhookPayload | TeamOriginWebhookPayload
+
+"""Metadata for guidance that should be provided to an AI agent."""
+type GuidanceRuleWebhookPayload {
+  """The content of the guidance as markdown."""
+  body: String!
+
+  """Where the guidance was defined within the organization."""
+  origin: GuidanceRuleOriginWebhookPayload!
 }
 
 """Comparator for identifiers."""
@@ -11453,6 +12330,18 @@ type InitiativeArchivePayload implements ArchivePayload {
   success: Boolean!
 }
 
+"""Certain properties of an initiative."""
+type InitiativeChildWebhookPayload {
+  """The ID of the initiative."""
+  id: String!
+
+  """The name of the initiative."""
+  name: String!
+
+  """The URL of the initiative."""
+  url: String!
+}
+
 """Initiative collection filtering options."""
 input InitiativeCollectionFilter {
   """Comparator for the initiative activity type."""
@@ -11897,6 +12786,21 @@ type InitiativeLabel implements Node {
   updatedAt: DateTime!
 }
 
+"""Certain properties of an initiative label."""
+type InitiativeLabelChildWebhookPayload {
+  """The color of the initiative label."""
+  color: String!
+
+  """The ID of the initiative label."""
+  id: String!
+
+  """The name of the initiative label."""
+  name: String!
+
+  """The parent ID of the initiative label."""
+  parentId: String
+}
+
 """Initiative label filtering options."""
 input InitiativeLabelCollectionFilter {
   """Compound filters, all of which need to be matched by the label."""
@@ -12046,6 +12950,39 @@ input InitiativeLabelUpdateInput {
   The time at which the label was retired. Set to null to restore a retired label.
   """
   retiredAt: DateTime
+}
+
+"""Payload for an initiative label webhook."""
+type InitiativeLabelWebhookPayload {
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The color of the initiative label."""
+  color: String!
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The creator ID of the initiative label."""
+  creatorId: String
+
+  """The label's description."""
+  description: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """Whether the label is a group."""
+  isGroup: Boolean!
+
+  """The name of the initiative label."""
+  name: String!
+
+  """The parent ID of the initiative label."""
+  parentId: String
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
 }
 
 """[Internal] Impact summary for changing an initiative's lead team."""
@@ -12709,6 +13646,21 @@ type InitiativeUpdateArchivePayload implements ArchivePayload {
   success: Boolean!
 }
 
+"""Certain properties of an initiative update."""
+type InitiativeUpdateChildWebhookPayload {
+  """The body of the initiative update."""
+  bodyData: String!
+
+  """The edited at timestamp of the initiative update."""
+  editedAt: String!
+
+  """The health of the initiative update."""
+  health: String!
+
+  """The ID of the initiative update."""
+  id: String!
+}
+
 type InitiativeUpdateConnection {
   edges: [InitiativeUpdateEdge!]!
   nodes: [InitiativeUpdate!]!
@@ -12897,11 +13849,59 @@ input InitiativeUpdateUpdateInput {
 
   """The health of the initiative at the time of the update."""
   health: InitiativeUpdateHealthType
+}
+
+"""Payload for an initiative update webhook."""
+type InitiativeUpdateWebhookPayload {
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The body of the initiative update."""
+  body: String!
+
+  """The body data of the initiative update."""
+  bodyData: String!
+
+  """The time at which the entity was created."""
+  createdAt: String!
 
   """
-  Whether the diff between the current update and the previous one should be hidden.
+  The diff between the current update and the previous one, formatted as markdown.
   """
-  isDiffHidden: Boolean @deprecated(reason: "No longer used by the UI. Kept for backwards compatibility with older updates.")
+  diffMarkdown: String
+
+  """The edited at timestamp of the initiative update."""
+  editedAt: String!
+
+  """The health of the initiative update."""
+  health: String!
+
+  """The ID of the entity."""
+  id: String!
+
+  """The initiative that the initiative update belongs to."""
+  initiative: InitiativeChildWebhookPayload!
+
+  """The initiative id of the initiative update."""
+  initiativeId: String!
+
+  """The reaction data for this initiative update."""
+  reactionData: JSONObject!
+
+  """The slug id of the initiative update."""
+  slugId: String!
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The URL of the initiative update."""
+  url: String
+
+  """The user that created the initiative update."""
+  user: UserChildWebhookPayload!
+
+  """The user id of the initiative update."""
+  userId: String!
 }
 
 """Initiative update date sorting options."""
@@ -12975,6 +13975,134 @@ enum InitiativeVisibility {
   restricted
 }
 
+"""Payload for an initiative webhook."""
+type InitiativeWebhookPayload {
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """When the initiative was canceled."""
+  canceledAt: String
+
+  """The color of the initiative."""
+  color: String
+
+  """When the initiative was completed."""
+  completedAt: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The user who created the initiative."""
+  creator: UserChildWebhookPayload
+
+  """The ID of the user who created the initiative."""
+  creatorId: String
+
+  """The description of the initiative."""
+  description: String!
+
+  """The resolution of the update reminder frequency."""
+  frequencyResolution: String!
+
+  """The health status of the initiative."""
+  health: String
+
+  """When the health status was last updated."""
+  healthUpdatedAt: String
+
+  """The icon of the initiative."""
+  icon: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The human-readable identifier of the initiative."""
+  identifier: String
+
+  """The IDs of the initiative labels associated with this initiative."""
+  labelIds: [String!]!
+
+  """The last update for this initiative."""
+  lastUpdate: InitiativeUpdateChildWebhookPayload
+
+  """The ID of the last update for this initiative."""
+  lastUpdateId: String
+
+  """The ID of the team that leads the initiative."""
+  leadTeamId: String
+
+  """The name of the initiative."""
+  name: String!
+
+  """The ID of the organization this initiative belongs to."""
+  organizationId: String!
+
+  """The user who owns the initiative."""
+  owner: UserChildWebhookPayload
+
+  """The ID of the user who owns the initiative."""
+  ownerId: String
+
+  """The parent initiative associated with the initiative."""
+  parentInitiative: InitiativeChildWebhookPayload
+
+  """The parent initiatives associated with the initiative."""
+  parentInitiatives: [InitiativeChildWebhookPayload!]
+
+  """Previous identifiers of the initiative."""
+  previousIdentifiers: [String!]
+
+  """
+  The priority of the initiative. 0 = No priority, 1 = Urgent, 2 = High, 3 = Medium, 4 = Low.
+  """
+  priority: Float!
+
+  """The projects associated with the initiative."""
+  projects: [ProjectChildWebhookPayload!]
+
+  """The unique slug identifier of the initiative."""
+  slugId: String!
+
+  """The sort order of the initiative within the organization."""
+  sortOrder: Float!
+
+  """When the initiative was started."""
+  startedAt: String
+
+  """The current status of the initiative."""
+  status: String!
+
+  """The sub-initiatives associated with the initiative."""
+  subInitiatives: [InitiativeChildWebhookPayload!]
+
+  """The target date of the initiative."""
+  targetDate: String
+
+  """The resolution of the target date."""
+  targetDateResolution: String
+
+  """Whether the initiative is trashed."""
+  trashed: Boolean
+
+  """The frequency of update reminders."""
+  updateReminderFrequency: Float
+
+  """The frequency of update reminders in weeks."""
+  updateReminderFrequencyInWeeks: Float
+
+  """The day of the week for update reminders."""
+  updateRemindersDay: Float
+
+  """The hour of the day for update reminders."""
+  updateRemindersHour: Float
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The URL of the initiative."""
+  url: String!
+}
+
 """
 An integration with an external service. Integrations connect Linear to tools like Slack, GitHub, GitLab, Jira, Figma, Sentry, Zendesk, Intercom, Front, PagerDuty, Opsgenie, Google Sheets, Microsoft Teams, Discord, Salesforce, and others. Each integration record represents a single configured connection, scoped to a workspace and optionally to a specific team, project, initiative, or custom view. Personal integrations (e.g., Slack Personal, Jira Personal, GitHub Personal) are scoped to the user who created them.
 """
@@ -13009,6 +14137,27 @@ type Integration implements Node {
       been updated after creation.
   """
   updatedAt: DateTime!
+}
+
+"""Integration actor payload for webhooks."""
+type IntegrationActorWebhookPayload {
+  """The ID of the integration."""
+  id: String!
+
+  """The service of the integration."""
+  service: String!
+
+  """The type of actor."""
+  type: String!
+}
+
+"""Certain properties of an integration."""
+type IntegrationChildWebhookPayload {
+  """The ID of the integration."""
+  id: String!
+
+  """The service of the integration."""
+  service: String!
 }
 
 type IntegrationConnection {
@@ -13148,9 +14297,6 @@ input IntegrationSettingsInput {
   jira: JiraSettingsInput
   jiraPersonal: JiraPersonalSettingsInput
   launchDarkly: LaunchDarklySettingsInput
-
-  """Settings shared by personal and shared MCP server connections."""
-  mcpServer: McpServerIntegrationSettingsInput
   microsoftTeams: MicrosoftTeamsSettingsInput
   microsoftTeamsProjectPost: MicrosoftTeamsPostSettingsInput
   notion: NotionSettingsInput
@@ -13297,11 +14443,6 @@ type IntegrationsSettings implements Node {
   """Project which those settings apply to."""
   project: Project
 
-  """
-  Whether to send a Slack message when a top-level initiative comment is created. New settings default to true. Existing unset settings inherit the initiative update preference until first edited.
-  """
-  slackInitiativeCommentCreated: Boolean
-
   """Whether to send a Slack message when an initiative update is created."""
   slackInitiativeUpdateCreated: Boolean
 
@@ -13338,11 +14479,6 @@ type IntegrationsSettings implements Node {
   Whether to send a Slack message when any of the project or team's issues change to completed or canceled.
   """
   slackIssueStatusChangedDone: Boolean
-
-  """
-  Whether to send a Slack message when a top-level project comment is created. New settings default to true. Existing unset settings inherit the project update preference until first edited.
-  """
-  slackProjectCommentCreated: Boolean
 
   """Whether to send a Slack message when a project update is created."""
   slackProjectUpdateCreated: Boolean
@@ -13388,11 +14524,6 @@ input IntegrationsSettingsCreateInput {
   """The identifier of the project to create settings for."""
   projectId: String
 
-  """
-  Whether to send a Slack message when a top-level initiative comment is created.
-  """
-  slackInitiativeCommentCreated: Boolean
-
   """Whether to send a Slack message when an initiative update is created."""
   slackInitiativeUpdateCreated: Boolean
 
@@ -13427,11 +14558,6 @@ input IntegrationsSettingsCreateInput {
   Whether to send a Slack message when any of the project or team's issues change to completed or canceled.
   """
   slackIssueStatusChangedDone: Boolean
-
-  """
-  Whether to send a Slack message when a top-level project comment is created.
-  """
-  slackProjectCommentCreated: Boolean
 
   """Whether to send a Slack message when a project update is created."""
   slackProjectUpdateCreated: Boolean
@@ -13467,11 +14593,6 @@ input IntegrationsSettingsUpdateInput {
   """
   microsoftTeamsProjectUpdateCreated: Boolean
 
-  """
-  Whether to send a Slack message when a top-level initiative comment is created.
-  """
-  slackInitiativeCommentCreated: Boolean
-
   """Whether to send a Slack message when an initiative update is created."""
   slackInitiativeUpdateCreated: Boolean
 
@@ -13506,11 +14627,6 @@ input IntegrationsSettingsUpdateInput {
   Whether to send a Slack message when any of the project or team's issues change to completed or canceled.
   """
   slackIssueStatusChangedDone: Boolean
-
-  """
-  Whether to send a Slack message when a top-level project comment is created.
-  """
-  slackProjectCommentCreated: Boolean
 
   """Whether to send a Slack message when a project update is created."""
   slackProjectUpdateCreated: Boolean
@@ -14387,6 +15503,45 @@ type IssueArchivePayload implements ArchivePayload {
   success: Boolean!
 }
 
+"""An issue assignment notification type."""
+scalar IssueAssignedToYouNotificationType
+
+"""Payload for an issue assigned to you notification."""
+type IssueAssignedToYouNotificationWebhookPayload {
+  """The actor who caused the notification."""
+  actor: UserChildWebhookPayload
+
+  """The ID of the actor who caused the notification."""
+  actorId: String
+
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the external user who caused the notification."""
+  externalUserActorId: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The issue this notification belongs to."""
+  issue: IssueWithDescriptionChildWebhookPayload!
+
+  """The ID of the issue this notification belongs to."""
+  issueId: String!
+
+  """An issue assigned to you notification type."""
+  type: IssueAssignedToYouNotificationType!
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The ID of the user who received the notification."""
+  userId: String!
+}
+
 """
 Input for creating multiple issues at once in a batch operation. Up to 50 issues can be created in a single batch.
 """
@@ -14407,6 +15562,27 @@ type IssueBatchPayload {
 
   """Whether the operation was successful."""
   success: Boolean!
+}
+
+"""Certain properties of an issue."""
+type IssueChildWebhookPayload {
+  """The ID of the issue."""
+  id: String!
+
+  """The identifier of the issue."""
+  identifier: String!
+
+  """The ID of the team that the issue belongs to."""
+  team: TeamChildWebhookPayload!
+
+  """The ID of the team that the issue belongs to."""
+  teamId: String!
+
+  """The title of the issue."""
+  title: String!
+
+  """The URL of the issue."""
+  url: String!
 }
 
 """Issue filtering options."""
@@ -14655,6 +15831,115 @@ input IssueCollectionFilter {
   updatedAt: DateComparator
 }
 
+"""An issue comment mention notification type."""
+scalar IssueCommentMentionNotificationType
+
+"""Payload for an issue comment mention notification."""
+type IssueCommentMentionNotificationWebhookPayload {
+  """The actor who caused the notification."""
+  actor: UserChildWebhookPayload
+
+  """The ID of the actor who caused the notification."""
+  actorId: String
+
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The comment this notification belongs to."""
+  comment: CommentChildWebhookPayload!
+
+  """The ID of the comment this notification belongs to."""
+  commentId: String!
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the external user who caused the notification."""
+  externalUserActorId: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The issue this notification belongs to."""
+  issue: IssueWithDescriptionChildWebhookPayload!
+
+  """The ID of the issue this notification belongs to."""
+  issueId: String!
+
+  """The parent comment for the comment this notification belongs to."""
+  parentComment: CommentChildWebhookPayload
+
+  """
+  The ID of the parent comment for the comment this notification belongs to.
+  """
+  parentCommentId: String
+
+  """An issue comment mention notification type."""
+  type: IssueCommentMentionNotificationType!
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The ID of the user who received the notification."""
+  userId: String!
+}
+
+"""An issue comment reaction notification type."""
+scalar IssueCommentReactionNotificationType
+
+"""Payload for an issue comment reaction notification."""
+type IssueCommentReactionNotificationWebhookPayload {
+  """The actor who caused the notification."""
+  actor: UserChildWebhookPayload
+
+  """The ID of the actor who caused the notification."""
+  actorId: String
+
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The comment this notification belongs to."""
+  comment: CommentChildWebhookPayload!
+
+  """The ID of the comment this notification belongs to."""
+  commentId: String!
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the external user who caused the notification."""
+  externalUserActorId: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The issue this notification belongs to."""
+  issue: IssueWithDescriptionChildWebhookPayload!
+
+  """The ID of the issue this notification belongs to."""
+  issueId: String!
+
+  """The parent comment for the comment this notification belongs to."""
+  parentComment: CommentChildWebhookPayload
+
+  """
+  The ID of the parent comment for the comment this notification belongs to.
+  """
+  parentCommentId: String
+
+  """The emoji of the reaction this notification is for."""
+  reactionEmoji: String!
+
+  """An issue comment reaction notification type."""
+  type: IssueCommentReactionNotificationType!
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The ID of the user who received the notification."""
+  userId: String!
+}
+
 type IssueConnection {
   edges: [IssueEdge!]!
   nodes: [Issue!]!
@@ -14667,9 +15952,6 @@ Input for creating a new issue. At minimum, a team must be specified. A title is
 input IssueCreateInput {
   """The identifier of the user to assign the issue to."""
   assigneeId: String
-
-  """The position of the issue in its column on the board view."""
-  boardOrder: Float @deprecated(reason: "Will be removed in near future, please use `sortOrder` instead")
 
   """
   The time at which the issue was completed (e.g. if importing from another system). Must be a time in the past and after createdAt. Cannot be provided with an incompatible workflow state.
@@ -14952,6 +16234,48 @@ type IssueEdge {
   """Used in `before` and `after` args"""
   cursor: String!
   node: Issue!
+}
+
+"""An issue emoji reaction notification type."""
+scalar IssueEmojiReactionNotificationType
+
+"""Payload for an issue emoji reaction notification."""
+type IssueEmojiReactionNotificationWebhookPayload {
+  """The actor who caused the notification."""
+  actor: UserChildWebhookPayload
+
+  """The ID of the actor who caused the notification."""
+  actorId: String
+
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the external user who caused the notification."""
+  externalUserActorId: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The issue this notification belongs to."""
+  issue: IssueWithDescriptionChildWebhookPayload!
+
+  """The ID of the issue this notification belongs to."""
+  issueId: String!
+
+  """The emoji of the reaction this notification is for."""
+  reactionEmoji: String!
+
+  """An issue emoji reaction notification type."""
+  type: IssueEmojiReactionNotificationType!
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The ID of the user who received the notification."""
+  userId: String!
 }
 
 """Issue filtering options."""
@@ -15839,6 +17163,21 @@ type IssueLabel implements Node {
   updatedAt: DateTime!
 }
 
+"""Certain properties of an issue label."""
+type IssueLabelChildWebhookPayload {
+  """The color of the issue label."""
+  color: String!
+
+  """The ID of the issue label."""
+  id: String!
+
+  """The name of the issue label."""
+  name: String!
+
+  """The parent ID of the issue label."""
+  parentId: String
+}
+
 """Issue label filtering options."""
 input IssueLabelCollectionFilter {
   """Compound filters, all of which need to be matched by the label."""
@@ -16011,6 +17350,137 @@ input IssueLabelUpdateInput {
   The time at which the label was retired. Set to null to restore a retired label.
   """
   retiredAt: DateTime
+}
+
+"""Payload for an issue label webhook."""
+type IssueLabelWebhookPayload {
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The color of the issue label."""
+  color: String!
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The creator ID of the issue label."""
+  creatorId: String
+
+  """The label's description."""
+  description: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The original label inherited from."""
+  inheritedFromId: String
+
+  """Whether the label is a group."""
+  isGroup: Boolean!
+
+  """The name of the issue label."""
+  name: String!
+
+  """The parent ID of the issue label."""
+  parentId: String
+
+  """The team ID of the issue label."""
+  teamId: String
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+}
+
+"""An issue mention notification type."""
+scalar IssueMentionNotificationType
+
+"""Payload for an issue mention notification."""
+type IssueMentionNotificationWebhookPayload {
+  """The actor who caused the notification."""
+  actor: UserChildWebhookPayload
+
+  """The ID of the actor who caused the notification."""
+  actorId: String
+
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the external user who caused the notification."""
+  externalUserActorId: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The issue this notification belongs to."""
+  issue: IssueWithDescriptionChildWebhookPayload!
+
+  """The ID of the issue this notification belongs to."""
+  issueId: String!
+
+  """An issue mention notification type."""
+  type: IssueMentionNotificationType!
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The ID of the user who received the notification."""
+  userId: String!
+}
+
+"""An issue new comment notification type."""
+scalar IssueNewCommentNotificationType
+
+"""Payload for an issue new comment notification."""
+type IssueNewCommentNotificationWebhookPayload {
+  """The actor who caused the notification."""
+  actor: UserChildWebhookPayload
+
+  """The ID of the actor who caused the notification."""
+  actorId: String
+
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The comment this notification belongs to."""
+  comment: CommentChildWebhookPayload!
+
+  """The ID of the comment this notification belongs to."""
+  commentId: String!
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the external user who caused the notification."""
+  externalUserActorId: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The issue this notification belongs to."""
+  issue: IssueWithDescriptionChildWebhookPayload!
+
+  """The ID of the issue this notification belongs to."""
+  issueId: String!
+
+  """The parent comment for the comment this notification belongs to."""
+  parentComment: CommentChildWebhookPayload
+
+  """
+  The ID of the parent comment for the comment this notification belongs to.
+  """
+  parentCommentId: String
+
+  """An issue new comment notification type."""
+  type: IssueNewCommentNotificationType!
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The ID of the user who received the notification."""
+  userId: String!
 }
 
 """
@@ -17168,6 +18638,33 @@ enum IssueSharingPolicy {
   disabled
 }
 
+"""Payload for issue SLA webhook events."""
+type IssueSlaWebhookPayload {
+  """The type of action that triggered the webhook."""
+  action: String!
+
+  """The time the payload was created."""
+  createdAt: DateTime!
+
+  """The issue that the SLA event is about."""
+  issueData: IssueWebhookPayload!
+
+  """ID of the organization for which the webhook belongs to."""
+  organizationId: String!
+
+  """The type of resource."""
+  type: String!
+
+  """URL for the issue."""
+  url: String
+
+  """The ID of the webhook that sent this event."""
+  webhookId: String!
+
+  """Unix timestamp in milliseconds when the webhook was sent."""
+  webhookTimestamp: Float!
+}
+
 """Issue sorting options."""
 input IssueSortInput {
   """[Internal] Sort by the accumulated time in the current workflow state"""
@@ -17281,6 +18778,45 @@ type IssueStateSpanEdge {
   """Used in `before` and `after` args"""
   cursor: String!
   node: IssueStateSpan!
+}
+
+"""An issue status changed notification type."""
+scalar IssueStatusChangedNotificationType
+
+"""Payload for a terminal issue status change notification."""
+type IssueStatusChangedNotificationWebhookPayload {
+  """The actor who caused the notification."""
+  actor: UserChildWebhookPayload
+
+  """The ID of the actor who caused the notification."""
+  actorId: String
+
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the external user who caused the notification."""
+  externalUserActorId: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The issue this notification belongs to."""
+  issue: IssueWithDescriptionChildWebhookPayload!
+
+  """The ID of the issue this notification belongs to."""
+  issueId: String!
+
+  """A terminal issue status change notification type."""
+  type: IssueStatusChangedNotificationType!
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The ID of the user who received the notification."""
+  userId: String!
 }
 
 """Filter for issue subscription events."""
@@ -17669,6 +19205,45 @@ type IssueToReleasePayload {
   success: Boolean!
 }
 
+"""An issue unassignment notification type."""
+scalar IssueUnassignedFromYouNotificationType
+
+"""Payload for an issue unassignment notification."""
+type IssueUnassignedFromYouNotificationWebhookPayload {
+  """The actor who caused the notification."""
+  actor: UserChildWebhookPayload
+
+  """The ID of the actor who caused the notification."""
+  actorId: String
+
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the external user who caused the notification."""
+  externalUserActorId: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The issue this notification belongs to."""
+  issue: IssueWithDescriptionChildWebhookPayload!
+
+  """The ID of the issue this notification belongs to."""
+  issueId: String!
+
+  """An issue unassignment notification type."""
+  type: IssueUnassignedFromYouNotificationType!
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The ID of the user who received the notification."""
+  userId: String!
+}
+
 """
 Input for updating an existing issue. All fields are optional; only provided fields will be updated. Setting a field to null (where supported) will clear the value.
 """
@@ -17686,9 +19261,6 @@ input IssueUpdateInput {
   Whether the issue was automatically closed because its parent issue was closed.
   """
   autoClosedByParentClosing: Boolean
-
-  """The position of the issue in its column on the board view."""
-  boardOrder: Float @deprecated(reason: "Will be removed in near future, please use `sortOrder` instead")
 
   """The cycle associated with the issue."""
   cycleId: String
@@ -17793,6 +19365,237 @@ input IssueUpdateInput {
   trusted: Boolean
 }
 
+"""Payload for an issue webhook."""
+type IssueWebhookPayload {
+  """The time at which the issue was added to a cycle."""
+  addedToCycleAt: String
+
+  """The time at which the issue was added to a project."""
+  addedToProjectAt: String
+
+  """The time at which the issue was added to a team."""
+  addedToTeamAt: String
+
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The user that is assigned to the issue."""
+  assignee: UserChildWebhookPayload
+
+  """The ID of the user that is assigned to the issue."""
+  assigneeId: String
+
+  """The time at which the issue was auto-archived."""
+  autoArchivedAt: String
+
+  """The time at which the issue was auto-closed."""
+  autoClosedAt: String
+
+  """The bot actor data for this issue."""
+  botActor: String
+
+  """The time at which the issue was canceled."""
+  canceledAt: String
+
+  """The time at which the issue was completed."""
+  completedAt: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The user that created the issue."""
+  creator: UserChildWebhookPayload
+
+  """The ID of the user that created the issue."""
+  creatorId: String
+
+  """The cycle that the issue belongs to."""
+  cycle: CycleChildWebhookPayload
+
+  """The ID of the cycle that the issue belongs to."""
+  cycleId: String
+
+  """The agent user that the issue is delegated to."""
+  delegate: UserChildWebhookPayload
+
+  """The ID of the agent user that the issue is delegated to."""
+  delegateId: String
+
+  """The description of the issue."""
+  description: String
+
+  """The description data of the issue."""
+  descriptionData: String
+
+  """The due date of the issue."""
+  dueDate: String
+
+  """The estimate of the complexity of the issue.."""
+  estimate: Float
+
+  """The external user that created the issue."""
+  externalUserCreator: ExternalUserChildWebhookPayload
+
+  """The ID of the external user that created the issue."""
+  externalUserCreatorId: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The identifier of the issue."""
+  identifier: String!
+
+  """Integration type that created this issue, if applicable."""
+  integrationSourceType: String
+
+  """Id of the labels associated with this issue."""
+  labelIds: [String!]!
+
+  """The labels associated with this issue."""
+  labels: [IssueLabelChildWebhookPayload!]!
+
+  """The ID of the last template that was applied to the issue."""
+  lastAppliedTemplateId: String
+
+  """The project milestone that the issue belongs to."""
+  milestone: ProjectMilestoneChildWebhookPayload @deprecated(reason: "Use `projectMilestone` instead.")
+
+  """The issue's unique number."""
+  number: Float!
+
+  """The ID of the parent issue."""
+  parentId: String
+
+  """Previous identifiers of the issue if it has been moved between teams."""
+  previousIdentifiers: [String!]!
+
+  """
+  The priority of the issue. 0 = No priority, 1 = Urgent, 2 = High, 3 = Medium, 4 = Low.
+  """
+  priority: Float!
+
+  """The label of the issue's priority."""
+  priorityLabel: String!
+
+  """
+  The order of the item in relation to other items in the organization, when ordered by priority.
+  """
+  prioritySortOrder: Float!
+
+  """The project that the issue belongs to."""
+  project: ProjectChildWebhookPayload
+
+  """The ID of the project that the issue belongs to."""
+  projectId: String
+
+  """The project milestone that the issue belongs to."""
+  projectMilestone: ProjectMilestoneChildWebhookPayload
+
+  """The ID of the project milestone that the issue belongs to."""
+  projectMilestoneId: String
+
+  """The reaction data for this issue."""
+  reactionData: JSONObject!
+
+  """The ID of the recurring issue template that created the issue."""
+  recurringIssueTemplateId: String
+
+  """The releases associated with this issue."""
+  releases: [ReleaseChildWebhookPayload!]!
+
+  """The time at which the issue would breach its SLA."""
+  slaBreachesAt: String
+
+  """The time at which the issue would enter SLA high risk."""
+  slaHighRiskAt: String
+
+  """The time at which the issue would enter SLA medium risk."""
+  slaMediumRiskAt: String
+
+  """The time at which the issue's SLA started."""
+  slaStartedAt: String
+
+  """The type of SLA the issue is under."""
+  slaType: String
+
+  """The time until an issue will be snoozed in Triage view."""
+  snoozedUntilAt: String
+
+  """The order of the item in relation to other items in the organization."""
+  sortOrder: Float!
+
+  """The ID of the source comment that the issue was created from."""
+  sourceCommentId: String
+
+  """The time at which the issue was moved into started state."""
+  startedAt: String
+
+  """The time at which the issue entered triage."""
+  startedTriageAt: String
+
+  """The issue's current workflow state."""
+  state: WorkflowStateChildWebhookPayload!
+
+  """The ID of the issue's current workflow state."""
+  stateId: String!
+
+  """
+  The order of the item in the sub-issue list. Only set if the issue has a parent.
+  """
+  subIssueSortOrder: Float
+
+  """The IDs of the users that are subscribed to the issue."""
+  subscriberIds: [String!]!
+
+  """The entity this issue is synced with."""
+  syncedWith: JSONObject
+
+  """The team that the issue belongs to."""
+  team: TeamChildWebhookPayload
+
+  """The ID of the team that the issue belongs to."""
+  teamId: String!
+
+  """The issue's title."""
+  title: String!
+
+  """A flag that indicates whether the issue is in the trash bin."""
+  trashed: Boolean
+
+  """The time at which the issue was triaged."""
+  triagedAt: String
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The URL of the issue."""
+  url: String!
+}
+
+"""Certain properties of an issue, including its description."""
+type IssueWithDescriptionChildWebhookPayload {
+  """The description of the issue."""
+  description: String
+
+  """The ID of the issue."""
+  id: String!
+
+  """The identifier of the issue."""
+  identifier: String!
+
+  """The ID of the team that the issue belongs to."""
+  team: TeamChildWebhookPayload!
+
+  """The ID of the team that the issue belongs to."""
+  teamId: String!
+
+  """The title of the issue."""
+  title: String!
+
+  """The URL of the issue."""
+  url: String!
+}
+
 """
 The `JSON` scalar type represents arbitrary values as *stringified* JSON
 """
@@ -17819,9 +19622,6 @@ input JiraConfigurationInput {
 
   """Whether this integration will be setup using the manual webhook flow."""
   manualSetup: Boolean
-
-  """[DEPRECATED] The Jira project keys to scope the integration to."""
-  project: String @deprecated(reason: "This parameter is ignored, use mappings instead to scope the integration to one or more specific projects")
 
   """
   Whether the access token is the API key of a Jira Cloud service account. Defaults to detecting the service account key prefix. The site's cloudId is resolved from the hostname, and webhooks are always set up manually.
@@ -17949,11 +19749,6 @@ input JiraSettingsInput {
   Whether the user needs to provide setup information about the webhook to complete the integration setup. Only relevant for integrations that use a manual setup flow
   """
   setupPending: Boolean
-
-  """
-  Jira status names grouped by project, separated into issue statuses (non-Epic) and project statuses (Epic). Structure: projectId -> { issueStatuses: string[], projectStatuses: string[] }
-  """
-  statusNamesPerIssueType: JSONObject @deprecated(reason: "No longer persisted. Use the `integrationJiraProjectStatuses` query instead.")
 }
 
 input JiraUpdateInput {
@@ -17961,11 +19756,6 @@ input JiraUpdateInput {
   The Jira personal access token, or the API key of a Jira Cloud service account.
   """
   accessToken: String
-
-  """
-  The mapped Jira project to use as its team's default. Omit to keep the current default.
-  """
-  defaultProjectId: String
 
   """Whether to delete the current manual webhook configuration."""
   deleteWebhook: Boolean
@@ -18172,9 +19962,6 @@ type LoopExecution implements Node {
   """[Internal] The project that triggered this Loop execution."""
   project: Project
 
-  """[Internal] The release that triggered this Loop execution."""
-  release: Release
-
   """[Internal] The team that triggered this Loop execution."""
   team: Team
 
@@ -18206,11 +19993,6 @@ input McpServerCustomHeaderInput {
 
   """The HTTP header value."""
   value: String!
-}
-
-input McpServerIntegrationSettingsInput {
-  """The connection-specific display name."""
-  name: String
 }
 
 """
@@ -18571,15 +20353,6 @@ type Mutation {
     """[Internal] The kind of link between the issue and the pull request."""
     linkKind: GitLinkKind
 
-    """The GitHub pull request number to link."""
-    number: Float @deprecated(reason: "No longer required")
-
-    """The owner of the GitHub repository."""
-    owner: String @deprecated(reason: "No longer required")
-
-    """The name of the GitHub repository."""
-    repo: String @deprecated(reason: "No longer required")
-
     """The title to use for the attachment."""
     title: String
 
@@ -18721,9 +20494,6 @@ type Mutation {
   Link an existing Slack message to an issue. This creates a rich attachment using the workspace's Slack integration.
   """
   attachmentLinkSlack(
-    """[DEPRECATED] The Slack channel ID for the message to link."""
-    channel: String @deprecated(reason: "This field is now ignored.")
-
     """
     Create attachment as a user with the provided name. This option is only available to OAuth applications creating attachments in `actor=app` mode.
     """
@@ -18742,9 +20512,6 @@ type Mutation {
     """
     issueId: String!
 
-    """[DEPRECATED] The latest timestamp for the Slack message."""
-    latest: String @deprecated(reason: "This field is now ignored.")
-
     """
     Whether to begin syncing the message's Slack thread with a comment thread on the issue.
     """
@@ -18752,11 +20519,6 @@ type Mutation {
 
     """The title to use for the attachment."""
     title: String
-
-    """
-    [DEPRECATED] Unique identifier of either a thread's parent message or a message in the thread.
-    """
-    ts: String @deprecated(reason: "This field is now ignored.")
 
     """The Slack message URL for the message to link."""
     url: String!
@@ -18911,11 +20673,6 @@ type Mutation {
     IDs of private teams to include in the export. If null, only data from public teams is exported.
     """
     includePrivateTeamIds: [String!]
-
-    """
-    [DEPRECATED] IDs of restricted teams to include in the export. If null, restricted team data is omitted.
-    """
-    includeProtectedTeamIds: [String!] @deprecated(reason: "Use `includeRestrictedTeamIds` instead.")
 
     """
     IDs of restricted teams to include in the export. If null, restricted team data is omitted.
@@ -19874,11 +21631,6 @@ type Mutation {
 
     """The Jira OAuth code, when connecting using OAuth."""
     code: String
-
-    """
-    The workspace Jira integration to connect to. Required when the connection would otherwise be ambiguous.
-    """
-    workspaceIntegrationId: String
   ): IntegrationPayload!
 
   """[INTERNAL] Updates a Jira Integration."""
@@ -20253,11 +22005,6 @@ type Mutation {
     """
     accessToken: String
 
-    """
-    The Zendesk user ID to use as the author of internal notes instead of creating a bot user. Omit to keep the configured user on reconnect, or pass null to create a new bot user.
-    """
-    botUserId: String
-
     """The role to assign to the Linear bot user in Zendesk."""
     botUserRole: String
 
@@ -20352,7 +22099,7 @@ type Mutation {
   [INTERNAL] Updates an issue description from the Front app to handle Front attachments correctly.
   """
   issueDescriptionUpdateFromFront(
-    """Description to update the issue with. """
+    """Description to update the issue with."""
     description: String!
 
     """The identifier of the issue to update."""
@@ -20384,9 +22131,6 @@ type Mutation {
     """
     instantProcess: Boolean
 
-    """ID of the workspace into which to import data."""
-    organizationId: String @deprecated(reason: "Argument will be ignored. Use teamId to import in a specific team, or teamName to import into a new team.")
-
     """ID of the team into which to import data."""
     teamId: String
 
@@ -20407,9 +22151,6 @@ type Mutation {
 
     """Jira personal access token to access Jira REST API."""
     jiraToken: String
-
-    """ID of the workspace into which to import data."""
-    organizationId: String @deprecated(reason: "Argument will be ignored. Use teamId to import in a specific team, or teamName to import into a new team.")
 
     """ID of the team into which to import data. Empty to create new team."""
     teamId: String
@@ -20441,9 +22182,6 @@ type Mutation {
     """
     instantProcess: Boolean
 
-    """ID of the workspace into which to import data."""
-    organizationId: String @deprecated(reason: "Argument will be ignored. Use teamId to import in a specific team, or teamName to import into a new team.")
-
     """ID of the team into which to import data."""
     teamId: String
 
@@ -20461,9 +22199,6 @@ type Mutation {
     """IDs of the Github repositories from which we will import data."""
     githubRepoIds: [Int!]
 
-    """Whether or not we should import GitHub organization level projects."""
-    githubShouldImportOrgProjects: Boolean @deprecated(reason: "Argument will be ignored. The project information of an issue is always imported regardless of whether the project is linked to the repository of the issue or not")
-
     """Whether or not we should collect the data for closed issues."""
     includeClosedIssues: Boolean
 
@@ -20471,14 +22206,6 @@ type Mutation {
     Whether to instantly process the import with the default configuration mapping.
     """
     instantProcess: Boolean
-
-    """
-    [DEPRECATED] ID of the Github import integration to use to access issues.
-    """
-    integrationId: String @deprecated(reason: "An import can span multiple integrations. Value will be ignored.")
-
-    """ID of the workspace into which to import data."""
-    organizationId: String @deprecated(reason: "Argument will be ignored. Use teamId to import in a specific team, or teamName to import into a new team.")
 
     """ID of the team into which to import data."""
     teamId: String
@@ -20514,9 +22241,6 @@ type Mutation {
 
     """A custom JQL query to filter issues being imported"""
     jql: String
-
-    """ID of the workspace into which to import data."""
-    organizationId: String @deprecated(reason: "Argument will be ignored. Use teamId to import in a specific team, or teamName to import into a new team.")
 
     """ID of the team into which to import data. Empty to create new team."""
     teamId: String
@@ -21095,9 +22819,6 @@ type Mutation {
     [Internal] The identifier of the project draft conversation to attach to this project.
     """
     aiConversationId: String
-
-    """[DEPRECATED] Whether to connect a Slack channel to the project."""
-    connectSlackChannel: Boolean @deprecated(reason: "Use slackChannelName instead")
 
     """The project properties to set on the new project."""
     input: ProjectCreateInput!
@@ -21872,11 +23593,6 @@ type Mutation {
   userExternalUserDisconnect(
     """The external service to disconnect."""
     service: String!
-
-    """
-    The workspace Jira integration whose account mapping to remove. If omitted, removes all Jira mappings without a personal connection.
-    """
-    workspaceIntegrationId: String
   ): UserPayload!
 
   """
@@ -22393,11 +24109,6 @@ type NotificationDeliveryPreferencesChannel {
 }
 
 input NotificationDeliveryPreferencesChannelInput {
-  """
-  [DEPRECATED] Whether notifications are enabled for this channel. Use notificationChannelPreferences instead.
-  """
-  notificationsDisabled: Boolean @deprecated(reason: "This field has been replaced by notificationChannelPreferences")
-
   """The schedule for notifications on this channel."""
   schedule: NotificationDeliveryPreferencesScheduleInput
 }
@@ -22785,6 +24496,8 @@ input NotificationUpdateInput {
   """
   snoozedUntilAt: DateTime
 }
+
+union NotificationWebhookPayload = IssueAssignedToYouNotificationWebhookPayload | IssueCommentMentionNotificationWebhookPayload | IssueCommentReactionNotificationWebhookPayload | IssueEmojiReactionNotificationWebhookPayload | IssueMentionNotificationWebhookPayload | IssueNewCommentNotificationWebhookPayload | IssueStatusChangedNotificationWebhookPayload | IssueUnassignedFromYouNotificationWebhookPayload | OtherNotificationWebhookPayload
 
 input NotionSettingsInput {
   """The ID of the Notion workspace being connected."""
@@ -24002,6 +25715,30 @@ input NumberComparator {
   nin: [Float!]
 }
 
+"""Payload for OAuth app webhook events."""
+type OAuthAppWebhookPayload {
+  """The type of action that triggered the webhook."""
+  action: String!
+
+  """The time the payload was created."""
+  createdAt: DateTime!
+
+  """Id of the OAuth client that was revoked."""
+  oauthClientId: String!
+
+  """ID of the organization for which the webhook belongs to."""
+  organizationId: String!
+
+  """The type of resource."""
+  type: String!
+
+  """The ID of the webhook that sent this event."""
+  webhookId: String!
+
+  """Unix timestamp in milliseconds when the webhook was sent."""
+  webhookTimestamp: Float!
+}
+
 """
 An OAuth application that can be managed by the calling OAuth application.
 """
@@ -24194,6 +25931,42 @@ input OAuthApplicationUpdateInput {
   webhookUrl: String
 }
 
+"""Payload for OAuth authorization webhook events."""
+type OAuthAuthorizationWebhookPayload {
+  """The type of action that triggered the webhook."""
+  action: String!
+
+  """The number of currently active tokens for the user for this client."""
+  activeTokensForUser: Float!
+
+  """The time the payload was created."""
+  createdAt: DateTime!
+
+  """Details of the OAuth client the authorization belongs to."""
+  oauthClient: OauthClientChildWebhookPayload!
+
+  """ID of the OAuth client the authorization belongs to."""
+  oauthClientId: String!
+
+  """ID of the organization for which the webhook belongs to."""
+  organizationId: String!
+
+  """The type of resource."""
+  type: String!
+
+  """Details of the user that the authorization belongs to."""
+  user: UserChildWebhookPayload!
+
+  """ID of the user that the authorization belongs to."""
+  userId: String!
+
+  """The ID of the webhook that sent this event."""
+  webhookId: String!
+
+  """Unix timestamp in milliseconds when the webhook was sent."""
+  webhookTimestamp: Float!
+}
+
 """
 The different requests statuses possible for an OAuth client approval request.
 """
@@ -24201,6 +25974,18 @@ enum OAuthClientApprovalStatus {
   approved
   denied
   requested
+}
+
+"""OAuth client actor payload for webhooks."""
+type OauthClientActorWebhookPayload {
+  """The ID of the OAuth client."""
+  id: String!
+
+  """The name of the OAuth client."""
+  name: String!
+
+  """The type of actor."""
+  type: String!
 }
 
 """
@@ -24383,6 +26168,15 @@ type OauthClientApprovalNotification implements Entity & Node & Notification {
 
   """The recipient user of this notification."""
   user: User!
+}
+
+"""Certain properties of an OAuth client."""
+type OauthClientChildWebhookPayload {
+  """The ID of the OAuth client."""
+  id: String!
+
+  """The name of the OAuth client."""
+  name: String!
 }
 
 input OnboardingCustomerSurvey {
@@ -25330,6 +27124,12 @@ type OrganizationMeta {
   region: String!
 }
 
+"""Organization origin for guidance rules."""
+type OrganizationOriginWebhookPayload {
+  """The type of origin, always 'Organization'."""
+  type: String!
+}
+
 """Workspace update operation response."""
 type OrganizationPayload {
   """The identifier of the last sync operation."""
@@ -25434,12 +27234,6 @@ input OrganizationUpdateInput {
   """Whether the workspace has enabled resolved thread AI summaries."""
   aiThreadSummariesEnabled: Boolean
 
-  """[DEPRECATED] Whether member users are allowed to send invites."""
-  allowMembersToInvite: Boolean @deprecated(reason: "This field is now ignored. Use `securitySettings.invitationsRole` instead.")
-
-  """[DEPRECATED] List of services that are allowed to be used for login."""
-  allowedAuthServices: [String!] @deprecated(reason: "Use `authSettings.allowedAuthServices` instead.")
-
   """Allowed file upload content types."""
   allowedFileUploadContentTypes: [String!]
 
@@ -25508,11 +27302,6 @@ input OrganizationUpdateInput {
   """
   gitPublicLinkbackMessagesEnabled: Boolean
 
-  """
-  [DEPRECATED] Whether to hide other workspaces for new users signing up with email domains claimed by this organization.
-  """
-  hideNonPrimaryOrganizations: Boolean @deprecated(reason: "Use `authSettings.hideNonPrimaryOrganizations` instead.")
-
   """Whether HIPAA compliance is enabled for the workspace."""
   hipaaComplianceEnabled: Boolean
 
@@ -25549,9 +27338,6 @@ input OrganizationUpdateInput {
   """
   oauthAppReview: Boolean
 
-  """[DEPRECATED] Whether the workspace has enabled the member API keys."""
-  personalApiKeysEnabled: Boolean @deprecated(reason: "This field is now ignored. Use `securitySettings.personalApiKeysRole` instead.")
-
   """The n-weekly frequency at which to prompt for project updates."""
   projectUpdateReminderFrequencyInWeeks: Float
 
@@ -25578,12 +27364,6 @@ input OrganizationUpdateInput {
 
   """Whether agent invocation is restricted to full workspace members."""
   restrictAgentInvocationToMembers: Boolean
-
-  """[DEPRECATED] Whether label creation is restricted to admins."""
-  restrictLabelManagementToAdmins: Boolean @deprecated(reason: "This field is now ignored. Use `securitySettings.labelManagementRole` instead.")
-
-  """[DEPRECATED] Whether team creation is restricted to admins."""
-  restrictTeamCreationToAdmins: Boolean @deprecated(reason: "This field is now ignored. Use `securitySettings.teamCreationRole` instead.")
 
   """Whether the workspace is using roadmap."""
   roadmapEnabled: Boolean
@@ -25622,6 +27402,169 @@ input OrganizationUpdateInput {
 
   """[Internal] The list of working days. Sunday is 0, Monday is 1, etc."""
   workingDays: [Float!]
+}
+
+"""A generic type of notification."""
+enum OtherNotificationType {
+  agentConversationMention
+  customerAddedAsOwner
+  customerNeedCreated
+  customerNeedMarkedAsImportant
+  customerNeedResolved
+  documentAddedAsOwner
+  documentCommentMention
+  documentCommentReaction
+  documentContentChange
+  documentDeleted
+  documentMention
+  documentMoved
+  documentNewComment
+  documentReminder
+  documentRemovedAsOwner
+  documentRestored
+  documentSubscribed
+  documentThreadResolved
+  documentUnsubscribed
+  feedSummaryGenerated
+  initiativeAddedAsOwner
+  initiativeCommentMention
+  initiativeCommentReaction
+  initiativeDescriptionContentChange
+  initiativeMention
+  initiativeNewComment
+  initiativeReminder
+  initiativeThreadResolved
+  initiativeUpdateCommentMention
+  initiativeUpdateCommentReaction
+  initiativeUpdateCreated
+  initiativeUpdateMention
+  initiativeUpdateNewComment
+  initiativeUpdatePrompt
+  initiativeUpdateReaction
+  issueAddedToTriage
+  issueAddedToView
+  issueBlocking
+  issueCreated
+  issueDue
+  issuePriorityUrgent
+  issueReminder
+  issueReopened
+  issueSlaBreached
+  issueSlaHighRisk
+  issueStatusChangedAll
+  issueSubscribed
+  issueThreadResolved
+  issueUnblocked
+  issueUnsubscribed
+  oauthClientApprovalCreated
+  projectAddedAsLead
+  projectAddedAsMember
+  projectCommentMention
+  projectCommentReaction
+  projectDescriptionContentChange
+  projectMention
+  projectMilestoneCommentMention
+  projectMilestoneCommentReaction
+  projectMilestoneDescriptionContentChange
+  projectMilestoneMention
+  projectMilestoneNewComment
+  projectMilestoneThreadResolved
+  projectNewComment
+  projectReminder
+  projectThreadResolved
+  projectUpdateCommentMention
+  projectUpdateCommentReaction
+  projectUpdateCreated
+  projectUpdateMention
+  projectUpdateNewComment
+  projectUpdatePrompt
+  projectUpdateReaction
+  pullRequestApproved
+  pullRequestChangesRequested
+  pullRequestChecksFailed
+  pullRequestCommentMention
+  pullRequestCommented
+  pullRequestMention
+  pullRequestRemovedFromMergeQueue
+  pullRequestReviewRequested
+  pullRequestReviewRerequested
+  system
+  teamUpdateCommentMention
+  teamUpdateCommentReaction
+  teamUpdateCreated
+  teamUpdateMention
+  teamUpdateNewComment
+  teamUpdateReaction
+  triageResponsibilityIssueAddedToTriage
+}
+
+"""Generic notification payload."""
+type OtherNotificationWebhookPayload {
+  """The actor who caused the notification."""
+  actor: UserChildWebhookPayload
+
+  """The ID of the actor who caused the notification."""
+  actorId: String
+
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The comment this notification belongs to."""
+  comment: CommentChildWebhookPayload
+
+  """The ID of the comment this notification belongs to."""
+  commentId: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The document this notification belongs to."""
+  document: DocumentChildWebhookPayload
+
+  """The ID of the document this notification belongs to."""
+  documentId: String
+
+  """The ID of the external user who caused the notification."""
+  externalUserActorId: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The issue this notification belongs to."""
+  issue: IssueWithDescriptionChildWebhookPayload
+
+  """The ID of the issue this notification belongs to."""
+  issueId: String
+
+  """The parent comment this notification belongs to."""
+  parentComment: CommentChildWebhookPayload
+
+  """The ID of the parent comment this notification belongs to."""
+  parentCommentId: String
+
+  """The project this notification belongs to."""
+  project: ProjectChildWebhookPayload
+
+  """The ID of the project this notification belongs to."""
+  projectId: String
+
+  """The project update this notification belongs to."""
+  projectUpdate: ProjectUpdateChildWebhookPayload
+
+  """The ID of the project update this notification belongs to."""
+  projectUpdateId: String
+
+  """The emoji of the reaction this notification is for."""
+  reactionEmoji: String
+
+  """The type of the notification."""
+  type: OtherNotificationType!
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The ID of the user who received the notification."""
+  userId: String!
 }
 
 """Customer owner sorting options."""
@@ -25831,7 +27774,6 @@ enum PartnerDiscountType {
 """The kind of partner program an offer belongs to."""
 enum PartnerOfferCategory {
   accelerator
-  creator
   investor
   startup_community
 }
@@ -26770,11 +28712,6 @@ type Project implements Node {
   """
   leadTeam: Team
 
-  """
-  [Internal] The ID of the team that leads the project, even when the viewer cannot access the team.
-  """
-  leadTeamId: String!
-
   """Users that are members of the project."""
   members(
     """A cursor to be used with first for forward pagination"""
@@ -27164,6 +29101,18 @@ type ProjectAttachmentEdge {
   node: ProjectAttachment!
 }
 
+"""Certain properties of a project."""
+type ProjectChildWebhookPayload {
+  """The ID of the project."""
+  id: String!
+
+  """The name of the project."""
+  name: String!
+
+  """The URL of the project."""
+  url: String!
+}
+
 """Project filtering options."""
 input ProjectCollectionFilter {
   """Filters that the project's team must satisfy."""
@@ -27379,9 +29328,6 @@ input ProjectCreateInput {
 
   """The resolution of the project's start date."""
   startDateResolution: DateResolutionType
-
-  """[DEPRECATED] The state of the project."""
-  state: String @deprecated(reason: "Use statusId instead")
 
   """The ID of the project status."""
   statusId: String
@@ -27620,7 +29566,7 @@ type ProjectHistoryEdge {
 }
 
 """
-A label that can be applied to projects for categorization. Project labels can be workspace-level (available to all teams) or team-scoped, and can be organized into groups with a parent-child hierarchy. Only child labels (not group labels) can be directly applied to projects. Team-scoped labels may be inherited from parent teams to sub-teams.
+A label that can be applied to projects for categorization. Project labels are workspace-level and can be organized into groups with a parent-child hierarchy. Only child labels (not group labels) can be directly applied to projects.
 """
 type ProjectLabel implements Node {
   """
@@ -27676,7 +29622,7 @@ type ProjectLabel implements Node {
   id: ID!
 
   """
-  The original workspace or parent-team label that this label was inherited from. Null if the label is not inherited.
+  [Internal] The original workspace or parent-team label that this label was inherited from. Null if the label is not inherited.
   """
   inheritedFrom: ProjectLabel
 
@@ -27743,7 +29689,7 @@ type ProjectLabel implements Node {
   retiredBy: User
 
   """
-  The team that the label is scoped to. If null, the label is a workspace-level label available to all teams in the workspace.
+  [Internal] The team that the label is scoped to. If null, the label is a workspace-level label available to all teams in the workspace.
   """
   team: Team
 
@@ -27752,6 +29698,21 @@ type ProjectLabel implements Node {
       been updated after creation.
   """
   updatedAt: DateTime!
+}
+
+"""Certain properties of a project label."""
+type ProjectLabelChildWebhookPayload {
+  """The color of the project label."""
+  color: String!
+
+  """The ID of the project label."""
+  id: String!
+
+  """The name of the project label."""
+  name: String!
+
+  """The parent ID of the project label."""
+  parentId: String
 }
 
 """Project label filtering options."""
@@ -27791,11 +29752,6 @@ input ProjectLabelCollectionFilter {
 
   """Filters that needs to be matched by some project labels."""
   some: ProjectLabelCollectionFilter
-
-  """
-  Filters that the project label's team must satisfy. Use `{ null: true }` to filter workspace-level labels.
-  """
-  team: NullableTeamFilter
 
   """Comparator for the updated at date."""
   updatedAt: DateComparator
@@ -27837,7 +29793,7 @@ input ProjectLabelCreateInput {
   retiredAt: DateTime
 
   """
-  The identifier of the team to scope the label to. If not given, the label is a workspace-level label available to all teams.
+  [Internal] The team associated with the label. If not given, the label will be associated with the entire workspace.
   """
   teamId: String
 }
@@ -27873,11 +29829,6 @@ input ProjectLabelFilter {
 
   """Filters that the project label's parent label must satisfy."""
   parent: ProjectLabelFilter
-
-  """
-  Filters that the project label's team must satisfy. Use `{ null: true }` to filter workspace-level labels.
-  """
-  team: NullableTeamFilter
 
   """Comparator for the updated at date."""
   updatedAt: DateComparator
@@ -27918,6 +29869,39 @@ input ProjectLabelUpdateInput {
   The time at which the label was retired. Set to null to restore a retired label.
   """
   retiredAt: DateTime
+}
+
+"""Payload for a project label webhook."""
+type ProjectLabelWebhookPayload {
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The color of the project label."""
+  color: String!
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The creator ID of the project label."""
+  creatorId: String
+
+  """The label's description."""
+  description: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """Whether the label is a group."""
+  isGroup: Boolean!
+
+  """The name of the project label."""
+  name: String!
+
+  """The parent ID of the project label."""
+  parentId: String
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
 }
 
 """Project lead sorting options."""
@@ -28031,6 +30015,18 @@ type ProjectMilestone implements Node {
       been updated after creation.
   """
   updatedAt: DateTime!
+}
+
+"""Certain properties of a project milestone."""
+type ProjectMilestoneChildWebhookPayload {
+  """The ID of the project milestone."""
+  id: String!
+
+  """The name of the project milestone."""
+  name: String!
+
+  """The target date of the project milestone."""
+  targetDate: String!
 }
 
 """Milestone collection filtering options."""
@@ -29102,11 +31098,6 @@ type ProjectSearchResult implements Node {
   """
   leadTeam: Team
 
-  """
-  [Internal] The ID of the team that leads the project, even when the viewer cannot access the team.
-  """
-  leadTeamId: String!
-
   """Users that are members of the project."""
   members(
     """A cursor to be used with first for forward pagination"""
@@ -29517,11 +31508,6 @@ type ProjectStatus implements Node {
   team: Team
 
   """
-  [Internal] The ID of the team that owns the status, even when the viewer cannot access the team. Null for workspace statuses.
-  """
-  teamId: String
-
-  """
   The category type of the project status (e.g., backlog, planned, started, paused, completed, canceled). Determines the status's behavior and position in the project lifecycle.
   """
   type: ProjectStatusType!
@@ -29543,6 +31529,21 @@ type ProjectStatusArchivePayload implements ArchivePayload {
 
   """Whether the operation was successful."""
   success: Boolean!
+}
+
+"""Certain properties of a project status."""
+type ProjectStatusChildWebhookPayload {
+  """The color of the project status."""
+  color: String!
+
+  """The ID of the project status."""
+  id: String!
+
+  """The name of the project status."""
+  name: String!
+
+  """The type of the project status."""
+  type: String!
 }
 
 type ProjectStatusConnection {
@@ -29832,6 +31833,21 @@ type ProjectUpdateArchivePayload implements ArchivePayload {
   success: Boolean!
 }
 
+"""Certain properties of a project update."""
+type ProjectUpdateChildWebhookPayload {
+  """The body of the project update."""
+  body: String!
+
+  """The ID of the project update."""
+  id: String!
+
+  """The project that the project update belongs to."""
+  project: ProjectChildWebhookPayload!
+
+  """The ID of the user who wrote the project update."""
+  userId: String!
+}
+
 type ProjectUpdateConnection {
   edges: [ProjectUpdateEdge!]!
   nodes: [ProjectUpdate!]!
@@ -29988,9 +32004,6 @@ input ProjectUpdateInput {
   """The resolution of the project's start date."""
   startDateResolution: DateResolutionType
 
-  """[DEPRECATED] The state of the project."""
-  state: String @deprecated(reason: "Use statusId instead")
-
   """The ID of the project status."""
   statusId: String
 
@@ -30064,11 +32077,59 @@ input ProjectUpdateUpdateInput {
 
   """The health of the project at the time of the update."""
   health: ProjectUpdateHealthType
+}
+
+"""Payload for a project update webhook."""
+type ProjectUpdateWebhookPayload {
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The body of the project update."""
+  body: String!
+
+  """The body data of the project update."""
+  bodyData: String!
+
+  """The time at which the entity was created."""
+  createdAt: String!
 
   """
-  Whether the diff between the current update and the previous one should be hidden.
+  The diff between the current update and the previous one, formatted as markdown.
   """
-  isDiffHidden: Boolean @deprecated(reason: "No longer used by the UI. Kept for backwards compatibility with older updates.")
+  diffMarkdown: String
+
+  """The edited at timestamp of the project update."""
+  editedAt: String!
+
+  """The health of the project update."""
+  health: String!
+
+  """The ID of the entity."""
+  id: String!
+
+  """The project that the project update belongs to."""
+  project: ProjectChildWebhookPayload!
+
+  """The project id of the project update."""
+  projectId: String!
+
+  """The reaction data for this project update."""
+  reactionData: JSONObject!
+
+  """The slug id of the project update."""
+  slugId: String!
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The URL of the project update."""
+  url: String
+
+  """The user who wrote the project update."""
+  user: UserChildWebhookPayload!
+
+  """The user id of the project update."""
+  userId: String!
 }
 
 """Project update date sorting options."""
@@ -30137,6 +32198,157 @@ input ProjectUpdatesFilter {
 
   """Comparator for the updated at date."""
   updatedAt: DateComparator
+}
+
+"""Payload for a project webhook."""
+type ProjectWebhookPayload {
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The auto archived at timestamp of the project."""
+  autoArchivedAt: String
+
+  """The canceled at timestamp of the project."""
+  canceledAt: String
+
+  """The project's color."""
+  color: String!
+
+  """The completed at timestamp of the project."""
+  completedAt: String
+
+  """The number of completed issues in the project after each week."""
+  completedIssueCountHistory: [Float!]!
+
+  """The number of completed estimation points after each week."""
+  completedScopeHistory: [Float!]!
+
+  """The content of the project."""
+  content: String
+
+  """The ID of the issue that was converted to the project."""
+  convertedFromIssueId: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the user who created the project."""
+  creatorId: String
+
+  """The project's description."""
+  description: String!
+
+  """The document content ID of the project."""
+  documentContentId: String
+
+  """The health of the project."""
+  health: String
+
+  """The time at which the project health was updated."""
+  healthUpdatedAt: String
+
+  """The icon of the project."""
+  icon: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The human-readable identifier of the project."""
+  identifier: String
+
+  """The number of in progress estimation points after each week."""
+  inProgressScopeHistory: [Float!]!
+
+  """The initiatives associated with the project."""
+  initiatives: [InitiativeChildWebhookPayload!]
+
+  """The total number of issues in the project after each week."""
+  issueCountHistory: [Float!]!
+
+  """IDs of the labels associated with this project."""
+  labelIds: [String!]!
+
+  """The ID of the last template that was applied to the project."""
+  lastAppliedTemplateId: String
+
+  """The ID of the last update posted for this project."""
+  lastUpdateId: String
+
+  """The project lead."""
+  lead: UserChildWebhookPayload
+
+  """The ID of the project lead."""
+  leadId: String
+
+  """IDs of the members of the project."""
+  memberIds: [String!]!
+
+  """The milestones associated with the project."""
+  milestones: [ProjectMilestoneChildWebhookPayload!]
+
+  """The project's name."""
+  name: String!
+
+  """Previous identifiers of the project."""
+  previousIdentifiers: [String!]
+
+  """
+  The priority of the project. 0 = No priority, 1 = Urgent, 2 = High, 3 = Medium, 4 = Low.
+  """
+  priority: Float!
+
+  """
+  The sort order for the project within the organization, when ordered by priority.
+  """
+  prioritySortOrder: Float!
+
+  """The time at which the project update reminders were paused until."""
+  projectUpdateRemindersPausedUntilAt: String
+
+  """The total number of estimation points after each week."""
+  scopeHistory: [Float!]!
+
+  """The project's unique URL slug."""
+  slugId: String!
+
+  """The sort order for the project within the organization."""
+  sortOrder: Float!
+
+  """The estimated start date of the project."""
+  startDate: String
+
+  """The resolution of the project's estimated start date."""
+  startDateResolution: String
+
+  """The time at which the project was moved into started state."""
+  startedAt: String
+
+  """The project status."""
+  status: ProjectStatusChildWebhookPayload
+
+  """The ID of the project status."""
+  statusId: String!
+
+  """The external services the project is synced with."""
+  syncedWith: JSONObject
+
+  """The target date of the project."""
+  targetDate: String
+
+  """The resolution of the project's target date."""
+  targetDateResolution: String
+
+  """IDs of the teams associated with this project."""
+  teamIds: [String!]!
+
+  """The trashed status of the project."""
+  trashed: Boolean
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The URL of the project."""
+  url: String!
 }
 
 """
@@ -30691,9 +32903,6 @@ input PushSubscriptionCreateInput {
   The type of push subscription: 'web' for browser-based Web Push API, 'apple' for Apple Push Notification service (or 'appleDevelopment' for sandbox), or 'firebase' for Firebase Cloud Messaging (Android).
   """
   type: PushSubscriptionType = web
-
-  """The user identifier of the subscription."""
-  userId: String @deprecated(reason: "Not needed anymore.")
 }
 
 """Return type for push subscription mutations."""
@@ -30723,6 +32932,8 @@ enum PushSubscriptionType {
 }
 
 type Query {
+  _dummy: String!
+
   """
   All teams whose settings the user can administer. This includes teams the user can change settings for, but whose issues they may not have direct access to. This differs from the `teams` query which returns teams based on issue access.
   """
@@ -30892,10 +33103,13 @@ type Query {
   """[Internal] All archived teams of the workspace."""
   archivedTeams: [Team!]!
 
-  "\nOne specific issue attachment.\n[Deprecated] 'url' can no longer be used as the 'id' parameter. Use 'attachmentsForUrl' instead"
+  """
+  One specific issue attachment.
+  [Deprecated] 'url' can no longer be used as the 'id' parameter. Use 'attachmentsForUrl' instead
+  """
   attachment(id: String!): Attachment!
 
-  "\nQuery an issue by its associated attachment, and its id.\n"
+  """Query an issue by its associated attachment, and its id."""
   attachmentIssue(
     """
     `id` of the attachment for which you'll want to get the issue for. [Deprecated] `url` as the `id` parameter.
@@ -31029,9 +33243,6 @@ type Query {
 
     """The identifier of the comment to retrieve."""
     id: String
-
-    """[Deprecated] The issue for which to find the comment."""
-    issueId: String @deprecated(reason: "Not in use anymore, please use `id` or `hash` directly.")
   ): Comment!
 
   """All comments the user has access to in the workspace."""
@@ -32301,9 +34512,7 @@ type Query {
   """Returns a single project label by its identifier."""
   projectLabel(id: String!): ProjectLabel!
 
-  """
-  All project labels. Returns a paginated list of labels visible to the authenticated user, including both workspace-level and team-scoped labels, with optional filtering.
-  """
+  """Returns all project labels in the workspace, with optional filtering."""
   projectLabels(
     """A cursor to be used with first for forward pagination"""
     after: String
@@ -32798,9 +35007,6 @@ type Query {
     """
     orderBy: PaginationOrderBy
 
-    """Size of search snippet to return (default: 100)"""
-    snippetSize: Float @deprecated(reason: "No longer supported.")
-
     """
     UUID of a team to boost in search results. Results from this team are ranked higher. If null, no team boosting is applied.
     """
@@ -32844,9 +35050,6 @@ type Query {
     """
     orderBy: PaginationOrderBy
 
-    """Size of search snippet to return (default: 100)"""
-    snippetSize: Float @deprecated(reason: "No longer supported.")
-
     """
     UUID of a team to boost in search results. Results from this team are ranked higher. If null, no team boosting is applied.
     """
@@ -32886,9 +35089,6 @@ type Query {
     By which field should the pagination order by. Available options are createdAt (default) and updatedAt.
     """
     orderBy: PaginationOrderBy
-
-    """Size of search snippet to return (default: 100)"""
-    snippetSize: Float @deprecated(reason: "No longer supported.")
 
     """
     UUID of a team to boost in search results. Results from this team are ranked higher. If null, no team boosting is applied.
@@ -33503,6 +35703,57 @@ type ReactionPayload {
   success: Boolean!
 }
 
+"""Payload for a reaction webhook."""
+type ReactionWebhookPayload {
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The comment the reaction is associated with."""
+  comment: CommentChildWebhookPayload
+
+  """The ID of the comment that the reaction is associated with."""
+  commentId: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """Name of the reaction's emoji."""
+  emoji: String!
+
+  """The ID of the external user that created the reaction."""
+  externalUserId: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The ID of the initiative update that the reaction is associated with."""
+  initiativeUpdateId: String
+
+  """The issue the reaction is associated with."""
+  issue: IssueChildWebhookPayload
+
+  """The ID of the issue that the reaction is associated with."""
+  issueId: String
+
+  """The ID of the post that the reaction is associated with."""
+  postId: String
+
+  """The project update the reaction is associated with."""
+  projectUpdate: ProjectUpdateChildWebhookPayload
+
+  """The ID of the project update that the reaction is associated with."""
+  projectUpdateId: String
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The user that created the reaction."""
+  user: UserChildWebhookPayload
+
+  """The ID of the user that created the reaction."""
+  userId: String
+}
+
 """Comparator for relation existence."""
 input RelationExistsComparator {
   """Equals constraint."""
@@ -33768,6 +36019,27 @@ enum ReleaseChannel {
   preRelease
   privateBeta
   public
+}
+
+"""Certain properties of a release."""
+type ReleaseChildWebhookPayload {
+  """The time at which the release was completed."""
+  completedAt: String
+
+  """The ID of the release."""
+  id: String!
+
+  """The name of the release."""
+  name: String!
+
+  """The pipeline this release belongs to."""
+  pipeline: ReleasePipelineChildWebhookPayload
+
+  """The current stage of the release."""
+  stage: ReleaseStageChildWebhookPayload
+
+  """The version of the release."""
+  version: String
 }
 
 """Release collection filtering options."""
@@ -34260,6 +36532,48 @@ input ReleaseNoteUpdateInput {
   title: String
 }
 
+"""Payload for a release note webhook."""
+type ReleaseNoteWebhookPayload {
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The release note's body as markdown."""
+  content: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the user who created the release note."""
+  creatorId: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The ID of the most recent release covered by this note."""
+  lastReleaseId: String
+
+  """The pipeline this release note belongs to."""
+  pipeline: ReleasePipelineChildWebhookPayload
+
+  """The ID of the pipeline this release note belongs to."""
+  pipelineId: String!
+
+  """IDs of the releases included in the note."""
+  releaseIds: [String!]!
+
+  """The release note's unique URL slug."""
+  slugId: String!
+
+  """User-supplied title for the release note."""
+  title: String
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The URL of the release note."""
+  url: String!
+}
+
 """
 The result of a release mutation, containing the release that was created or updated and a success indicator.
 """
@@ -34446,6 +36760,24 @@ type ReleasePipelineArchivePayload implements ArchivePayload {
 
   """Whether the operation was successful."""
   success: Boolean!
+}
+
+"""Certain properties of a release pipeline."""
+type ReleasePipelineChildWebhookPayload {
+  """The ID of the release pipeline."""
+  id: String!
+
+  """The name of the release pipeline."""
+  name: String!
+
+  """The pipeline's unique slug identifier."""
+  slugId: String!
+
+  """The type of the release pipeline."""
+  type: String!
+
+  """The URL of the release pipeline."""
+  url: String!
 }
 
 """Release pipeline collection filtering options."""
@@ -34763,6 +37095,24 @@ type ReleaseStageArchivePayload implements ArchivePayload {
 
   """Whether the operation was successful."""
   success: Boolean!
+}
+
+"""Certain properties of a release stage."""
+type ReleaseStageChildWebhookPayload {
+  """The UI color of the stage as a HEX string."""
+  color: String!
+
+  """The ID of the release stage."""
+  id: String!
+
+  """The name of the stage."""
+  name: String!
+
+  """The position of the stage."""
+  position: Float!
+
+  """The type of the stage."""
+  type: String!
 }
 
 type ReleaseStageConnection {
@@ -35093,11 +37443,6 @@ input ReleaseUpdateInput {
   """The name of the release."""
   name: String
 
-  """
-  The identifier of the pipeline this release belongs to. Set at creation and cannot be changed.
-  """
-  pipelineId: String @deprecated(reason: "Releases cannot be moved between pipelines. Passing a different pipelineId will be rejected.")
-
   """The current stage of the release."""
   stageId: String
 
@@ -35114,6 +37459,75 @@ input ReleaseUpdateInput {
   Whether the release has been trashed. Set to true to trash, or null to restore.
   """
   trashed: Boolean
+
+  """The version of the release."""
+  version: String
+}
+
+"""Payload for a release webhook."""
+type ReleaseWebhookPayload {
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The time at which the release was canceled."""
+  canceledAt: String
+
+  """The commit SHA associated with this release."""
+  commitSha: String
+
+  """The time at which the release was completed."""
+  completedAt: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The ID of the user who created the release."""
+  creatorId: String
+
+  """The release's description."""
+  description: String
+
+  """The ID of the entity."""
+  id: String!
+
+  """The issues associated with the release."""
+  issues: [IssueChildWebhookPayload!]
+
+  """The name of the release."""
+  name: String!
+
+  """The pipeline this release belongs to."""
+  pipeline: ReleasePipelineChildWebhookPayload
+
+  """The ID of the pipeline this release belongs to."""
+  pipelineId: String!
+
+  """The release's unique URL slug."""
+  slugId: String!
+
+  """The current stage of the release."""
+  stage: ReleaseStageChildWebhookPayload
+
+  """The ID of the current stage of the release."""
+  stageId: String!
+
+  """The estimated start date of the release."""
+  startDate: String
+
+  """The time at which the release was started."""
+  startedAt: String
+
+  """The estimated completion date of the release."""
+  targetDate: String
+
+  """Whether the release is in the trash bin."""
+  trashed: Boolean
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The URL of the release."""
+  url: String!
 
   """The version of the release."""
   version: String
@@ -37486,6 +39900,18 @@ type TeamArchivePayload implements ArchivePayload {
   success: Boolean!
 }
 
+"""Certain properties of a team."""
+type TeamChildWebhookPayload {
+  """The ID of the team."""
+  id: String!
+
+  """The key of the team."""
+  key: String!
+
+  """The name of the team."""
+  name: String!
+}
+
 """Team collection filtering options."""
 input TeamCollectionFilter {
   """Filters that the team's ancestors must satisfy."""
@@ -37626,32 +40052,16 @@ input TeamCreateInput {
   """
   issueEstimationType: String
 
-  """[DEPRECATED] Whether issues without priority should be sorted first."""
-  issueOrderingNoPriorityFirst: Boolean @deprecated(reason: "This setting is no longer in use.")
-
   """Whether issue sharing is enabled for this team."""
   issueSharingEnabled: Boolean
-
-  """
-  The policy controlling whether and by whom issues in the team can be shared with non-team-members.
-  """
-  issueSharingPolicy: IssueSharingPolicy @deprecated(reason: "Use issueSharingEnabled instead.")
 
   """
   The key of the team. If not given, the key will be generated based on the name of the team.
   """
   key: String
 
-  """
-  [DEPRECATED] No longer in use. Duplicates are now system-managed via the native duplicate state.
-  """
-  markedAsDuplicateWorkflowStateId: String @deprecated(reason: "Duplicates are now system-managed via the native duplicate state.")
-
   """The name of the team."""
   name: String!
-
-  """The workspace associated with the team."""
-  organizationId: String @deprecated(reason: "The request context is used to determine the workspace.")
 
   """The parent team ID."""
   parentId: String
@@ -37927,6 +40337,15 @@ type TeamNotificationSubscription implements Entity & Node & NotificationSubscri
   The type of user-specific view that further scopes a user notification subscription. Null if the subscription is not associated with a user view type.
   """
   userContextViewType: UserContextViewType
+}
+
+"""Team origin for guidance rules."""
+type TeamOriginWebhookPayload {
+  """The team that the guidance was defined in."""
+  team: TeamWithParentWebhookPayload!
+
+  """The type of origin, always 'Team'."""
+  type: String!
 }
 
 """Team operation response."""
@@ -38206,16 +40625,8 @@ input TeamUpdateInput {
   """
   issueEstimationType: String
 
-  """[DEPRECATED] Whether issues without priority should be sorted first."""
-  issueOrderingNoPriorityFirst: Boolean @deprecated(reason: "This setting is no longer in use.")
-
   """Whether issue sharing is enabled for this team."""
   issueSharingEnabled: Boolean
-
-  """
-  The policy controlling whether and by whom issues in the team can be shared with non-team-members.
-  """
-  issueSharingPolicy: IssueSharingPolicy @deprecated(reason: "Use issueSharingEnabled instead.")
 
   """
   Whether new users should join this team by default. Mutation restricted to workspace admins or owners!
@@ -38224,11 +40635,6 @@ input TeamUpdateInput {
 
   """The key of the team."""
   key: String
-
-  """
-  [DEPRECATED] No longer in use. Duplicates are now system-managed via the native duplicate state.
-  """
-  markedAsDuplicateWorkflowStateId: String @deprecated(reason: "Duplicates are now system-managed via the native duplicate state.")
 
   """The name of the team."""
   name: String
@@ -38310,6 +40716,24 @@ input TeamVisibilityComparator {
 
   """Not-in-array constraint."""
   nin: [TeamVisibility!]
+}
+
+"""Team properties including parent information for guidance rules."""
+type TeamWithParentWebhookPayload {
+  """The team's display name including parent team names if applicable."""
+  displayName: String!
+
+  """The ID of the team."""
+  id: String!
+
+  """The key of the team."""
+  key: String!
+
+  """The name of the team."""
+  name: String!
+
+  """The parent team's unique identifier, if any."""
+  parentId: String
 }
 
 """
@@ -38747,7 +41171,7 @@ input TimeScheduleUserInput {
 }
 
 """
-Represents a date in ISO 8601 format. Accepts shortcuts like `2021` to represent midnight Fri Jan 01 2021. Also accepts ISO 8601 durations strings which are added to the current date to create the represented date (e.g '-P2W1D' represents the date that was two weeks and 1 day ago) 
+Represents a date in ISO 8601 format. Accepts shortcuts like `2021` to represent midnight Fri Jan 01 2021. Also accepts ISO 8601 durations strings which are added to the current date to create the represented date (e.g '-P2W1D' represents the date that was two weeks and 1 day ago)
 """
 scalar TimelessDate
 
@@ -38774,9 +41198,6 @@ input TokenUserAccountAuthInput {
 
   """An optional invite link for a workspace."""
   inviteLink: String
-
-  """The identifiers of the teams to auto-join."""
-  teamIdsToJoin: [String!] @deprecated(reason: "Not used anymore")
 
   """The timezone of the user's browser."""
   timezone: String!
@@ -39426,16 +41847,14 @@ type User implements Node {
   inviteHash: String! @deprecated(reason: "This hash is not in use anymore, this value will always be empty.")
 
   """
-  Whether the user can be assigned to issues. Active app users require the assignments capability. The Linear agent also requires coding sessions to be enabled.
+  Whether the user can be assigned to issues. Regular users are always assignable; app users are assignable only if they have the app:assignable scope. The Linear agent also requires coding sessions to be enabled.
   """
   isAssignable: Boolean!
 
   """Whether the user is the currently authenticated user."""
   isMe: Boolean!
 
-  """
-  Whether the user can be mentioned. Active app users require the mentions capability.
-  """
+  """Whether the user is mentionable."""
   isMentionable: Boolean!
 
   """Issue drafts that the user has created but not yet submitted."""
@@ -39572,10 +41991,49 @@ type User implements Node {
   url: String!
 }
 
+"""User actor payload for webhooks."""
+type UserActorWebhookPayload {
+  """The avatar URL of the user."""
+  avatarUrl: String
+
+  """The email of the user."""
+  email: String!
+
+  """The ID of the user."""
+  id: String!
+
+  """The name of the user."""
+  name: String!
+
+  """The type of actor."""
+  type: String!
+
+  """The URL of the user."""
+  url: String!
+}
+
 """User admin operation response."""
 type UserAdminPayload {
   """Whether the operation was successful."""
   success: Boolean!
+}
+
+"""Certain properties of a user."""
+type UserChildWebhookPayload {
+  """The avatar URL of the user."""
+  avatarUrl: String
+
+  """The email of the user."""
+  email: String!
+
+  """The ID of the user."""
+  id: String!
+
+  """The name of the user."""
+  name: String!
+
+  """The URL of the user."""
+  url: String!
 }
 
 """User filtering options."""
@@ -39765,7 +42223,6 @@ enum UserFlagType {
   reviewsPromptToConnectGithubDismissed
   rewindBannerDismissed
   slackAgentPromoFromCreateNewIssueShown
-  slackAiFeedbackAcknowledgementShown
   slackBotWelcomeMessageShown
   slackCommentReactionTipShown
   slackProjectChannelsPromoDismissed
@@ -39957,9 +42414,6 @@ type UserSettings implements Node {
   [Internal] The user's preferred merge method for pull requests. Null if the user chooses a method for each pull request.
   """
   pullRequestMergeStrategyPreference: PullRequestMergeMethod
-
-  """Whether to show line numbers in code blocks."""
-  showCodeBlockLineNumbers: Boolean!
 
   """Whether to show full user names instead of display names."""
   showFullUserNames: Boolean!
@@ -40155,9 +42609,6 @@ input UserSettingsUpdateInput {
   """
   subscribedToPrivacyLegalUpdates: Boolean
 
-  """The types of emails the user has unsubscribed from."""
-  unsubscribedFrom: [String!] @deprecated(reason: "Use individual subscription fields instead. This field is now ignored.")
-
   """[Internal] The user's usage warning history."""
   usageWarningHistory: JSONObject
 }
@@ -40201,6 +42652,60 @@ input UserUpdateInput {
   title: String
 }
 
+"""Payload for a user webhook."""
+type UserWebhookPayload {
+  """Whether the user is active."""
+  active: Boolean!
+
+  """Whether the user is an admin."""
+  admin: Boolean!
+
+  """Whether the user is an app."""
+  app: Boolean!
+
+  """The time at which the entity was archived."""
+  archivedAt: String
+
+  """The avatar URL of the user."""
+  avatarUrl: String
+
+  """The time at which the entity was created."""
+  createdAt: String!
+
+  """The description of the user."""
+  description: String
+
+  """The reason the user is disabled."""
+  disableReason: String
+
+  """The display name of the user."""
+  displayName: String!
+
+  """The email of the user."""
+  email: String!
+
+  """Whether the user is a guest."""
+  guest: Boolean!
+
+  """The ID of the entity."""
+  id: String!
+
+  """The name of the user."""
+  name: String!
+
+  """Whether the user is an owner."""
+  owner: Boolean
+
+  """The local timezone of the user."""
+  timezone: String
+
+  """The time at which the entity was updated."""
+  updatedAt: String!
+
+  """The URL of the user."""
+  url: String!
+}
+
 """
 The display preferences for a view, controlling layout mode (list, board, spreadsheet), grouping, sorting, column visibility, and other visual settings. View preferences exist at two levels: organization-wide defaults and per-user overrides. The effective preferences are computed by merging both layers, with user preferences taking priority.
 """
@@ -40242,9 +42747,6 @@ type ViewPreferences implements Node {
 input ViewPreferencesCreateInput {
   """The custom view these view preferences are associated with."""
   customViewId: String
-
-  """The cycle these view preferences are associated with."""
-  cycleId: String @deprecated(reason: "Not used")
 
   """
   The identifier in UUID v4 format. If none is provided, the backend will generate one.
@@ -40362,14 +42864,8 @@ type ViewPreferencesValues {
   """Whether to show the run duration in Loop run history."""
   automationRunHistoryShowDuration: Boolean
 
-  """Whether to show the initiative identifier in Loop run history."""
-  automationRunHistoryShowInitiativeIdentifier: Boolean
-
   """Whether to show the issue identifier in Loop run history."""
   automationRunHistoryShowIssueIdentifier: Boolean
-
-  """Whether to show the project identifier in Loop run history."""
-  automationRunHistoryShowProjectIdentifier: Boolean
 
   """Whether to show sub-team loops."""
   automationShowDescendants: Boolean
@@ -42036,6 +44532,21 @@ type WorkflowStateArchivePayload implements ArchivePayload {
 
   """Whether the operation was successful."""
   success: Boolean!
+}
+
+"""Certain properties of a workflow state."""
+type WorkflowStateChildWebhookPayload {
+  """The color of the workflow state."""
+  color: String!
+
+  """The ID of the workflow state."""
+  id: String!
+
+  """The name of the workflow state."""
+  name: String!
+
+  """The type of the workflow state."""
+  type: String!
 }
 
 type WorkflowStateConnection {

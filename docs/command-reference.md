@@ -4,6 +4,10 @@ generated for UX review. each row = one valid invocation.
 
 | command | description |
 |---------|-------------|
+| `lnr api <file>` | validate graphql offline or explicitly execute |
+| `lnr api <file> --execute` | explicitly authorize network execution |
+| `lnr api <file> --validate-only` | validate offline; incompatible with --execute |
+| `lnr api <file> --variables <string>` | json variables file containing an object |
 | `lnr auth [apiKey]` | authenticate with Linear API |
 | `lnr auth [apiKey] --logout` | clear stored credentials |
 | `lnr auth [apiKey] --whoami` | show current authenticated user |

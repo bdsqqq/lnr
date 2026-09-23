@@ -1,8 +1,10 @@
 {
-  "source": "sdk-release",
+  "source": "live-introspection",
   "sdkVersion": "95.1.0",
-  "commit": "3addb24bdf771700da1c050742e70e645cc7e36a",
-  "sourceSha256": "354098d4acd5859524f0f9a77e5b29691e4b4f186b5334e97125ef8c4a2719da",
-  "url": "https://raw.githubusercontent.com/linear/linear/3addb24bdf771700da1c050742e70e645cc7e36a/packages/sdk/src/schema.graphql",
-  "schemaSha256": "6f944e957c16e6d7fa485208d158cf13645bb90bd3bb9bf87d688be7b1e652dc"
+  "endpoint": "https://api.linear.app/graphql",
+  "captureStartedAt": "2026-09-22T23:21:00.306Z",
+  "captureCompletedAt": "2026-09-22T23:22:42.359Z",
+  "consistency": "two-matching-passes; not an upstream atomic snapshot",
+  "snapshotSha256": "efb8ea40dc6bdeb5d9abd21e40875a934a2ec0d5dcb40d63567a084c442f5028",
+  "schemaSha256": "3d752013e460b853f839aa6f156f23ff85cad8f74035ef5675072c509f53a76d"
 }
