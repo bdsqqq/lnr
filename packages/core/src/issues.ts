@@ -4,17 +4,22 @@ import type { Issue, ListIssuesFilter, CreateIssueInput, UpdateIssueInput, Batch
 export function priorityFromString(priority: string): number {
   switch (priority.toLowerCase()) {
     case "urgent":
+    case "1":
       return 1;
     case "high":
+    case "2":
       return 2;
     case "medium":
+    case "3":
       return 3;
     case "low":
+    case "4":
       return 4;
     case "none":
+    case "0":
       return 0;
     default:
-      return 0;
+      throw new Error("invalid priority; use none (0), urgent (1), high (2), medium (3), or low (4)");
   }
 }
 

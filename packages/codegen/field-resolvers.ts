@@ -160,7 +160,7 @@ export const fieldResolvers: Record<string, FieldResolver> = {
 
   priority: {
     cliFlag: "priority",
-    cliDescription: "priority (urgent, high, medium, low, none)",
+    cliDescription: "priority: none (0), urgent (1), high (2), medium (3), low (4); names are case-insensitive",
     inputType: "string",
     passthrough: true,
     transform: "priorityFromString(input.priority)",

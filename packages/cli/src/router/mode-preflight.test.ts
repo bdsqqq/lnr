@@ -40,6 +40,24 @@ async function checkArgv(argv: string[], message: string, accesses: number) {
 const issueReads = ["branch", "open", "comments", "sub-issues"];
 const projectReads = ["issues", "updates", "labels", "show-status", "milestones", "links"];
 
+test("priority validation precedes credentials on every curated issue route", async () => {
+  for (const route of [
+    ["issues"], ["issue", "new", "--team", "ENG", "--title", "test"],
+    ["issue", "ENG-1"], ["issue", "batch", "ENG-1,ENG-2"], ["issue batch", "ENG-1,ENG-2"],
+  ]) {
+    for (const value of ["unknown", "normal", "", " ", "\t\n", " high ",
+      "-1", "5", "01", "+1", "1.0", "1e0", "0x1", "NaN", "Infinity"]) {
+      const batch = route[0] === "issue batch" || route[1] === "batch";
+      await checkArgv([...route, "--priority=" + value],
+        batch && !value.trim() ? "--priority must not be blank" : "invalid priority", 0);
+    }
+    for (const value of ["none", "urgent", "high", "medium", "low",
+      "0", "1", "2", "3", "4", "NONE", "High"]) {
+      await checkArgv([...route, "--priority", value], credentialMarker, 1);
+    }
+  }
+});
+
 test("batch argv normalization preserves values and unrelated routes", () => {
   expect(normalizeArgv(["issue", "batch", "ENG-1,ENG-2", "--label", "two words"]))
     .toEqual(["issue batch", "ENG-1,ENG-2", "--label", "two words"]);

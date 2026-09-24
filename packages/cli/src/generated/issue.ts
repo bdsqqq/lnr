@@ -66,7 +66,7 @@ export const listIssuesInput = type({
   "project?": type("string").describe("filter by project name"),
   "assignee?": type("string").describe("filter by assignee email or @me"),
   "state?": type("string").describe("filter by state name"),
-  "priority?": type("string").describe("filter by priority"),
+  "priority?": type("string").describe("filter by priority: none (0), urgent (1), high (2), medium (3), low (4); names are case-insensitive"),
   "label?": type("string").describe("filter by label name"),
   "cycle?": type("string").describe("filter by cycle"),
   "json?": type("boolean").describe("output as json"),
@@ -88,7 +88,7 @@ export const issueInput = type({
   "estimate?": type("number").describe("set estimate points"),
   "inheritsSharedAccess?": type("boolean").describe("Whether this issue should inherit shared access from its parent issue."),
   "parent?": type("string").describe("set parent issue identifier"),
-  "priority?": type("string").describe("set priority (urgent, high, medium, low, none)"),
+  "priority?": type("string").describe("set priority: none (0), urgent (1), high (2), medium (3), low (4); names are case-insensitive"),
   "prioritySortOrder?": type("number").describe("The position of the issue related to other issues, when ordered by priority."),
   "project?": type("string").describe("set project name"),
   "milestone?": type("string").describe("set milestone name (requires --project)"),
@@ -122,7 +122,7 @@ export const batchUpdateInput = type({
   issues: type("string").configure({ positional: true }).describe("comma-separated issue identifiers (e.g. ENG-1,ENG-2,ENG-3)"),
   "state?": type("string").describe("set workflow state for all issues"),
   "assignee?": type("string").describe("set assignee by email or @me for all issues"),
-  "priority?": type("string").describe("set priority for all issues (urgent, high, medium, low, none)"),
+  "priority?": type("string").describe("set priority for all issues: none (0), urgent (1), high (2), medium (3), low (4); names are case-insensitive"),
   "label?": type("string").describe("set label for all issues (+name to add)"),
   "json?": type("boolean").describe("output as json"),
   "quiet?": type("boolean").describe("output ids only"),
@@ -172,6 +172,7 @@ async function handleListIssues(
   input: typeof listIssuesInput.infer
 ): Promise<void> {
   try {
+    const priority = input.priority === undefined ? undefined : priorityFromString(input.priority);
     const client = getClient();
 
     const outputOpts: OutputOptions = {
@@ -202,8 +203,8 @@ async function handleListIssues(
       filters.project = input.project;
     }
 
-    if (input.priority) {
-      filters.priority = priorityFromString(input.priority);
+    if (priority !== undefined) {
+      filters.priority = priority;
     }
 
     if (input.cycle) {
@@ -316,6 +317,7 @@ async function handleUpdateIssue(
   input: IssueInput
 ): Promise<void> {
   try {
+    const priority = input.priority === undefined ? undefined : priorityFromString(input.priority);
     const client = getClient();
     const issue = await getIssue(client, identifier);
 
@@ -390,8 +392,8 @@ async function handleUpdateIssue(
       }
     }
 
-    if (input.priority) {
-      updatePayload.priority = priorityFromString(input.priority);
+    if (priority !== undefined) {
+      updatePayload.priority = priority;
     }
 
     if (input.label) {
@@ -570,6 +572,7 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
   }
 
   try {
+    const priority = input.priority === undefined ? undefined : priorityFromString(input.priority);
     const client = getClient();
     const team = await findTeamByKeyOrName(client, input.team);
 
@@ -602,7 +605,7 @@ async function handleCreateIssue(input: IssueInput): Promise<void> {
 
     if (input.description) createPayload.description = input.description;
     if (input.assignee) createPayload.assigneeId = await resolveAssignee(client, input.assignee);
-    if (input.priority) createPayload.priority = priorityFromString(input.priority);
+    if (priority !== undefined) createPayload.priority = priority;
     if (input.prioritySortOrder !== undefined) createPayload.prioritySortOrder = input.prioritySortOrder;
 
     if (input.label) {
@@ -691,6 +694,7 @@ async function handleArchiveIssue(
 
 async function handleBatchUpdate(input: BatchUpdateInput): Promise<void> {
   try {
+    const priority = input.priority === undefined ? undefined : priorityFromString(input.priority);
     const client = getClient();
 
     const outputOpts: OutputOptions = {
@@ -743,8 +747,8 @@ async function handleBatchUpdate(input: BatchUpdateInput): Promise<void> {
       updateInput.assigneeId = await resolveAssignee(client, input.assignee);
     }
 
-    if (input.priority) {
-      updateInput.priority = priorityFromString(input.priority);
+    if (priority !== undefined) {
+      updateInput.priority = priority;
     }
 
     if (input.label) {

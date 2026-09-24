@@ -222,7 +222,7 @@ const issueConfig: EntityConfig = {
   "project?": type("string").describe("filter by project name"),
   "assignee?": type("string").describe("filter by assignee email or @me"),
   "state?": type("string").describe("filter by state name"),
-  "priority?": type("string").describe("filter by priority"),
+  "priority?": type("string").describe("filter by priority: none (0), urgent (1), high (2), medium (3), low (4); names are case-insensitive"),
   "label?": type("string").describe("filter by label name"),
   "cycle?": type("string").describe("filter by cycle"),
   "json?": type("boolean").describe("output as json"),
@@ -245,7 +245,7 @@ const issueConfig: EntityConfig = {
       let arktypeExpr: string;
       
       if (cliName === "priority") {
-        arktypeExpr = 'type("string").describe("set priority (urgent, high, medium, low, none)")';
+        arktypeExpr = 'type("string").describe("set priority: none (0), urgent (1), high (2), medium (3), low (4); names are case-insensitive")';
       } else if (cliName === "state") {
         arktypeExpr = 'type("string").describe("set workflow state")';
       } else if (cliName === "assignee") {
@@ -366,7 +366,7 @@ export const issueOperationSpec: OperationSpec<IssueInput, Operation> = {
   issues: type("string").configure({ positional: true }).describe("comma-separated issue identifiers (e.g. ENG-1,ENG-2,ENG-3)"),
   "state?": type("string").describe("set workflow state for all issues"),
   "assignee?": type("string").describe("set assignee by email or @me for all issues"),
-  "priority?": type("string").describe("set priority for all issues (urgent, high, medium, low, none)"),
+  "priority?": type("string").describe("set priority for all issues: none (0), urgent (1), high (2), medium (3), low (4); names are case-insensitive"),
   "label?": type("string").describe("set label for all issues (+name to add)"),
   "json?": type("boolean").describe("output as json"),
   "quiet?": type("boolean").describe("output ids only"),
@@ -1179,6 +1179,7 @@ function generateIssueListHandler(): string {
   input: typeof listIssuesInput.infer
 ): Promise<void> {
   try {
+    const priority = input.priority === undefined ? undefined : priorityFromString(input.priority);
     const client = getClient();
 
     const outputOpts: OutputOptions = {
@@ -1209,8 +1210,8 @@ function generateIssueListHandler(): string {
       filters.project = input.project;
     }
 
-    if (input.priority) {
-      filters.priority = priorityFromString(input.priority);
+    if (priority !== undefined) {
+      filters.priority = priority;
     }
 
     if (input.cycle) {
@@ -1327,6 +1328,7 @@ function generateIssueUpdateHandler(): string {
   input: IssueInput
 ): Promise<void> {
   try {
+    const priority = input.priority === undefined ? undefined : priorityFromString(input.priority);
     const client = getClient();
     const issue = await getIssue(client, identifier);
 
@@ -1401,8 +1403,8 @@ function generateIssueUpdateHandler(): string {
       }
     }
 
-    if (input.priority) {
-      updatePayload.priority = priorityFromString(input.priority);
+    if (priority !== undefined) {
+      updatePayload.priority = priority;
     }
 
     if (input.label) {
@@ -1583,6 +1585,7 @@ function generateIssueCreateHandler(): string {
   }
 
   try {
+    const priority = input.priority === undefined ? undefined : priorityFromString(input.priority);
     const client = getClient();
     const team = await findTeamByKeyOrName(client, input.team);
 
@@ -1615,7 +1618,7 @@ function generateIssueCreateHandler(): string {
 
     if (input.description) createPayload.description = input.description;
     if (input.assignee) createPayload.assigneeId = await resolveAssignee(client, input.assignee);
-    if (input.priority) createPayload.priority = priorityFromString(input.priority);
+    if (priority !== undefined) createPayload.priority = priority;
     if (input.prioritySortOrder !== undefined) createPayload.prioritySortOrder = input.prioritySortOrder;
 
     if (input.label) {
@@ -1706,6 +1709,7 @@ function generateIssueArchiveHandler(): string {
 function generateIssueBatchHandler(): string {
   return `async function handleBatchUpdate(input: BatchUpdateInput): Promise<void> {
   try {
+    const priority = input.priority === undefined ? undefined : priorityFromString(input.priority);
     const client = getClient();
 
     const outputOpts: OutputOptions = {
@@ -1758,8 +1762,8 @@ function generateIssueBatchHandler(): string {
       updateInput.assigneeId = await resolveAssignee(client, input.assignee);
     }
 
-    if (input.priority) {
-      updateInput.priority = priorityFromString(input.priority);
+    if (priority !== undefined) {
+      updateInput.priority = priority;
     }
 
     if (input.label) {

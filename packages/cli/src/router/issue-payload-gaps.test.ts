@@ -1,10 +1,12 @@
 import { beforeEach, expect, mock, test } from "bun:test";
 import { createCli, FailedToExitError } from "trpc-cli";
+import { normalizeArgv } from "../lib/argv";
 
 const core = await import("@bdsqqq/lnr-core");
 const createIssue = mock(async (..._args: unknown[]) => ({ success: false }));
 const updateIssue = mock(async (..._args: unknown[]) => ({ success: true }));
 const updateIssueBatch = mock(async (..._args: unknown[]) => ({ success: true, issues: [] }));
+const issues = mock(async (..._args: unknown[]) => ({ nodes: [] }));
 const labels = mock(async () => ({ nodes: [{ id: "label-id", name: "bug" }] }));
 const currentLabels = mock(async () => ({ nodes: [{ id: "existing-label" }] }));
 const team = {
@@ -15,7 +17,7 @@ const project = mock(async (..._args: unknown[]) => ({
   projectMilestones: async () => ({ nodes: [{ id: "milestone-id", name: "launch" }] }),
 }));
 const client = {
-  createIssue, updateIssue, updateIssueBatch,
+  createIssue, updateIssue, updateIssueBatch, issues,
   teams: async () => ({
     nodes: [{ ...team, key: "ENG", name: "test team" }], pageInfo: { hasNextPage: false },
   }),
@@ -39,7 +41,69 @@ mock.module("../lib/error", () => ({
 const { generatedIssuesRouter, inferOperation } = await import("../generated/issue");
 const caller = generatedIssuesRouter.createCaller({});
 beforeEach(() => {
-  for (const fn of [createIssue, updateIssue, updateIssueBatch, labels, currentLabels, project]) fn.mockClear();
+  for (const fn of [createIssue, updateIssue, updateIssueBatch, issues, labels, currentLabels, project]) fn.mockClear();
+});
+
+async function runPriorityArgv(argv: string[], exitCode: number, message?: string) {
+  const errors: string[] = [];
+  const previous = process.exitCode;
+  try {
+    await expect(createCli({ router: generatedIssuesRouter }).run({
+      argv: normalizeArgv(argv),
+      process: { exit(code): never {
+        throw new FailedToExitError("test exit", { exitCode: code, cause: undefined });
+      } },
+      logger: { info() {}, error: (...args) => { errors.push(args.map(String).join(" ")); } },
+    })).rejects.toMatchObject({ exitCode });
+    if (message) expect(errors.join("\n")).toContain(message);
+  } finally { process.exitCode = previous; }
+}
+
+test("priority argv preserves values through real core to SDK method payloads", async () => {
+  for (const [value, priority] of [
+    ["none", 0], ["urgent", 1], ["high", 2], ["medium", 3], ["low", 4],
+    ["0", 0], ["1", 1], ["2", 2], ["3", 3], ["4", 4], ["NONE", 0], ["High", 2],
+  ] as const) {
+    for (const fn of [issues, createIssue, updateIssue, updateIssueBatch]) fn.mockClear();
+    await runPriorityArgv(["issues", "--priority", value], 0);
+    expect(issues).toHaveBeenCalledTimes(1);
+    expect(issues).toHaveBeenLastCalledWith({ filter: { priority: { eq: priority } } });
+    // Creation deliberately rejects after capturing the submitted SDK payload.
+    await runPriorityArgv(["issue", "new", "--team", "ENG", "--title", "test", "--priority", value],
+      1, "verify the outcome before retrying");
+    expect(createIssue).toHaveBeenCalledTimes(1);
+    expect(createIssue).toHaveBeenLastCalledWith({ teamId: "team-id", title: "test", priority });
+    await runPriorityArgv(["issue", "ENG-1", "--priority", value], 0);
+    expect(updateIssue).toHaveBeenCalledTimes(1);
+    expect(updateIssue).toHaveBeenLastCalledWith("ENG-1", { priority });
+    await runPriorityArgv(["issue", "batch", "ENG-1,ENG-2", "--priority", value], 0);
+    expect(updateIssueBatch).toHaveBeenCalledTimes(1);
+    expect(updateIssueBatch).toHaveBeenLastCalledWith(["ENG-1", "ENG-2"], { priority });
+  }
+});
+
+test("invalid priority argv reaches no SDK list or mutation method", async () => {
+  for (const route of [["issues"], ["issue", "new", "--team", "ENG", "--title", "test"],
+    ["issue", "ENG-1"], ["issue", "batch", "ENG-1,ENG-2"]]) {
+    for (const value of ["unknown", "normal", "5", "01", "1.0", "+1", " high "]) {
+      await runPriorityArgv([...route, "--priority=" + value], 1, "invalid priority");
+      for (const fn of [issues, createIssue, updateIssue, updateIssueBatch]) {
+        expect(fn).not.toHaveBeenCalled();
+      }
+    }
+  }
+});
+
+test("omission does not synthesize zero priority", async () => {
+  await runPriorityArgv(["issues"], 0);
+  expect(issues).toHaveBeenLastCalledWith({ filter: {} });
+  await runPriorityArgv(["issue", "new", "--team", "ENG", "--title", "test"],
+    1, "verify the outcome before retrying");
+  expect(createIssue).toHaveBeenLastCalledWith({ teamId: "team-id", title: "test" });
+  await runPriorityArgv(["issue", "ENG-1", "--title", "revised"], 0);
+  expect(updateIssue).toHaveBeenLastCalledWith("ENG-1", { title: "revised" });
+  await runPriorityArgv(["issue", "batch", "ENG-1,ENG-2", "--label", "bug"], 0);
+  expect(updateIssueBatch).toHaveBeenLastCalledWith(["ENG-1", "ENG-2"], { labelIds: ["label-id"] });
 });
 
 test("each issue update flag reaches the real core and sdk payload", async () => {
