@@ -11,6 +11,7 @@ import {
   type GitAutomationTargetBranch,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "./trpc";
+import { validateMutationOutput } from "../lib/mutation-output";
 import { exitWithError, handleApiError, EXIT_CODES } from "../lib/error";
 import {
   outputJson,
@@ -289,6 +290,7 @@ export const gitAutomationTargetBranchesRouter = router({
     .input(gitAutomationTargetBranchInput)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);
+      if (operation !== "read") validateMutationOutput("git-branch " + operation, input);
 
       switch (operation) {
         case "create":

@@ -37,6 +37,7 @@ import {
 import { router, procedure } from "../router/trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
 import type { OperationSpec } from "../lib/operation-spec";
+import { validateMutationOutput } from "../lib/mutation-output";
 import {
   outputJson,
   outputQuiet,
@@ -571,6 +572,9 @@ export const generatedProjectsRouter = router({
     .input(projectInput)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);
+      if (operation !== "read") {
+        validateMutationOutput("project " + operation, input);
+      }
       const readActions = ["issues", "updates", "labels", "showStatus", "milestones", "links"] as const;
       const activeReadActions = readActions.filter(flag => input[flag] === true);
       if (activeReadActions.length > 1) {
@@ -626,6 +630,12 @@ export const generatedProjectsRouter = router({
     })
     .input(projectMilestoneInput)
     .mutation(async ({ input }) => {
+      if (input.nameOrNew === "new" || input.delete === true ||
+        [input.newName, input.description, input.targetDate].some(value => value !== undefined)) {
+        // Creation precedes deletion in the existing handler.
+        const deleting = input.nameOrNew !== "new" && input.delete === true;
+        validateMutationOutput("project milestone mutation", input, deleting ? [] : ["json"]);
+      }
       await handleProjectMilestone(input);
     }),
 });

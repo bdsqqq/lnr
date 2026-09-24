@@ -21,6 +21,7 @@ import {
 import { router, procedure } from "../router/trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
 import type { OperationSpec } from "../lib/operation-spec";
+import { validateMutationOutput } from "../lib/mutation-output";
 import {
   outputJson,
   outputQuiet,
@@ -255,6 +256,9 @@ export const generatedLabelsRouter = router({
     .input(labelInput)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);
+      if (operation !== "read") {
+        validateMutationOutput("label " + operation, input);
+      }
       if (operation === "create" && input.delete === true) {
         throw new Error("--delete requires an existing label");
       }

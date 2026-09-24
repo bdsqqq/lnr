@@ -9,6 +9,7 @@ import {
   type Notification,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "./trpc";
+import { validateMutationOutput } from "../lib/mutation-output";
 import { exitWithError, handleApiError, EXIT_CODES } from "../lib/error";
 import {
   outputJson,
@@ -99,6 +100,9 @@ export const notificationsRouter = router({
     .input(notificationInput)
     .mutation(async ({ input }) => {
       try {
+        if (input.read || input.archive) {
+          validateMutationOutput("notification " + (input.read ? "read" : "archive"), input);
+        }
         const client = getClient();
 
         if (input.read) {

@@ -14,6 +14,7 @@ import {
 } from "@bdsqqq/lnr-core";
 import type { OperationSpec } from "../lib/operation-spec";
 import { router, procedure } from "./trpc";
+import { validateMutationOutput } from "../lib/mutation-output";
 import { exitWithError, handleApiError, EXIT_CODES } from "../lib/error";
 import {
   outputJson,
@@ -385,6 +386,9 @@ export const cyclesRouter = router({
     .input(cycleInput)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);
+      if (operation === "create" || operation === "update" || operation === "delete") {
+        validateMutationOutput("cycle " + operation, input);
+      }
 
       switch (operation) {
         case "current":
