@@ -10,5 +10,70 @@
     "reason": "non-graphql implementation and live verification remain unresolved",
     "sources": []
   },
-  "records": []
+  "records": [
+    {
+      "coordinate": "Query.viewer",
+      "classification": "public-candidate",
+      "implementation": "implemented",
+      "reason": "Only the explicit viewer/id query binding is evidenced; public classification and auth requirements remain unresolved.",
+      "sources": [{"file":"docs/evidence/viewer-35941253133.txt","sha256":"864421ae5321d4055e8a1567bca0b1332327bb6c76ddaf746d33411ddca97599"}],
+      "binding": {
+        "command": "lnr api packages/cli/src/fixtures/api-viewer.graphql --execute",
+        "mode": "explicit query execution; JSON result",
+        "resolver": "createApiRouter -> executeApi -> client.client.rawRequest",
+        "mapping": "query { viewer { id } } -> data.viewer; only the selected id is asserted",
+        "sources": [
+          {"file":"packages/cli/src/fixtures/api-viewer.graphql","sha256":"95eea337e90dea4bf2a722d84893113fcaaeda6819c2127dbb8243f00c4b95ce"},
+          {"file":"packages/cli/src/router/api.ts","sha256":"c73d142ee0045c28c0d345d4a076176f1670a451063ffc904ff63928a229e9dc"},
+          {"file":"packages/core/src/api.ts","sha256":"78499fa89b83ad645f1831fdb032f995151cf89a7765079c3ab34230eb4bbdc3"}
+        ]
+      },
+      "evidence": [{"file":"packages/cli/src/e2e-readonly.test.ts","sha256":"4d5ecb66a1e3dac48aa5ec8d888f7d0f90cec1029c428a5afa102d79ac9eaf4a","kind":"contract","test":"explicit api execution returns the authenticated viewer"}],
+      "auth": {"status":"unknown","credential":"","scopes":"","plan":"","ownership":"","sources":[]},
+      "live": {
+        "status": "verified",
+        "reason": "Manually inspected CI assertion pass and checked-out source bytes; see bounded receipt. Not proof of auth requirements or other bindings.",
+        "scenario": "Explicit CLI query viewer { id } returns the authenticated SDK viewer id.",
+        "revision": "70bfafb31d2705279e47419e4f10af8e9599cf26",
+        "run": "https://github.com/bdsqqq/lnr/actions/runs/35941253133/job/107449390175",
+        "sources": [
+          {"file":"docs/evidence/viewer-35941253133.txt","sha256":"864421ae5321d4055e8a1567bca0b1332327bb6c76ddaf746d33411ddca97599"},
+          {"file":"packages/cli/src/e2e-readonly.test.ts","sha256":"4d5ecb66a1e3dac48aa5ec8d888f7d0f90cec1029c428a5afa102d79ac9eaf4a"},
+          {"file":"packages/cli/src/fixtures/api-viewer.graphql","sha256":"95eea337e90dea4bf2a722d84893113fcaaeda6819c2127dbb8243f00c4b95ce"}
+        ]
+      }
+    },
+    {
+      "coordinate": "User.id",
+      "classification": "public-candidate",
+      "implementation": "implemented",
+      "reason": "Only the explicit viewer/id query binding is evidenced; public classification and auth requirements remain unresolved.",
+      "sources": [{"file":"docs/evidence/viewer-35941253133.txt","sha256":"864421ae5321d4055e8a1567bca0b1332327bb6c76ddaf746d33411ddca97599"}],
+      "binding": {
+        "command": "lnr api packages/cli/src/fixtures/api-viewer.graphql --execute",
+        "mode": "explicit query execution; JSON result",
+        "resolver": "createApiRouter -> executeApi -> client.client.rawRequest",
+        "mapping": "query { viewer { id } } -> data.viewer.id; equals SDK client.viewer.id",
+        "sources": [
+          {"file":"packages/cli/src/fixtures/api-viewer.graphql","sha256":"95eea337e90dea4bf2a722d84893113fcaaeda6819c2127dbb8243f00c4b95ce"},
+          {"file":"packages/cli/src/router/api.ts","sha256":"c73d142ee0045c28c0d345d4a076176f1670a451063ffc904ff63928a229e9dc"},
+          {"file":"packages/core/src/api.ts","sha256":"78499fa89b83ad645f1831fdb032f995151cf89a7765079c3ab34230eb4bbdc3"}
+        ]
+      },
+      "evidence": [{"file":"packages/cli/src/e2e-readonly.test.ts","sha256":"4d5ecb66a1e3dac48aa5ec8d888f7d0f90cec1029c428a5afa102d79ac9eaf4a","kind":"contract","test":"explicit api execution returns the authenticated viewer"}],
+      "auth": {"status":"unknown","credential":"","scopes":"","plan":"","ownership":"","sources":[]},
+      "live": {
+        "status": "verified",
+        "reason": "Manually inspected CI assertion pass and checked-out source bytes; see bounded receipt. Not proof of auth requirements or other bindings.",
+        "scenario": "Explicit CLI query viewer { id } returns the authenticated SDK viewer id.",
+        "revision": "70bfafb31d2705279e47419e4f10af8e9599cf26",
+        "run": "https://github.com/bdsqqq/lnr/actions/runs/35941253133/job/107449390175",
+        "sources": [
+          {"file":"docs/evidence/viewer-35941253133.txt","sha256":"864421ae5321d4055e8a1567bca0b1332327bb6c76ddaf746d33411ddca97599"},
+          {"file":"packages/cli/src/e2e-readonly.test.ts","sha256":"4d5ecb66a1e3dac48aa5ec8d888f7d0f90cec1029c428a5afa102d79ac9eaf4a"},
+          {"file":"packages/cli/src/fixtures/api-viewer.graphql","sha256":"95eea337e90dea4bf2a722d84893113fcaaeda6819c2127dbb8243f00c4b95ce"}
+        ]
+      }
+    }
+  ]
 }

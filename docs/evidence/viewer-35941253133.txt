@@ -1,0 +1,21 @@
+review-status: manually verified by agent; not an automated attestation
+method: gh read-only run/job logs, revision APIs and contents API; no Linear calls
+run: https://github.com/bdsqqq/lnr/actions/runs/35941253133
+job: https://github.com/bdsqqq/lnr/actions/runs/35941253133/job/107449390175
+run-conclusion: success; e2e job conclusion: success
+head-revision: 4917c860fc5ef95a0d57dd2940f8b9afb5cafe39
+checked-out-revision: 70bfafb31d2705279e47419e4f10af8e9599cf26
+head-tree: 1dcb56105ebcfbf649b1e70700e500cfa82d968b
+checked-out-tree: 1dcb56105ebcfbf649b1e70700e500cfa82d968b
+assertion: explicit api execution returns the authenticated viewer
+result: pass; logged at 2026-09-24T01:03:59.5951641Z; read-only suite 11 pass, 0 fail
+contract: e2e-readonly.test.ts:37-42 compares the full CLI JSON result with ok=true, executed=true, operation=query and data.viewer.id equal to SDK client.viewer.id
+binding: lnr api packages/cli/src/fixtures/api-viewer.graphql --execute; query { viewer { id } }
+scope: Query.viewer and User.id through this binding only; no sibling fields or other bindings
+limitations: credential class, scopes, plan and ownership requirements not established; public classification unresolved
+cross-revision: source bytes below matched the checked-out revision and local files; identical committed trees connect this run to its head, not future changes
+source-sha256:
+4d5ecb66a1e3dac48aa5ec8d888f7d0f90cec1029c428a5afa102d79ac9eaf4a  packages/cli/src/e2e-readonly.test.ts
+95eea337e90dea4bf2a722d84893113fcaaeda6819c2127dbb8243f00c4b95ce  packages/cli/src/fixtures/api-viewer.graphql
+c73d142ee0045c28c0d345d4a076176f1670a451063ffc904ff63928a229e9dc  packages/cli/src/router/api.ts
+78499fa89b83ad645f1831fdb032f995151cf89a7765079c3ab34230eb4bbdc3  packages/core/src/api.ts

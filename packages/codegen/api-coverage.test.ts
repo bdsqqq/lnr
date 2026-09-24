@@ -116,9 +116,18 @@ test("accepted snapshot has honest gaps and evaluation never mutates inputs", as
   const load = async (name: string) => JSON.parse(await readFile(new URL(name, import.meta.url), "utf8"));
   const inventory = await load("./api-inventory.json"), ledger = await load("./api-coverage.json");
   const before = JSON.stringify([inventory, ledger]);
-  const report = await evaluate(inventory, ledger, async () => { throw new Error("empty ledger must not read evidence"); });
+  const readSource = (file: string) => readFile(new URL("../../" + file, import.meta.url), "utf8");
+  const report = await evaluate(inventory, ledger, readSource);
   expect(report.rows).toHaveLength(inventory.coordinates.length);
   expect(report.accepted).toBe(false);
   expect(() => requireAcceptance(report)).toThrow("coverage prerequisite incomplete");
   expect(JSON.stringify([inventory, ledger])).toBe(before);
+  // Partial live evidence must not erase unresolved classification or auth requirements.
+  for (const coordinate of ["Query.viewer", "User.id"]) {
+    expect(report.rows.find(row => row.coordinate === coordinate)!.gaps)
+      .toEqual(["classification", "auth-requirements"]);
+  }
+  await expect(evaluate(inventory, ledger, async file =>
+    file === "packages/core/src/api.ts" ? "changed implementation" : readSource(file),
+  )).rejects.toThrow("stale source");
 });
