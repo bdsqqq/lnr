@@ -3,6 +3,7 @@
 import { createCli } from "trpc-cli";
 import { appRouter } from "./router";
 import pkg from "../package.json";
+import { normalizeArgv } from "./lib/argv";
 
 // parse global --api-key flag before trpc-cli
 // precedence: --api-key > LINEAR_API_KEY env > config file
@@ -25,4 +26,4 @@ const cli = createCli({
   description: "command-line interface for Linear",
 });
 
-void cli.run();
+void cli.run({ argv: normalizeArgv(process.argv.slice(2)) });
