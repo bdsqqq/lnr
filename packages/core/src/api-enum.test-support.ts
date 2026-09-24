@@ -4,6 +4,7 @@ import {
 } from "graphql";
 import { inputWitnesses, internal } from "./api-witness.test-support";
 import { outputWitnesses } from "./api-output-witness.test-support";
+import { nestedInputWitnesses } from "./api-nested-input.test-support";
 
 type InputRow = ReturnType<typeof inputWitnesses>[number];
 type Route = Extract<InputRow, { status: "witness" | "blocked" }>;
@@ -39,7 +40,7 @@ export function enumSlot(value: unknown, path: readonly string[], literal: strin
   return { ...object, [key!]: enumSlot(object[key!], rest, literal) };
 }
 
-/** Root inputs take precedence; direct nested-output enum arguments provide fallback witnesses. */
+/** Root inputs take precedence; nested argument and input-field slots provide fallback witnesses. */
 export function enumWitnesses(schema: GraphQLSchema) {
   type EnumRoute = Pick<Route, "root" | "path" | "probe" | "reasons">;
   const usable = new Map<string, EnumRoute>(), blocked = new Map<string, EnumRoute>();
@@ -50,7 +51,14 @@ export function enumWitnesses(schema: GraphQLSchema) {
     const routes = row.status === "witness" ? usable : blocked;
     if (!routes.has(type.name)) routes.set(type.name, row);
   }
-  for (const row of outputWitnesses(schema)) {
+  const outputs = outputWitnesses(schema);
+  for (const row of nestedInputWitnesses(schema, outputs)) {
+    const type = schema.getType(row.inputType);
+    if (!isEnumType(type) || internal(type)) continue;
+    const routes = row.status === "witness" ? usable : blocked;
+    if (!routes.has(type.name)) routes.set(type.name, row);
+  }
+  for (const row of outputs) {
     if (row.status !== "witness" || !row.coordinate.endsWith(":)")) continue;
     const info = new TypeInfo(schema);
     visit(parse(row.probe.document), visitWithTypeInfo(info, {
