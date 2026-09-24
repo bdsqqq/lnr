@@ -336,6 +336,10 @@ export const gitAutomationStatesRouter = router({
     .input(gitAutomationStateInput)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);
+      if (input.delete && (input.idOrEvent === "new" ||
+          gitAutomationStateMutationFlags.some((flag) => input[flag] !== undefined))) {
+        throw new Error("git-automation modes conflict; use separate commands");
+      }
       if (operation !== "read") validateMutationOutput("git-automation " + operation, input);
 
       switch (operation) {

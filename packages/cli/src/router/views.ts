@@ -377,6 +377,11 @@ export const viewsRouter = router({
     .input(viewInput)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);
+      const mutations = viewMutationFlags.some((flag) => input[flag] !== undefined);
+      if ((input.preferences && (input.nameOrId === "new" || input.delete || mutations)) ||
+          (input.delete && (input.nameOrId === "new" || mutations))) {
+        throw new Error("view modes conflict; use separate commands");
+      }
       if (operation === "create" || operation === "update" || operation === "delete") {
         validateMutationOutput("view " + operation, input);
       }

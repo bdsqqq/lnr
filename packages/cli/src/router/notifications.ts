@@ -100,6 +100,9 @@ export const notificationsRouter = router({
     .input(notificationInput)
     .mutation(async ({ input }) => {
       try {
+        if (input.read && input.archive) {
+          throw new Error("notification modes conflict; use separate commands");
+        }
         if (input.read || input.archive) {
           validateMutationOutput("notification " + (input.read ? "read" : "archive"), input);
         }
