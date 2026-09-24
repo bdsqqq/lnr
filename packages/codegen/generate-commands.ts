@@ -335,7 +335,10 @@ export const issueMutationFlags: readonly (keyof IssueInput)[] = [
 export function inferOperation(input: IssueInput): Operation {
   if (input.idOrNew === "new") return "create";
 
-  const hasMutationFlags = issueMutationFlags.some(flag => input[flag] !== undefined);
+  const hasMutationFlags = issueMutationFlags.some(flag =>
+    input[flag] !== undefined &&
+    (!(flag === "subscribe" || flag === "unsubscribe") || input[flag] !== false)
+  );
 
   if (input.archive && hasMutationFlags) return "update";
   if (input.archive) return "archive";
@@ -377,6 +380,11 @@ type BatchUpdateInput = typeof batchUpdateInput.infer;`,
     })
     .input(batchUpdateInput)
     .mutation(async ({ input }) => {
+      for (const flag of ["state", "assignee", "priority", "label"] as const) {
+        if (input[flag] !== undefined && !input[flag].trim()) {
+          throw new Error("--" + flag + " must not be blank");
+        }
+      }
       await handleBatchUpdate(input);
     }),`,
 };
@@ -497,7 +505,8 @@ export function inferOperation(input: ProjectInput): Operation {
   if (input.delete) return "delete";
 
   for (const flag of projectMutationFlags) {
-    if (input[flag] !== undefined) return "update";
+    if (input[flag] !== undefined &&
+      (!(flag === "subscribe" || flag === "unsubscribe") || input[flag] !== false)) return "update";
   }
 
   return "read";
@@ -1058,6 +1067,14 @@ export const generated${TypeName}sRouter = router({
     .input(${config.singularCommand}Input)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);${config.singularCommand === "issue" ? `
+      const readActions = ["branch", "open", "comments", "subIssues"] as const;
+      const activeReadActions = readActions.filter(flag => input[flag] === true);
+      if (activeReadActions.length > 1) {
+        throw new Error("only one issue read action allowed per invocation");
+      }
+      if (operation !== "read" && activeReadActions.length > 0) {
+        throw new Error("issue read actions cannot be combined with " + operation);
+      }
       // reject ignored actions before handlers acquire credentials or create a resource.
       for (const flag of [
         "comment", "editComment", "replyTo", "deleteComment",
@@ -1086,6 +1103,19 @@ export const generated${TypeName}sRouter = router({
         }
       }
 ` : config.singularCommand === "project" ? `
+      const readActions = ["issues", "updates", "labels", "showStatus", "milestones", "links"] as const;
+      const activeReadActions = readActions.filter(flag => input[flag] === true);
+      if (activeReadActions.length > 1) {
+        throw new Error("only one project read action allowed per invocation");
+      }
+      if (operation !== "read" && activeReadActions.length > 0) {
+        throw new Error("project read actions cannot be combined with " + operation);
+      }
+      if (operation === "delete" && projectMutationFlags.some(flag =>
+        input[flag] !== undefined && input[flag] !== false
+      )) {
+        throw new Error("--delete cannot be combined with project mutation flags");
+      }
       // companion flags must be validated before an otherwise valid write.
       for (const flag of ["react", "emoji", "unreact"] as const) {
         if (input[flag] === "") throw new Error(flag + " must not be empty");
@@ -1101,6 +1131,15 @@ export const generated${TypeName}sRouter = router({
         input.delete === true || input.subscribe === true || input.unsubscribe === true
       )) {
         throw new Error("reaction, deletion and subscription actions require an existing project");
+      }
+` : ["doc", "label"].includes(config.singularCommand) ? `
+      if (operation === "create" && input.delete === true) {
+        throw new Error("--delete requires an existing ${config.singularCommand}");
+      }
+      if (operation === "delete" && ${config.singularCommand}MutationFlags.some(flag =>
+        input[flag] !== undefined && input[flag] !== false
+      )) {
+        throw new Error("--delete cannot be combined with ${config.singularCommand} mutation flags");
       }
 ` : ""}
 

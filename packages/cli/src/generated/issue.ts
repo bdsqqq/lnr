@@ -148,7 +148,10 @@ export const issueMutationFlags: readonly (keyof IssueInput)[] = [
 export function inferOperation(input: IssueInput): Operation {
   if (input.idOrNew === "new") return "create";
 
-  const hasMutationFlags = issueMutationFlags.some(flag => input[flag] !== undefined);
+  const hasMutationFlags = issueMutationFlags.some(flag =>
+    input[flag] !== undefined &&
+    (!(flag === "subscribe" || flag === "unsubscribe") || input[flag] !== false)
+  );
 
   if (input.archive && hasMutationFlags) return "update";
   if (input.archive) return "archive";
@@ -808,6 +811,14 @@ export const generatedIssuesRouter = router({
     .input(issueInput)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);
+      const readActions = ["branch", "open", "comments", "subIssues"] as const;
+      const activeReadActions = readActions.filter(flag => input[flag] === true);
+      if (activeReadActions.length > 1) {
+        throw new Error("only one issue read action allowed per invocation");
+      }
+      if (operation !== "read" && activeReadActions.length > 0) {
+        throw new Error("issue read actions cannot be combined with " + operation);
+      }
       // reject ignored actions before handlers acquire credentials or create a resource.
       for (const flag of [
         "comment", "editComment", "replyTo", "deleteComment",
@@ -861,6 +872,11 @@ export const generatedIssuesRouter = router({
     })
     .input(batchUpdateInput)
     .mutation(async ({ input }) => {
+      for (const flag of ["state", "assignee", "priority", "label"] as const) {
+        if (input[flag] !== undefined && !input[flag].trim()) {
+          throw new Error("--" + flag + " must not be blank");
+        }
+      }
       await handleBatchUpdate(input);
     }),
 });

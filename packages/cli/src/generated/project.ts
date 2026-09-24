@@ -120,7 +120,8 @@ export function inferOperation(input: ProjectInput): Operation {
   if (input.delete) return "delete";
 
   for (const flag of projectMutationFlags) {
-    if (input[flag] !== undefined) return "update";
+    if (input[flag] !== undefined &&
+      (!(flag === "subscribe" || flag === "unsubscribe") || input[flag] !== false)) return "update";
   }
 
   return "read";
@@ -570,6 +571,19 @@ export const generatedProjectsRouter = router({
     .input(projectInput)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);
+      const readActions = ["issues", "updates", "labels", "showStatus", "milestones", "links"] as const;
+      const activeReadActions = readActions.filter(flag => input[flag] === true);
+      if (activeReadActions.length > 1) {
+        throw new Error("only one project read action allowed per invocation");
+      }
+      if (operation !== "read" && activeReadActions.length > 0) {
+        throw new Error("project read actions cannot be combined with " + operation);
+      }
+      if (operation === "delete" && projectMutationFlags.some(flag =>
+        input[flag] !== undefined && input[flag] !== false
+      )) {
+        throw new Error("--delete cannot be combined with project mutation flags");
+      }
       // companion flags must be validated before an otherwise valid write.
       for (const flag of ["react", "emoji", "unreact"] as const) {
         if (input[flag] === "") throw new Error(flag + " must not be empty");

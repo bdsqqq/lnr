@@ -273,6 +273,15 @@ export const generatedDocsRouter = router({
     .input(docInput)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);
+      if (operation === "create" && input.delete === true) {
+        throw new Error("--delete requires an existing doc");
+      }
+      if (operation === "delete" && docMutationFlags.some(flag =>
+        input[flag] !== undefined && input[flag] !== false
+      )) {
+        throw new Error("--delete cannot be combined with doc mutation flags");
+      }
+
 
       switch (operation) {
         case "create":
