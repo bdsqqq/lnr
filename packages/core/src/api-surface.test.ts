@@ -1,65 +1,7 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
-import {
-  buildSchema, getNamedType, getVariableValues, isCompositeType, isEnumType,
-  isInputObjectType, isListType, isNonNullType, Kind, parse, validate,
-  type GraphQLField, type GraphQLInputType, type GraphQLObjectType,
-} from "graphql";
+import { buildSchema, getVariableValues, Kind, parse, validate } from "graphql";
 import { executeApi, getApiSchema } from "./api";
-
-type Operation = "query" | "mutation" | "subscription";
-type Member = { name: string; description?: string | null };
-type Blocker = { coordinate: string; reason: string };
-const internal = (item: Member) =>
-  item.name === "_dummy" || /\[internal\]/i.test(item.description ?? "");
-const required = (item: { type: GraphQLInputType; defaultValue?: unknown }) =>
-  isNonNullType(item.type) && item.defaultValue === undefined;
-
-/** minimal structural witnesses, not semantically valid live mutation payloads. */
-function witness(operation: Operation, parent: GraphQLObjectType, field: GraphQLField<unknown, unknown>) {
-  const blocked: Blocker[] = [];
-  function check(item: Member, coordinate: string, reason: string) {
-    if (internal(item)) blocked.push({ coordinate, reason });
-  }
-  function value(type: GraphQLInputType, coordinate: string, ancestors: string[] = []): unknown {
-    if (isNonNullType(type)) return value(type.ofType, coordinate, ancestors);
-    check(getNamedType(type), getNamedType(type).name, `internal required input type at ${coordinate}`);
-    if (isListType(type)) return [];
-    if (isInputObjectType(type)) {
-      if (ancestors.includes(type.name)) throw new Error(`required input cycle at ${coordinate}`);
-      return Object.fromEntries(Object.values(type.getFields()).filter(required).map(input => {
-        const at = `${type.name}.${input.name}`;
-        check(input, at, "internal required input field");
-        return [input.name, value(input.type, at, [...ancestors, type.name])];
-      }));
-    }
-    if (isEnumType(type)) {
-      const allowed = type.getValues().find(item => !internal(item));
-      if (!allowed) blocked.push({ coordinate: type.name, reason: `no public enum value at ${coordinate}` });
-      const chosen = allowed ?? type.getValues()[0];
-      if (!chosen) throw new Error(`empty enum ${type.name}`);
-      return chosen.name;
-    }
-    return type.name === "Boolean" ? false
-      : type.name === "Int" || type.name === "Float" ? 0 : "dummy";
-  }
-  const args = field.args.filter(required);
-  const variables: Record<string, unknown> = {};
-  for (const arg of args) {
-    const at = `${parent.name}.${field.name}(${arg.name}:)`;
-    check(arg, at, "internal required argument");
-    variables[arg.name] = value(arg.type, at);
-  }
-  const output = getNamedType(field.type);
-  check(output, output.name, `internal output type at ${parent.name}.${field.name}`);
-  const definitions = args.length ? `(${args.map(arg => `$${arg.name}: ${arg.type}`).join(", ")})` : "";
-  const argumentsText = args.length ? `(${args.map(arg => `${arg.name}: $${arg.name}`).join(", ")})` : "";
-  return {
-    document: `${operation}${definitions} { ${field.name}${argumentsText}${
-      isCompositeType(output) ? " { __typename }" : ""
-    } }`,
-    variables, blocked,
-  };
-}
+import { internal, witness } from "./api-witness.test-support";
 
 const schema = getApiSchema();
 const roots = [
