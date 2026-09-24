@@ -88,7 +88,7 @@ generated for UX review. each row = one valid invocation.
 | `lnr issues --cycle <string>` | filter by cycle |
 | `lnr issues --json` | output as json |
 | `lnr issues --label <string>` | filter by label name |
-| `lnr issues --priority <string>` | filter by priority |
+| `lnr issues --priority <string>` | filter by priority: none (0), urgent (1), high (2), medium (3), low (4); names are case-insensitive |
 | `lnr issues --project <string>` | filter by project name |
 | `lnr issues --quiet` | output ids only |
 | `lnr issues --state <string>` | filter by state name |
@@ -117,7 +117,7 @@ generated for UX review. each row = one valid invocation.
 | `lnr issue <idOrNew> --open` | open issue in browser |
 | `lnr issue <idOrNew> --parent <string>` | set parent issue identifier |
 | `lnr issue <idOrNew> --pr <string>` | link a GitHub PR URL to the issue |
-| `lnr issue <idOrNew> --priority <string>` | set priority (urgent, high, medium, low, none) |
+| `lnr issue <idOrNew> --priority <string>` | set priority: none (0), urgent (1), high (2), medium (3), low (4); names are case-insensitive |
 | `lnr issue <idOrNew> --priority-sort-order <number>` | The position of the issue related to other issues, when ordered by priority. |
 | `lnr issue <idOrNew> --project <string>` | set project name |
 | `lnr issue <idOrNew> --react <string>` | entity id to add reaction (requires --emoji) |
@@ -137,7 +137,7 @@ generated for UX review. each row = one valid invocation.
 | `lnr issue batch <issues> --assignee <string>` | set assignee by email or @me for all issues |
 | `lnr issue batch <issues> --json` | output as json |
 | `lnr issue batch <issues> --label <string>` | set label for all issues (+name to add) |
-| `lnr issue batch <issues> --priority <string>` | set priority for all issues (urgent, high, medium, low, none) |
+| `lnr issue batch <issues> --priority <string>` | set priority for all issues: none (0), urgent (1), high (2), medium (3), low (4); names are case-insensitive |
 | `lnr issue batch <issues> --quiet` | output ids only |
 | `lnr issue batch <issues> --state <string>` | set workflow state for all issues |
 | `lnr projects` | list projects (alias: p) |
