@@ -193,7 +193,7 @@ async function handleCreateView(input: ViewInput): Promise<void> {
     });
 
     if (view) {
-      console.log(`created view: ${view.name}`);
+      console.log(`created view: ${view.name} (${view.id})`);
     } else {
       exitWithError("failed to create view");
     }

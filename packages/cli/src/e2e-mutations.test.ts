@@ -9,7 +9,7 @@
 
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { executeApi, getClient, type Cycle, type GitAutomationState } from "@bdsqqq/lnr-core";
-import { cleanupOwned, liveChildEnv, liveCredentials, type OwnedFixture } from "./live-test-support";
+import { cleanupOwned, liveChildEnv, liveCredentials, registerViewReceipt, type OwnedFixture } from "./live-test-support";
 
 const { key: API_KEY, confirmOrg } = liveCredentials(process.env, true);
 const client = getClient(API_KEY);
@@ -211,14 +211,14 @@ describe("e2e: mutations", () => {
     test("create view", async () => {
       fixtures.push(viewFixture);
       const out = await lnr("view", "new", "--name", TEST_VIEW_NAME);
+      viewId = registerViewReceipt(out, viewFixture);
       const json = await lnr("views", "--json");
       const views = JSON.parse(json);
       const matches = views.filter((v: any) => v.name === TEST_VIEW_NAME);
       expect(matches).toHaveLength(1);
       const testView = matches[0];
       expect(testView).toBeTruthy();
-      viewId = testView.id;
-      viewFixture.id = viewId;
+      expect(testView.id).toBe(viewId);
       expect(out).toContain("created");
     });
 

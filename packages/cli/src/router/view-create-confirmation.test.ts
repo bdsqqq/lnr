@@ -1,11 +1,12 @@
 import { expect, mock, spyOn, test } from "bun:test";
 import { createCli, FailedToExitError } from "trpc-cli";
 const core = await import("@bdsqqq/lnr-core");
+const viewId = "12345678-1234-1234-1234-123456789abc";
 const read = mock(() => Promise.resolve({
-  id: "view-id", name: "audit", filterData: {}, shared: false,
+  id: viewId, name: "audit", filterData: {}, shared: false,
   createdAt: new Date(0), updatedAt: new Date(0),
 }));
-let success = false;
+let success: boolean | undefined = false;
 const createCustomView = mock(async () => ({
   success, get customView() { return read(); },
 }));
@@ -22,7 +23,7 @@ test("view argv cannot print success for an unconfirmed SDK create", async () =>
   const output = spyOn(console, "log").mockImplementation(() => {});
   const previous = process.exitCode;
   try {
-    for (success of [false, true]) {
+    for (success of [false, undefined, true]) {
       read.mockClear(); createCustomView.mockClear(); output.mockClear();
       await expect(createCli({ router: viewsRouter }).run({
         argv: ["view", "new", "--name", "audit"],
@@ -34,6 +35,7 @@ test("view argv cannot print success for an unconfirmed SDK create", async () =>
       expect(createCustomView).toHaveBeenCalledTimes(1);
       expect(read).toHaveBeenCalledTimes(success ? 1 : 0);
       expect(output).toHaveBeenCalledTimes(success ? 1 : 0);
+      if (success) expect(output).toHaveBeenCalledWith(`created view: audit (${viewId})`);
     }
   } finally { output.mockRestore(); process.exitCode = previous; }
 });
