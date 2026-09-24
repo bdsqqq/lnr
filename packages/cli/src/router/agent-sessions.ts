@@ -10,6 +10,7 @@ import {
   type AgentActivity,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "./trpc";
+import { validateMutationOutput } from "../lib/mutation-output";
 import { exitWithError, handleApiError, EXIT_CODES } from "../lib/error";
 import {
   outputJson,
@@ -152,6 +153,7 @@ export const agentSessionsRouter = router({
         if (updates && (input.activities || input.id === "new")) {
           throw new Error("session updates require an existing id and cannot use --activities");
         }
+        if (updates) validateMutationOutput("agent-session update", input);
         const client = getClient();
 
         if (updates) {

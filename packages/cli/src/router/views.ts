@@ -13,6 +13,7 @@ import {
   type ViewPreferencesResult,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "./trpc";
+import { validateMutationOutput } from "../lib/mutation-output";
 import { exitWithError, handleApiError, EXIT_CODES } from "../lib/error";
 import {
   outputJson,
@@ -376,6 +377,9 @@ export const viewsRouter = router({
     .input(viewInput)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);
+      if (operation === "create" || operation === "update" || operation === "delete") {
+        validateMutationOutput("view " + operation, input);
+      }
 
       switch (operation) {
         case "create":

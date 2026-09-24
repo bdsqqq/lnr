@@ -43,6 +43,7 @@ import {
 import { router, procedure } from "../router/trpc";
 import { handleApiError, exitWithError, EXIT_CODES } from "../lib/error";
 import type { OperationSpec } from "../lib/operation-spec";
+import { validateMutationOutput } from "../lib/mutation-output";
 import {
   outputJson,
   outputQuiet,
@@ -815,6 +816,9 @@ export const generatedIssuesRouter = router({
     .input(issueInput)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);
+      if (operation !== "read") {
+        validateMutationOutput("issue " + operation, input);
+      }
       const readActions = ["branch", "open", "comments", "subIssues"] as const;
       const activeReadActions = readActions.filter(flag => input[flag] === true);
       if (activeReadActions.length > 1) {
@@ -876,6 +880,7 @@ export const generatedIssuesRouter = router({
     })
     .input(batchUpdateInput)
     .mutation(async ({ input }) => {
+      validateMutationOutput("issue batch", input, ["json", "quiet"]);
       for (const flag of ["state", "assignee", "priority", "label"] as const) {
         if (input[flag] !== undefined && !input[flag].trim()) {
           throw new Error("--" + flag + " must not be blank");

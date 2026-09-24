@@ -17,6 +17,7 @@ import {
   type EntityExternalLink,
 } from "@bdsqqq/lnr-core";
 import { router, procedure } from "./trpc";
+import { validateMutationOutput } from "../lib/mutation-output";
 import { exitWithError, handleApiError, EXIT_CODES } from "../lib/error";
 import {
   outputJson,
@@ -120,6 +121,9 @@ export const initiativesRouter = router({
     .input(initiativeInput)
     .mutation(async ({ input }) => {
       try {
+        if (input.react || input.unreact || input.subscribe || input.unsubscribe) {
+          validateMutationOutput("initiative mutation", input);
+        }
         const client = getClient();
         let initiative = await getInitiative(client, input.nameOrId);
 
