@@ -132,7 +132,7 @@ test("request failures are sanitized and never retried at either stage", async (
 
 test("workflow invokes only new inspection and offline tests; secret stays step-local", async () => {
   const workflow = await Bun.file(new URL("../.github/workflows/ci.yml", import.meta.url)).text();
-  expect(workflow).toContain('branches: ["feat/api-parity-cycle-pagination"]');
+  expect(workflow).toContain('branches: ["feat/api-parity-nested-input-witnesses"]');
   expect(workflow).toContain("github.head_ref == 'chore/read-only-project-recovery'");
   expect(workflow).toContain("github.event.pull_request.head.repo.full_name == github.repository");
   expect(workflow).toContain("contents: read");
