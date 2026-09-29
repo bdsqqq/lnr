@@ -14,28 +14,24 @@ export async function listDocuments(
   client: LinearClient,
   projectId?: string
 ): Promise<Document[]> {
-  try {
-    const filter = projectId
-      ? { project: { id: { eq: projectId } } }
-      : undefined;
+  const filter = projectId
+    ? { project: { id: { eq: projectId } } }
+    : undefined;
 
-    const documentsConnection = await client.documents({ filter });
-    const nodes = documentsConnection.nodes;
+  const documentsConnection = await client.documents({ filter });
+  const nodes = documentsConnection.nodes;
 
-    return Promise.all(
-      nodes.map(async (d) => ({
-        id: d.id,
-        title: d.title,
-        content: d.content ?? null,
-        createdAt: d.createdAt,
-        updatedAt: d.updatedAt,
-        url: d.url,
-        project: (await d.project)?.name ?? null,
-      }))
-    );
-  } catch {
-    return [];
-  }
+  return Promise.all(
+    nodes.map(async (d) => ({
+      id: d.id,
+      title: d.title,
+      content: d.content ?? null,
+      createdAt: d.createdAt,
+      updatedAt: d.updatedAt,
+      url: d.url,
+      project: (await d.project)?.name ?? null,
+    }))
+  );
 }
 
 export async function getDocument(
