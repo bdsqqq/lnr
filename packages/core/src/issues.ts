@@ -87,34 +87,30 @@ export async function getIssue(
   client: LinearClient,
   identifier: string
 ): Promise<Issue | null> {
-  try {
-    const issue = await client.issue(identifier);
+  const issue = await client.issue(identifier);
 
-    if (!issue) {
-      return null;
-    }
-
-    const state = await issue.state;
-    const assignee = await issue.assignee;
-    const parent = await issue.parent;
-
-    return {
-      id: issue.id,
-      identifier: issue.identifier,
-      title: issue.title,
-      description: issue.description,
-      state: state?.name ?? null,
-      assignee: assignee?.name ?? null,
-      priority: issue.priority,
-      createdAt: issue.createdAt,
-      updatedAt: issue.updatedAt,
-      url: issue.url,
-      parentId: parent?.id ?? null,
-      branchName: issue.branchName,
-    };
-  } catch {
+  if (!issue) {
     return null;
   }
+
+  const state = await issue.state;
+  const assignee = await issue.assignee;
+  const parent = await issue.parent;
+
+  return {
+    id: issue.id,
+    identifier: issue.identifier,
+    title: issue.title,
+    description: issue.description,
+    state: state?.name ?? null,
+    assignee: assignee?.name ?? null,
+    priority: issue.priority,
+    createdAt: issue.createdAt,
+    updatedAt: issue.updatedAt,
+    url: issue.url,
+    parentId: parent?.id ?? null,
+    branchName: issue.branchName,
+  };
 }
 
 export async function createIssue(

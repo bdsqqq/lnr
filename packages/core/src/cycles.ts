@@ -29,20 +29,16 @@ export async function getCycle(
   teamKey: string,
   nameOrNumber: string
 ): Promise<Cycle | null> {
-  try {
-    const cycles = await listCycles(client, teamKey);
-    const normalizedInput = nameOrNumber.toLowerCase();
+  const cycles = await listCycles(client, teamKey);
+  const normalizedInput = nameOrNumber.toLowerCase();
 
-    const match = cycles.find(
-      (c) =>
-        c.name?.toLowerCase() === normalizedInput ||
-        c.number?.toString() === nameOrNumber
-    );
+  const match = cycles.find(
+    (c) =>
+      c.name?.toLowerCase() === normalizedInput ||
+      c.number?.toString() === nameOrNumber
+  );
 
-    return match ?? null;
-  } catch {
-    return null;
-  }
+  return match ?? null;
 }
 
 export async function getCurrentCycle(
