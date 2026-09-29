@@ -330,19 +330,64 @@ describe("e2e: mutations", () => {
         if (!label) throw new Error("label creation returned no id");
         fixture.id = label.id;
         labelIds.push(label.id);
+        console.log(JSON.stringify({
+          event: "issue.labels.fixture", runId: RUN_ID, teamId, role: suffix,
+          labelId: label.id, name: fixture.name, confirmed: result.success === true,
+          observedAt: new Date().toISOString(),
+        }));
         expect(result.success).toBe(true);
-      }
-      for (const [index, issue] of issues.entries()) {
-        expect((await client.updateIssue(issue.id, { labelIds: [labelIds[index]!] })).success).toBe(true);
       }
       const labelsFor = async (id: string) =>
         (await (await client.issue(id)).labels()).nodes.map(label => label.id).sort();
+      for (const [index, issue] of issues.entries()) {
+        const expected = [labelIds[index]!];
+        const result = await client.updateIssue(issue.id, { labelIds: expected });
+        console.log(JSON.stringify({
+          event: "issue.labels.assignment", runId: RUN_ID, teamId,
+          issueId: issue.id, identifier: issue.identifier,
+          originalLabelId: labelIds[index], addedLabelId: labelIds[2],
+          input: { labelIds: expected }, confirmed: result.success === true,
+          observedAt: new Date().toISOString(),
+        }));
+        expect(result.success).toBe(true);
+        // A write acknowledgement alone does not establish the batch's starting state.
+        const actual = await labelsFor(issue.id);
+        console.log(JSON.stringify({
+          event: "issue.labels.precondition", runId: RUN_ID, teamId,
+          issueId: issue.id, identifier: issue.identifier, expected, actual,
+          observedAt: new Date().toISOString(),
+        }));
+        expect(actual).toEqual(expected);
+      }
       const addedName = ownedLabels[2]!.name;
       const addedId = labelIds[2]!;
       const identifiers = issues.map(issue => issue.identifier).join(",");
+      const batchContext = {
+        runId: RUN_ID, teamId, addedLabelId: addedId, addedLabelName: addedName,
+        issues: issues.map((issue, index) => ({
+          issueId: issue.id, identifier: issue.identifier, originalLabelId: labelIds[index],
+        })),
+        argv: ["issue batch", identifiers, "--label", `+${addedName}`],
+      };
+      console.log(JSON.stringify({
+        event: "issue.labels.batch", ...batchContext, phase: "requested",
+        observedAt: new Date().toISOString(),
+      }));
       await lnr("issue batch", identifiers, "--label", `+${addedName}`);
+      // This receipt records CLI completion, not an independently captured SDK payload.
+      console.log(JSON.stringify({
+        event: "issue.labels.batch", ...batchContext, phase: "cli-completed",
+        observedAt: new Date().toISOString(),
+      }));
       for (const [index, issue] of issues.entries()) {
-        expect(await labelsFor(issue.id)).toEqual([labelIds[index]!, addedId].sort());
+        const actual = await labelsFor(issue.id);
+        console.log(JSON.stringify({
+          event: "issue.labels.batch.readback", ...batchContext,
+          issueId: issue.id, identifier: issue.identifier,
+          originalLabelId: labelIds[index], expected: [labelIds[index]!, addedId].sort(), actual,
+          observedAt: new Date().toISOString(),
+        }));
+        expect(actual).toEqual([labelIds[index]!, addedId].sort());
       }
       await lnr("issue", issues[0]!.identifier, `--label=-${addedName}`);
       expect(await labelsFor(issues[0]!.id)).toEqual([labelIds[0]!]);

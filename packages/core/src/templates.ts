@@ -14,48 +14,44 @@ export async function listTemplates(
   client: LinearClient,
   teamKey?: string
 ): Promise<Template[]> {
-  try {
-    if (teamKey) {
-      const teamsConnection = await client.teams({
-        filter: { key: { eq: teamKey.toUpperCase() } },
-      });
-      const team = teamsConnection.nodes[0];
-      if (!team) return [];
+  if (teamKey) {
+    const teamsConnection = await client.teams({
+      filter: { key: { eq: teamKey.toUpperCase() } },
+    });
+    const team = teamsConnection.nodes[0];
+    if (!team) return [];
 
-      const templatesConnection = await team.templates();
-      return templatesConnection.nodes.map((t) => ({
-        id: t.id,
-        name: t.name,
-        type: t.type,
-        description: t.description ?? null,
-        teamKey: teamKey.toUpperCase(),
-        createdAt: t.createdAt,
-        updatedAt: t.updatedAt,
-      }));
-    }
-
-    // Fetch templates from all teams
-    const teams = await client.teams();
-    const allTemplates: Template[] = [];
-
-    for (const team of teams.nodes) {
-      const templatesConnection = await team.templates();
-      const templates = templatesConnection.nodes.map((t) => ({
-        id: t.id,
-        name: t.name,
-        type: t.type,
-        description: t.description ?? null,
-        teamKey: team.key,
-        createdAt: t.createdAt,
-        updatedAt: t.updatedAt,
-      }));
-      allTemplates.push(...templates);
-    }
-
-    return allTemplates;
-  } catch {
-    return [];
+    const templatesConnection = await team.templates();
+    return templatesConnection.nodes.map((t) => ({
+      id: t.id,
+      name: t.name,
+      type: t.type,
+      description: t.description ?? null,
+      teamKey: teamKey.toUpperCase(),
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+    }));
   }
+
+  // Fetch templates from all teams
+  const teams = await client.teams();
+  const allTemplates: Template[] = [];
+
+  for (const team of teams.nodes) {
+    const templatesConnection = await team.templates();
+    const templates = templatesConnection.nodes.map((t) => ({
+      id: t.id,
+      name: t.name,
+      type: t.type,
+      description: t.description ?? null,
+      teamKey: team.key,
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+    }));
+    allTemplates.push(...templates);
+  }
+
+  return allTemplates;
 }
 
 export async function getTemplate(
