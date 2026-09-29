@@ -25,7 +25,7 @@ for (const [name, list, connectionName] of [
   }
   for (const missingTeam of [false, true]) {
     test(`${name} preserves ${missingTeam ? "null team" : "empty connection"} fallback`, async () => {
-      const connection = mock(async () => ({ nodes: [] }));
+      const connection = mock(async () => ({ nodes: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }));
       const team = mock(async () => missingTeam ? null : { [connectionName]: connection });
       expect(await list({ team } as unknown as LinearClient, "ENG")).toEqual([]);
       expect(team).toHaveBeenCalledTimes(1);
