@@ -60,7 +60,7 @@ export async function markNotificationRead(
 ): Promise<boolean> {
   try {
     const result = await client.updateNotification(id, { readAt: new Date() });
-    return result.success;
+    return result.success === true;
   } catch {
     return false;
   }
@@ -72,7 +72,7 @@ export async function archiveNotification(
 ): Promise<boolean> {
   try {
     const result = await client.archiveNotification(id);
-    return result.success;
+    return result.success === true;
   } catch {
     return false;
   }

@@ -135,7 +135,7 @@ export async function deleteMilestone(
 ): Promise<boolean> {
   try {
     const result = await client.deleteProjectMilestone(id);
-    return result.success;
+    return result.success === true;
   } catch {
     return false;
   }

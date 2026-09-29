@@ -95,7 +95,7 @@ export async function updateLabel(
     ...input,
     groupType: input.groupType == null ? input.groupType : groupTypes[input.groupType],
   });
-  return payload.success;
+  return payload.success === true;
 }
 
 export async function deleteLabel(
@@ -103,5 +103,5 @@ export async function deleteLabel(
   id: string
 ): Promise<boolean> {
   const payload = await client.deleteIssueLabel(id);
-  return payload.success;
+  return payload.success === true;
 }

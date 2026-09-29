@@ -150,7 +150,7 @@ export async function deleteProject(
   }
 
   const result = await client.deleteProject(project.id);
-  return result.success;
+  return result.success === true;
 }
 
 export async function updateProject(

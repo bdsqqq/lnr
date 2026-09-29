@@ -113,7 +113,7 @@ export async function updateGitAutomationState(
       targetBranchId: input.targetBranchId,
     });
 
-    return payload.success;
+    return payload.success === true;
   } catch {
     return false;
   }
@@ -125,7 +125,7 @@ export async function deleteGitAutomationState(
 ): Promise<boolean> {
   try {
     const payload = await client.deleteGitAutomationState(id);
-    return payload.success;
+    return payload.success === true;
   } catch {
     return false;
   }

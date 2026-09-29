@@ -106,7 +106,7 @@ export async function deleteSubscription(
   subscriptionId: string
 ): Promise<boolean> {
   const result = await client.deleteNotificationSubscription(subscriptionId);
-  return result.success;
+  return result.success === true;
 }
 
 /**
@@ -178,7 +178,7 @@ export async function subscribeToIssue(
   const result = await client.updateIssue(issueId, {
     subscriberIds: [...currentIds, viewer.id],
   });
-  return result.success;
+  return result.success === true;
 }
 
 export async function unsubscribeFromIssue(
@@ -197,5 +197,5 @@ export async function unsubscribeFromIssue(
   const result = await client.updateIssue(issueId, {
     subscriberIds: currentIds.filter((id) => id !== viewer.id),
   });
-  return result.success;
+  return result.success === true;
 }

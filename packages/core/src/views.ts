@@ -118,7 +118,7 @@ export async function updateView(
       shared: input.shared,
     });
 
-    return payload.success;
+    return payload.success === true;
   } catch {
     return false;
   }
@@ -130,7 +130,7 @@ export async function deleteView(
 ): Promise<boolean> {
   try {
     const payload = await client.deleteCustomView(viewId);
-    return payload.success;
+    return payload.success === true;
   } catch {
     return false;
   }

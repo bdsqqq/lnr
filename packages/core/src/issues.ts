@@ -166,7 +166,7 @@ export async function updateIssue(
   input: UpdateIssueInput
 ): Promise<boolean> {
   const result = await client.updateIssue(issueId, input);
-  return result.success;
+  return result.success === true;
 }
 
 export async function addComment(
@@ -175,7 +175,7 @@ export async function addComment(
   body: string
 ): Promise<boolean> {
   const result = await client.createComment({ issueId, body });
-  return result.success;
+  return result.success === true;
 }
 
 export async function getTeamStates(
@@ -205,7 +205,7 @@ export async function archiveIssue(
   issueId: string
 ): Promise<boolean> {
   const result = await client.archiveIssue(issueId);
-  return result.success;
+  return result.success === true;
 }
 
 export async function getSubIssues(

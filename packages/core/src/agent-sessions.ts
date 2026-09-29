@@ -99,7 +99,7 @@ export async function updateAgentSession(
   try {
     const session = await client.agentSession(id);
     const result = await session.update(input);
-    return result.success;
+    return result.success === true;
   } catch {
     return false;
   }

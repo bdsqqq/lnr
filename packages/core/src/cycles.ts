@@ -151,7 +151,7 @@ export async function updateCycle(
       completedAt: input.completedAt ? new Date(input.completedAt) : undefined,
     });
 
-    return payload.success;
+    return payload.success === true;
   } catch {
     return false;
   }
@@ -163,7 +163,7 @@ export async function deleteCycle(
 ): Promise<boolean> {
   try {
     const payload = await client.archiveCycle(cycleId);
-    return payload.success;
+    return payload.success === true;
   } catch {
     return false;
   }

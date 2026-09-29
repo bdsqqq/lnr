@@ -171,7 +171,7 @@ export async function updateComment(
   body: string
 ): Promise<boolean> {
   const result = await client.updateComment(commentId, { body });
-  return result.success;
+  return result.success === true;
 }
 
 export async function replyToComment(
@@ -181,7 +181,7 @@ export async function replyToComment(
   body: string
 ): Promise<boolean> {
   const result = await client.createComment({ issueId, body, parentId });
-  return result.success;
+  return result.success === true;
 }
 
 export async function deleteComment(
@@ -189,5 +189,5 @@ export async function deleteComment(
   commentId: string
 ): Promise<boolean> {
   const result = await client.deleteComment(commentId);
-  return result.success;
+  return result.success === true;
 }
