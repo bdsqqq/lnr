@@ -1,16 +1,15 @@
-name: Authorized single-view recovery
+name: Read-only exact-project inspection
 
 on:
   pull_request:
-    branches: ["feat/api-parity-nested-input-witnesses"]
+    branches: ["feat/api-parity-cycle-pagination"]
 
 permissions:
   contents: read
 
 jobs:
-  delete-authorized-view:
-    # A new push/reopen is a NEW attempt too: bind this authorization to one run.
-    if: github.head_ref == 'chore/read-only-view-recovery' && github.event.pull_request.head.repo.full_name == github.repository && github.run_attempt == 1 && github.run_number == 150
+  inspect-exact-project:
+    if: github.head_ref == 'chore/read-only-project-recovery' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     concurrency:
       group: lnr-e2e-bdsqqq-sandbox
@@ -21,10 +20,9 @@ jobs:
       - uses: oven-sh/setup-bun@v1
 
       - run: bun install --frozen-lockfile
-      - run: bun test scripts/inspect-view-recovery.test.ts scripts/delete-authorized-view.test.ts
-      - name: Delete only the separately authorized immutable view id
-        run: bun scripts/delete-authorized-view.ts
+      - run: bun test scripts/inspect-project-recovery.test.ts
+      - name: Inspect only the authorized exact project name
+        run: bun scripts/inspect-project-recovery.ts
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           LNR_RECOVERY_CONFIRM_ORG: bdsqqq-sandbox
-          LNR_RECOVERY_DELETE_ID: 54429643-f5fd-4ee9-b3bb-9948cf7245e8
