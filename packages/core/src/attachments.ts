@@ -45,7 +45,7 @@ export async function linkGitHubPR(
   url: string
 ): Promise<boolean> {
   const result = await client.attachmentLinkGitHubPR(issueId, url);
-  return result.success;
+  return result.success === true;
 }
 
 export async function getIssueAttachments(

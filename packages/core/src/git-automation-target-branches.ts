@@ -111,7 +111,7 @@ export async function updateGitAutomationTargetBranch(
       isRegex: input.isRegex,
     });
 
-    return payload.success;
+    return payload.success === true;
   } catch {
     return false;
   }
@@ -123,7 +123,7 @@ export async function deleteGitAutomationTargetBranch(
 ): Promise<boolean> {
   try {
     const payload = await client.deleteGitAutomationTargetBranch(id);
-    return payload.success;
+    return payload.success === true;
   } catch {
     return false;
   }

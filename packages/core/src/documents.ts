@@ -99,7 +99,7 @@ export async function updateDocument(
   input: { title?: string; content?: string; ownerId?: string | null; projectId?: string | null }
 ): Promise<boolean> {
   const result = await client.updateDocument(id, input);
-  return result.success;
+  return result.success === true;
 }
 
 export async function deleteDocument(
@@ -107,5 +107,5 @@ export async function deleteDocument(
   id: string
 ): Promise<boolean> {
   const result = await client.deleteDocument(id);
-  return result.success;
+  return result.success === true;
 }

@@ -36,7 +36,7 @@ export async function createReaction(
   }
 
   const result = await client.createReaction(input);
-  return result.success;
+  return result.success === true;
 }
 
 /**
@@ -56,5 +56,5 @@ export async function deleteReaction(
   reactionId: string
 ): Promise<boolean> {
   const result = await client.deleteReaction(reactionId);
-  return result.success;
+  return result.success === true;
 }

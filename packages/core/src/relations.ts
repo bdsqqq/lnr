@@ -13,5 +13,5 @@ export async function createIssueRelation(
     relatedIssueId,
     type: relationType,
   });
-  return result.success;
+  return result.success === true;
 }
