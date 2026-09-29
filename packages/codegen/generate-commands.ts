@@ -2122,7 +2122,7 @@ function generateProjectCreateHandler(): string {
     const project = await createProject(client, createPayload);
 
     if (project) {
-      console.log(\`created project: \${project.name}\`);
+      console.log(\`created project: \${project.name} (\${project.id})\`);
     } else {
       exitWithError("project creation returned no project; verify the outcome before retrying");
     }
