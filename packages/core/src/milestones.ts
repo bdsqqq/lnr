@@ -47,23 +47,19 @@ export async function getMilestone(
   client: LinearClient,
   id: string
 ): Promise<ProjectMilestone | null> {
-  try {
-    const milestone = await client.projectMilestone(id);
-    if (!milestone) {
-      return null;
-    }
-    return {
-      id: milestone.id,
-      name: milestone.name,
-      description: milestone.description,
-      targetDate: milestone.targetDate,
-      sortOrder: milestone.sortOrder,
-      createdAt: milestone.createdAt,
-      updatedAt: milestone.updatedAt,
-    };
-  } catch {
+  const milestone = await client.projectMilestone(id);
+  if (!milestone) {
     return null;
   }
+  return {
+    id: milestone.id,
+    name: milestone.name,
+    description: milestone.description,
+    targetDate: milestone.targetDate,
+    sortOrder: milestone.sortOrder,
+    createdAt: milestone.createdAt,
+    updatedAt: milestone.updatedAt,
+  };
 }
 
 export async function createMilestone(

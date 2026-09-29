@@ -38,24 +38,20 @@ export async function getDocument(
   client: LinearClient,
   id: string
 ): Promise<Document | null> {
-  try {
-    const doc = await client.document(id);
-    if (!doc) {
-      return null;
-    }
-
-    return {
-      id: doc.id,
-      title: doc.title,
-      content: doc.content ?? null,
-      createdAt: doc.createdAt,
-      updatedAt: doc.updatedAt,
-      url: doc.url,
-      project: (await doc.project)?.name ?? null,
-    };
-  } catch {
+  const doc = await client.document(id);
+  if (!doc) {
     return null;
   }
+
+  return {
+    id: doc.id,
+    title: doc.title,
+    content: doc.content ?? null,
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+    url: doc.url,
+    project: (await doc.project)?.name ?? null,
+  };
 }
 
 export async function createDocument(

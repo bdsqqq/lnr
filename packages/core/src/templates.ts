@@ -59,18 +59,14 @@ export async function getTemplate(
   nameOrId: string,
   teamKey?: string
 ): Promise<Template | null> {
-  try {
-    const templates = await listTemplates(client, teamKey);
-    return (
-      templates.find(
-        (t) =>
-          t.id === nameOrId ||
-          t.name.toLowerCase() === nameOrId.toLowerCase()
-      ) ?? null
-    );
-  } catch {
-    return null;
-  }
+  const templates = await listTemplates(client, teamKey);
+  return (
+    templates.find(
+      (t) =>
+        t.id === nameOrId ||
+        t.name.toLowerCase() === nameOrId.toLowerCase()
+    ) ?? null
+  );
 }
 
 export async function findTemplateByName(
