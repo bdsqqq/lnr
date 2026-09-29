@@ -5,27 +5,23 @@ export async function listCycles(
   client: LinearClient,
   teamKey: string
 ): Promise<Cycle[]> {
-  try {
-    const team = await client.team(teamKey);
+  const team = await client.team(teamKey);
 
-    if (!team) {
-      return [];
-    }
-
-    const cyclesConnection = await team.cycles();
-    return cyclesConnection.nodes.map((c) => ({
-      id: c.id,
-      number: c.number,
-      name: c.name,
-      description: c.description,
-      startsAt: c.startsAt,
-      endsAt: c.endsAt,
-      completedAt: c.completedAt,
-      progress: c.progress,
-    }));
-  } catch {
+  if (!team) {
     return [];
   }
+
+  const cyclesConnection = await team.cycles();
+  return cyclesConnection.nodes.map((c) => ({
+    id: c.id,
+    number: c.number,
+    name: c.name,
+    description: c.description,
+    startsAt: c.startsAt,
+    endsAt: c.endsAt,
+    completedAt: c.completedAt,
+    progress: c.progress,
+  }));
 }
 
 export async function getCycle(
