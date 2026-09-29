@@ -386,6 +386,12 @@ export const cyclesRouter = router({
     .input(cycleInput)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);
+      const mutations = cycleMutationFlags.some((flag) => input[flag] !== undefined);
+      if ((input.current && (input.nameOrNumber === "new" || input.delete || mutations)) ||
+          (input.issues && operation !== "read" && operation !== "current") ||
+          (input.delete && (input.nameOrNumber === "new" || mutations))) {
+        throw new Error("cycle modes conflict; use separate commands");
+      }
       if (operation === "create" || operation === "update" || operation === "delete") {
         validateMutationOutput("cycle " + operation, input);
       }

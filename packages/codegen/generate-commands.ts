@@ -1514,17 +1514,23 @@ function generateIssueUpdateHandler(): string {
     }
 
     if (input.editComment) {
-      await updateComment(client, input.editComment, input.text!);
+      if ((await updateComment(client, input.editComment, input.text!)) !== true) {
+        exitWithError("comment update was not confirmed; verify the outcome before retrying");
+      }
       console.log(\`updated comment \${input.editComment.slice(0, 8)}\`);
     }
 
     if (input.replyTo) {
-      await replyToComment(client, issue.id, input.replyTo, input.text!);
+      if ((await replyToComment(client, issue.id, input.replyTo, input.text!)) !== true) {
+        exitWithError("comment reply was not confirmed; verify the outcome before retrying");
+      }
       console.log(\`replied to comment \${input.replyTo.slice(0, 8)}\`);
     }
 
     if (input.deleteComment) {
-      await deleteComment(client, input.deleteComment);
+      if ((await deleteComment(client, input.deleteComment)) !== true) {
+        exitWithError("comment deletion was not confirmed; verify the outcome before retrying");
+      }
       console.log(\`deleted comment \${input.deleteComment.slice(0, 8)}\`);
     }
 
@@ -1573,7 +1579,9 @@ function generateIssueUpdateHandler(): string {
     }
 
     if (input.archive) {
-      await archiveIssue(client, issue.id);
+      if ((await archiveIssue(client, issue.id)) !== true) {
+        exitWithError("issue archival was not confirmed; verify the outcome before retrying");
+      }
       console.log(\`archived \${identifier}\`);
     }
   } catch (error) {
@@ -1709,7 +1717,9 @@ function generateIssueArchiveHandler(): string {
       exitWithError(\`issue \${identifier} not found\`, undefined, EXIT_CODES.NOT_FOUND);
     }
 
-    await archiveIssue(client, issue.id);
+    if ((await archiveIssue(client, issue.id)) !== true) {
+      exitWithError("issue archival was not confirmed; verify the outcome before retrying");
+    }
     console.log(\`archived \${identifier}\`);
   } catch (error) {
     handleApiError(error);

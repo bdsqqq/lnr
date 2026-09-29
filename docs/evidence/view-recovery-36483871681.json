@@ -1,0 +1,19 @@
+{
+  "inspectionRun": "https://github.com/bdsqqq/lnr/actions/runs/36481626839",
+  "deletionRun": "https://github.com/bdsqqq/lnr/actions/runs/36483871681",
+  "recoveryCommit": "afafe8a4453611597e74fb4b17dc8e6e7d9616f3",
+  "organizationId": "40d4b432-9b66-4a4a-ad6c-2ab39d6208ce",
+  "organizationName": "bdsqqq-sandbox",
+  "name": "e2e-view-4f550931-72c6-4b5b-9821-de19fca79362",
+  "id": "54429643-f5fd-4ee9-b3bb-9948cf7245e8",
+  "createdAt": "2026-09-24T17:56:49.537Z",
+  "creatorId": "3d9471f1-862c-4c29-8ebb-653a55553122",
+  "creatorMatchedCiViewer": true,
+  "authorization": "user separately authorized inspection and deletion of only this immutable id",
+  "mutationAttempts": 1,
+  "mutationSuccess": true,
+  "verifiedAt": "2026-09-28T21:06:51.002Z",
+  "absentFromArchivedInclusiveIdQuery": true,
+  "limitation": "absence from accessible customViews is not proof of permanent storage erasure; this does not establish historical cycle/team outcomes",
+  "provenance": "selected fields manually transcribed from inspected CI logs; not an automated attestation"
+}

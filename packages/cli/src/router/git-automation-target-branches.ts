@@ -290,6 +290,10 @@ export const gitAutomationTargetBranchesRouter = router({
     .input(gitAutomationTargetBranchInput)
     .mutation(async ({ input }) => {
       const operation = inferOperation(input);
+      if (input.delete && (input.patternOrId === "new" ||
+          gitAutomationTargetBranchMutationFlags.some((flag) => input[flag] !== undefined))) {
+        throw new Error("git-branch modes conflict; use separate commands");
+      }
       if (operation !== "read") validateMutationOutput("git-branch " + operation, input);
 
       switch (operation) {

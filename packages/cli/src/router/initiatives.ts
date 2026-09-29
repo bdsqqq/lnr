@@ -121,6 +121,10 @@ export const initiativesRouter = router({
     .input(initiativeInput)
     .mutation(async ({ input }) => {
       try {
+        if ([input.react, input.unreact, input.subscribe, input.unsubscribe,
+          input.updates, input.links].filter(Boolean).length > 1) {
+          throw new Error("initiative modes conflict; use separate commands");
+        }
         if (input.react || input.unreact || input.subscribe || input.unsubscribe) {
           validateMutationOutput("initiative mutation", input);
         }
