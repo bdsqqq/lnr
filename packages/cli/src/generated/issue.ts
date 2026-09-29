@@ -558,7 +558,9 @@ async function handleUpdateIssue(
     }
 
     if (input.archive) {
-      await archiveIssue(client, issue.id);
+      if ((await archiveIssue(client, issue.id)) !== true) {
+        exitWithError("issue archival was not confirmed; verify the outcome before retrying");
+      }
       console.log(`archived ${identifier}`);
     }
   } catch (error) {
@@ -692,7 +694,9 @@ async function handleArchiveIssue(
       exitWithError(`issue ${identifier} not found`, undefined, EXIT_CODES.NOT_FOUND);
     }
 
-    await archiveIssue(client, issue.id);
+    if ((await archiveIssue(client, issue.id)) !== true) {
+      exitWithError("issue archival was not confirmed; verify the outcome before retrying");
+    }
     console.log(`archived ${identifier}`);
   } catch (error) {
     handleApiError(error);
