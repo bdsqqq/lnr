@@ -19,7 +19,7 @@ const cycle = mock(async (id: string) => {
   throw new Error("wrong cycle");
 });
 const team = mock(async () => ({
-  cycles: async () => ({ nodes: [selected, current] }),
+  cycles: async () => ({ nodes: [selected, current], pageInfo: { hasNextPage: false, hasPreviousPage: false } }),
   get activeCycle() { return active(); },
 }));
 mock.module("@bdsqqq/lnr-core", () => ({

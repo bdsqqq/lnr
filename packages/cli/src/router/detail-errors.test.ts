@@ -24,7 +24,7 @@ const cycleFields = {
 };
 const cycles = mock(async () => {
   if (phase === "connection") throw failure;
-  return { nodes: phase === "empty" ? [] : [cycleFields] };
+  return { nodes: phase === "empty" ? [] : [cycleFields], pageInfo: { hasNextPage: false, hasPreviousPage: false } };
 });
 const team = mock(async (..._args: unknown[]) => {
   if (phase === "root") throw failure;

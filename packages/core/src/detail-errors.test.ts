@@ -41,7 +41,7 @@ for (const phase of ["team", "connection", "null-team", "empty", "unmatched", "n
     const error = new Error("permission denied");
     const cycles = mock(async () => {
       if (phase === "connection") throw error;
-      return { nodes: phase === "empty" ? [] : [cycleFields] };
+      return { nodes: phase === "empty" ? [] : [cycleFields], pageInfo: { hasNextPage: false, hasPreviousPage: false } };
     });
     const team = mock(async (..._args: unknown[]) => {
       if (phase === "team") throw error;

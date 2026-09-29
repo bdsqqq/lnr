@@ -6,7 +6,7 @@ let failure: Error | undefined;
 let phase: "lookup" | "connection" | "empty" | "null";
 const connection = mock(async () => {
   if (phase === "connection") throw failure;
-  return { nodes: [] };
+  return { nodes: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } };
 });
 const team = mock(async (..._args: unknown[]) => {
   if (phase === "lookup") throw failure;

@@ -11,7 +11,7 @@ const labels = mock(async () => ({ nodes: [{ id: "label-id", name: "bug" }] }));
 const currentLabels = mock(async () => ({ nodes: [{ id: "existing-label" }] }));
 const team = {
   id: "team-id", labels,
-  cycles: async () => ({ nodes: [{ id: "cycle-id", name: "next", number: 2 }] }),
+  cycles: async () => ({ nodes: [{ id: "cycle-id", name: "next", number: 2 }], pageInfo: { hasNextPage: false, hasPreviousPage: false } }),
 };
 const project = mock(async (..._args: unknown[]) => ({
   projectMilestones: async () => ({ nodes: [{ id: "milestone-id", name: "launch" }] }),

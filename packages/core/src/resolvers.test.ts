@@ -361,7 +361,7 @@ describe("resolveCycleByName", () => {
     return {
       team: mock(() =>
         Promise.resolve({
-          cycles: () => Promise.resolve({ nodes: cycles }),
+          cycles: () => Promise.resolve({ nodes: cycles, pageInfo: { hasNextPage: false, hasPreviousPage: false } }),
         })
       ),
     } as unknown as LinearClient;

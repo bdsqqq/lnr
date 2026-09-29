@@ -12,6 +12,20 @@ export async function listCycles(
   }
 
   const cyclesConnection = await team.cycles();
+  /** sdk fetchNext mutates this connection and replaces its accumulated nodes array; map only after traversal. */
+  const seen = new Set<string>();
+  const initialStartCursor = cyclesConnection.pageInfo.startCursor;
+  while (cyclesConnection.pageInfo.hasNextPage) {
+    const cursor = cyclesConnection.pageInfo.endCursor;
+    if (!cursor || seen.has(cursor)) {
+      throw new Error("cycle pagination did not advance");
+    }
+    seen.add(cursor);
+    await cyclesConnection.fetchNext();
+    // sdk substitutes the initial start for a missing end. forbid that fallback
+    // only after the first fetch: a one-item initial page has equal start/end.
+    if (initialStartCursor) seen.add(initialStartCursor);
+  }
   return cyclesConnection.nodes.map((c) => ({
     id: c.id,
     number: c.number,
