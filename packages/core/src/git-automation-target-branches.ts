@@ -9,36 +9,32 @@ export async function listGitAutomationTargetBranches(
   client: LinearClient,
   teamKey: string
 ): Promise<GitAutomationTargetBranch[]> {
-  try {
-    const team = await client.team(teamKey);
+  const team = await client.team(teamKey);
 
-    if (!team) {
-      return [];
-    }
-
-    const connection = await team.gitAutomationStates();
-    const branchMap = new Map<string, GitAutomationTargetBranch>();
-
-    for (const state of connection.nodes) {
-      const targetBranch = state.targetBranch;
-      if (targetBranch && !branchMap.has(targetBranch.id)) {
-        branchMap.set(targetBranch.id, {
-          id: targetBranch.id,
-          branchPattern: targetBranch.branchPattern,
-          isRegex: targetBranch.isRegex,
-          teamId: team.id,
-          teamKey: team.key,
-          createdAt: targetBranch.createdAt,
-          updatedAt: targetBranch.updatedAt,
-          archivedAt: targetBranch.archivedAt ?? null,
-        });
-      }
-    }
-
-    return Array.from(branchMap.values());
-  } catch {
+  if (!team) {
     return [];
   }
+
+  const connection = await team.gitAutomationStates();
+  const branchMap = new Map<string, GitAutomationTargetBranch>();
+
+  for (const state of connection.nodes) {
+    const targetBranch = state.targetBranch;
+    if (targetBranch && !branchMap.has(targetBranch.id)) {
+      branchMap.set(targetBranch.id, {
+        id: targetBranch.id,
+        branchPattern: targetBranch.branchPattern,
+        isRegex: targetBranch.isRegex,
+        teamId: team.id,
+        teamKey: team.key,
+        createdAt: targetBranch.createdAt,
+        updatedAt: targetBranch.updatedAt,
+        archivedAt: targetBranch.archivedAt ?? null,
+      });
+    }
+  }
+
+  return Array.from(branchMap.values());
 }
 
 export async function getGitAutomationTargetBranch(
