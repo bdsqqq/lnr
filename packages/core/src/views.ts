@@ -2,22 +2,18 @@ import type { LinearClient } from "@linear/sdk";
 import type { CustomView, CreateCustomViewInput, UpdateCustomViewInput, ViewPreferences, ViewPreferencesValues } from "./types";
 
 export async function listViews(client: LinearClient): Promise<CustomView[]> {
-  try {
-    const connection = await client.customViews();
-    return connection.nodes.map((v) => ({
-      id: v.id,
-      name: v.name,
-      description: v.description,
-      icon: v.icon,
-      color: v.color,
-      filterData: v.filterData as Record<string, unknown>,
-      shared: v.shared,
-      createdAt: v.createdAt,
-      updatedAt: v.updatedAt,
-    }));
-  } catch {
-    return [];
-  }
+  const connection = await client.customViews();
+  return connection.nodes.map((v) => ({
+    id: v.id,
+    name: v.name,
+    description: v.description,
+    icon: v.icon,
+    color: v.color,
+    filterData: v.filterData as Record<string, unknown>,
+    shared: v.shared,
+    createdAt: v.createdAt,
+    updatedAt: v.updatedAt,
+  }));
 }
 
 export async function getView(
