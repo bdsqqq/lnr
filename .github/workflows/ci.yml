@@ -2,7 +2,7 @@ name: Read-only exact-project inspection
 
 on:
   pull_request:
-    branches: ["feat/api-parity-cycle-pagination"]
+    branches: ["feat/api-parity-nested-input-witnesses"]
 
 permissions:
   contents: read
