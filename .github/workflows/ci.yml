@@ -1,4 +1,4 @@
-name: Read-only exact-project inspection
+name: Authorized single-view recovery
 
 on:
   pull_request:
@@ -8,8 +8,9 @@ permissions:
   contents: read
 
 jobs:
-  inspect-exact-project:
-    if: github.head_ref == 'chore/read-only-run51-inspection' && github.event.pull_request.head.repo.full_name == github.repository
+  delete-authorized-view:
+    # Later pushes/reopens are new runs too; authorization belongs to one run only.
+    if: github.head_ref == 'chore/read-only-run51-inspection' && github.event.pull_request.head.repo.full_name == github.repository && github.run_number == 163 && github.run_attempt == 1
     runs-on: ubuntu-latest
     concurrency:
       group: lnr-e2e-bdsqqq-sandbox
@@ -20,9 +21,10 @@ jobs:
       - uses: oven-sh/setup-bun@v1
 
       - run: bun install --frozen-lockfile
-      - run: bun test scripts/inspect-run51-fixtures.test.ts
-      - name: Inspect only the pinned run51 project name and view id
-        run: bun scripts/inspect-run51-fixtures.ts
+      - run: bun test scripts/delete-run51-view.test.ts
+      - name: Delete only the separately authorized run51 view
+        run: bun scripts/delete-run51-view.ts
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           LNR_RECOVERY_CONFIRM_ORG: bdsqqq-sandbox
+          LNR_RECOVERY_DELETE_ID: b3ebbe18-e7ed-4e19-8715-1dbdd93da9be
