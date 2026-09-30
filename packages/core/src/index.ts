@@ -28,6 +28,7 @@ export {
   createClientWithKey,
   resetClient,
   NotAuthenticatedError,
+  isRootIdentifierRejection,
 } from "./client";
 
 // config

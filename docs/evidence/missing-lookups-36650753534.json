@@ -1,0 +1,17 @@
+{
+  "run": "https://github.com/bdsqqq/lnr/actions/runs/36650753534",
+  "scope": "pinned bdsqqq-sandbox organization verified before fixed read-only probes",
+  "identifier": "00000000-0000-4000-8000-000000000099",
+  "roots": ["initiative", "roadmap"],
+  "observed": {
+    "status": 200,
+    "constructor": "InvalidInputLinearError",
+    "type": "InvalidInput",
+    "dataIsNull": true,
+    "parsedErrorType": "InvalidInput",
+    "parsedErrorPath": "exact root",
+    "rawExtensionType": "invalid input"
+  },
+  "limitation": "two missing-identifier observations, not evidence that every InvalidInput means absence or that permissions are granted",
+  "provenance": "selected allowlisted output manually transcribed from inspected CI logs; not an automated attestation"
+}

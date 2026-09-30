@@ -59,58 +59,50 @@ export async function getCurrentCycle(
   client: LinearClient,
   teamKey: string
 ): Promise<Cycle | null> {
-  try {
-    const team = await client.team(teamKey);
+  const team = await client.team(teamKey);
 
-    if (!team) {
-      return null;
-    }
-
-    const activeCycle = await team.activeCycle;
-
-    if (!activeCycle) {
-      return null;
-    }
-
-    return {
-      id: activeCycle.id,
-      number: activeCycle.number,
-      name: activeCycle.name,
-      description: activeCycle.description,
-      startsAt: activeCycle.startsAt,
-      endsAt: activeCycle.endsAt,
-      completedAt: activeCycle.completedAt,
-      progress: activeCycle.progress,
-    };
-  } catch {
+  if (!team) {
     return null;
   }
+
+  const activeCycle = await team.activeCycle;
+
+  if (!activeCycle) {
+    return null;
+  }
+
+  return {
+    id: activeCycle.id,
+    number: activeCycle.number,
+    name: activeCycle.name,
+    description: activeCycle.description,
+    startsAt: activeCycle.startsAt,
+    endsAt: activeCycle.endsAt,
+    completedAt: activeCycle.completedAt,
+    progress: activeCycle.progress,
+  };
 }
 
 export async function getCycleById(
   client: LinearClient,
   cycleId: string
 ): Promise<Cycle | null> {
-  try {
-    const cycle = await client.cycle(cycleId);
+  const cycle = await client.cycle(cycleId);
 
-    if (!cycle) {
-      return null;
-    }
-
-    return {
-      id: cycle.id,
-      number: cycle.number,
-      name: cycle.name,
-      description: cycle.description,
-      startsAt: cycle.startsAt,
-      endsAt: cycle.endsAt,
-      completedAt: cycle.completedAt,
-      progress: cycle.progress,
-    };
-  } catch {
+  if (!cycle) {
     return null;
   }
+
+  return {
+    id: cycle.id,
+    number: cycle.number,
+    name: cycle.name,
+    description: cycle.description,
+    startsAt: cycle.startsAt,
+    endsAt: cycle.endsAt,
+    completedAt: cycle.completedAt,
+    progress: cycle.progress,
+  };
 }
 
 export async function createCycle(

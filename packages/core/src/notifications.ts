@@ -35,23 +35,20 @@ export async function getNotification(
   client: LinearClient,
   id: string
 ): Promise<Notification | null> {
-  try {
-    const n = await client.notification(id);
-    const actor = n.actorId ? await n.actor : null;
-    return {
-      id: n.id,
-      type: n.type,
-      category: n.category,
-      createdAt: n.createdAt,
-      readAt: n.readAt ?? null,
-      snoozedUntilAt: n.snoozedUntilAt ?? null,
-      archivedAt: n.archivedAt ?? null,
-      actorId: n.actorId ?? null,
-      actorName: actor?.name ?? null,
-    };
-  } catch {
-    return null;
-  }
+  const n = await client.notification(id);
+  if (!n) return null;
+  const actor = n.actorId ? await n.actor : null;
+  return {
+    id: n.id,
+    type: n.type,
+    category: n.category,
+    createdAt: n.createdAt,
+    readAt: n.readAt ?? null,
+    snoozedUntilAt: n.snoozedUntilAt ?? null,
+    archivedAt: n.archivedAt ?? null,
+    actorId: n.actorId ?? null,
+    actorName: actor?.name ?? null,
+  };
 }
 
 export async function markNotificationRead(

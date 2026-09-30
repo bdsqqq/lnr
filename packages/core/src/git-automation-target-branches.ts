@@ -42,12 +42,8 @@ export async function getGitAutomationTargetBranch(
   teamKey: string,
   id: string
 ): Promise<GitAutomationTargetBranch | null> {
-  try {
-    const branches = await listGitAutomationTargetBranches(client, teamKey);
-    return branches.find((b) => b.id === id) ?? null;
-  } catch {
-    return null;
-  }
+  const branches = await listGitAutomationTargetBranches(client, teamKey);
+  return branches.find((b) => b.id === id) ?? null;
 }
 
 export async function findGitAutomationTargetBranchByPattern(
@@ -55,12 +51,8 @@ export async function findGitAutomationTargetBranchByPattern(
   teamKey: string,
   pattern: string
 ): Promise<GitAutomationTargetBranch | null> {
-  try {
-    const branches = await listGitAutomationTargetBranches(client, teamKey);
-    return branches.find((b) => b.branchPattern === pattern) ?? null;
-  } catch {
-    return null;
-  }
+  const branches = await listGitAutomationTargetBranches(client, teamKey);
+  return branches.find((b) => b.branchPattern === pattern) ?? null;
 }
 
 export async function createGitAutomationTargetBranch(

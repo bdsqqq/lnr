@@ -20,45 +20,37 @@ export async function getView(
   client: LinearClient,
   nameOrId: string
 ): Promise<CustomView | null> {
-  try {
-    const views = await listViews(client);
-    const normalizedInput = nameOrId.toLowerCase();
+  const views = await listViews(client);
+  const normalizedInput = nameOrId.toLowerCase();
 
-    const match = views.find(
-      (v) => v.name.toLowerCase() === normalizedInput || v.id === nameOrId
-    );
+  const match = views.find(
+    (v) => v.name.toLowerCase() === normalizedInput || v.id === nameOrId
+  );
 
-    return match ?? null;
-  } catch {
-    return null;
-  }
+  return match ?? null;
 }
 
 export async function getViewById(
   client: LinearClient,
   viewId: string
 ): Promise<CustomView | null> {
-  try {
-    const view = await client.customView(viewId);
+  const view = await client.customView(viewId);
 
-    if (!view) {
-      return null;
-    }
-
-    return {
-      id: view.id,
-      name: view.name,
-      description: view.description,
-      icon: view.icon,
-      color: view.color,
-      filterData: view.filterData as Record<string, unknown>,
-      shared: view.shared,
-      createdAt: view.createdAt,
-      updatedAt: view.updatedAt,
-    };
-  } catch {
+  if (!view) {
     return null;
   }
+
+  return {
+    id: view.id,
+    name: view.name,
+    description: view.description,
+    icon: view.icon,
+    color: view.color,
+    filterData: view.filterData as Record<string, unknown>,
+    shared: view.shared,
+    createdAt: view.createdAt,
+    updatedAt: view.updatedAt,
+  };
 }
 
 export async function createView(
@@ -152,36 +144,32 @@ export async function getViewPreferences(
   client: LinearClient,
   viewId: string
 ): Promise<ViewPreferencesResult | null> {
-  try {
-    const view = await client.customView(viewId);
-    if (!view) return null;
+  const view = await client.customView(viewId);
+  if (!view) return null;
 
-    const [userPrefs, orgPrefs, effectiveValues] = await Promise.all([
-      view.userViewPreferences,
-      view.organizationViewPreferences,
-      view.viewPreferencesValues,
-    ]);
+  const [userPrefs, orgPrefs, effectiveValues] = await Promise.all([
+    view.userViewPreferences,
+    view.organizationViewPreferences,
+    view.viewPreferencesValues,
+  ]);
 
-    const mapPreferences = (
-      prefs: Awaited<typeof userPrefs> | undefined
-    ): ViewPreferences | null => {
-      if (!prefs) return null;
-      return {
-        id: prefs.id,
-        type: prefs.type,
-        viewType: prefs.viewType,
-        createdAt: prefs.createdAt,
-        updatedAt: prefs.updatedAt,
-        preferences: mapPreferencesValues(prefs.preferences),
-      };
-    };
-
+  const mapPreferences = (
+    prefs: Awaited<typeof userPrefs> | undefined
+  ): ViewPreferences | null => {
+    if (!prefs) return null;
     return {
-      user: mapPreferences(userPrefs),
-      organization: mapPreferences(orgPrefs),
-      effective: mapPreferencesValues(effectiveValues),
+      id: prefs.id,
+      type: prefs.type,
+      viewType: prefs.viewType,
+      createdAt: prefs.createdAt,
+      updatedAt: prefs.updatedAt,
+      preferences: mapPreferencesValues(prefs.preferences),
     };
-  } catch {
-    return null;
-  }
+  };
+
+  return {
+    user: mapPreferences(userPrefs),
+    organization: mapPreferences(orgPrefs),
+    effective: mapPreferencesValues(effectiveValues),
+  };
 }

@@ -17,19 +17,16 @@ export async function getUser(
   client: LinearClient,
   id: string
 ): Promise<User | null> {
-  try {
-    const user = await client.user(id);
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      displayName: user.displayName,
-      active: user.active,
-      admin: user.admin,
-    };
-  } catch {
-    return null;
-  }
+  const user = await client.user(id);
+  if (!user) return null;
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    displayName: user.displayName,
+    active: user.active,
+    admin: user.admin,
+  };
 }
 
 export async function findUserByEmail(

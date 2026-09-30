@@ -9,7 +9,7 @@
 
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { executeApi, getClient, type Cycle, type GitAutomationState } from "@bdsqqq/lnr-core";
-import { cleanupOwned, liveChildEnv, liveCredentials, registerViewReceipt, type OwnedFixture } from "./live-test-support";
+import { cleanupOwned, liveChildEnv, liveCredentials, registerViewReceipt, registerProjectReceipt, type OwnedFixture } from "./live-test-support";
 
 const { key: API_KEY, confirmOrg } = liveCredentials(process.env, true);
 const client = getClient(API_KEY);
@@ -407,14 +407,14 @@ describe("e2e: mutations", () => {
       const out = await lnr("project", "new", "--new-name", TEST_PROJECT_NAME, "--team", TEST_TEAM_KEY,
         "--content", "e2e payload content", "--lead", "@me", "--priority", "0",
         "--start-date", "2026-10-01", "--target-date", "2026-11-01", "--status", status.id);
+      projectId = registerProjectReceipt(out, projectFixture);
       const json = await lnr("projects", "--json");
       const projects = JSON.parse(json);
       const matches = projects.filter((p: any) => p.name === TEST_PROJECT_NAME);
       expect(matches).toHaveLength(1);
       const testProject = matches[0];
       expect(testProject).toBeTruthy();
-      projectId = testProject.id;
-      projectFixture.id = projectId;
+      expect(testProject.id).toBe(projectId);
       expect(out).toContain("created");
       const read = await client.client.rawRequest<{ project: unknown }, { id: string }>(
         "query($id: String!) { project(id: $id) { id content startDate targetDate priority lead { id } status { id } } }",

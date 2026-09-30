@@ -44,17 +44,14 @@ export async function getLabel(
   client: LinearClient,
   id: string
 ): Promise<Label | null> {
-  try {
-    const label = await client.issueLabel(id);
-    return {
-      id: label.id,
-      name: label.name,
-      color: label.color,
-      description: label.description ?? null,
-    };
-  } catch {
-    return null;
-  }
+  const label = await client.issueLabel(id);
+  if (!label) return null;
+  return {
+    id: label.id,
+    name: label.name,
+    color: label.color,
+    description: label.description ?? null,
+  };
 }
 
 export async function createLabel(

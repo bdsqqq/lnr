@@ -4,6 +4,7 @@ import {
   getClient,
   listInitiatives,
   getInitiative,
+  isRootIdentifierRejection,
   findInitiativeByName,
   getInitiativeUpdates,
   getInitiativeExternalLinks,
@@ -35,7 +36,7 @@ export const listInitiativesInput = type({
 });
 
 export const initiativeInput = type({
-  nameOrId: type("string").configure({ positional: true }).describe("initiative name, slugId, or id"),
+  nameOrId: type("string").configure({ positional: true }).describe("initiative name, slugId, or id (direct identifier lookup takes precedence over name lookup)"),
   "json?": type("boolean").describe("output as json"),
   "quiet?": type("boolean").describe("output id only"),
   "verbose?": type("boolean").describe("show all columns"),
@@ -129,8 +130,12 @@ export const initiativesRouter = router({
           validateMutationOutput("initiative mutation", input);
         }
         const client = getClient();
-        let initiative = await getInitiative(client, input.nameOrId);
-
+        let initiative: Initiative | null = null;
+        try {
+          initiative = await getInitiative(client, input.nameOrId);
+        } catch (error) {
+          if (!isRootIdentifierRejection(error, "initiative")) throw error;
+        }
         if (!initiative) {
           initiative = await findInitiativeByName(client, input.nameOrId);
         }

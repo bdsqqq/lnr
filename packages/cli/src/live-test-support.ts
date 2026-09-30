@@ -30,6 +30,16 @@ export function registerViewReceipt(output: string, fixture: OwnedFixture): stri
   return fixture.id = id;
 }
 
+/** Preserve project ownership before listing or readback can fail. */
+export function registerProjectReceipt(output: string, fixture: OwnedFixture): string {
+  const prefix = `created project: ${fixture.name} (`;
+  const id = output.startsWith(prefix)
+    ? /^([0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})\)$/.exec(output.slice(prefix.length))?.[1]
+    : undefined;
+  if (!id || output !== `${prefix}${id})`) throw new Error("missing or invalid project creation receipt");
+  return fixture.id = id;
+}
+
 /** unknown write outcomes require manual recovery, never a speculative retry. */
 export async function cleanupOwned(fixtures: OwnedFixture[]): Promise<void> {
   const failures: Error[] = [];
