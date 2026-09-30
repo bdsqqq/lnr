@@ -55,7 +55,7 @@ for (const entry of cases) {
       });
       const issue = mock(async (id: string) => {
         expect(id).toBe("I1");
-        return { subscribers: async () => ({ nodes: (entry.subscribed ? ["other", "viewer"] : ["other"]).map(id => ({ id })) }) };
+        return { subscribers: async () => ({ nodes: (entry.subscribed ? ["other", "viewer"] : ["other"]).map(id => ({ id })), pageInfo: { hasNextPage: false } }) };
       });
       const agentSession = mock(async (id: string) => {
         expect(id).toBe("AS1");
@@ -88,7 +88,7 @@ test("subscription no-ops stay confirmed without writing; missing project stays 
   for (const subscribed of [false, true]) {
     const client = {
       viewer: { id: "viewer" },
-      issue: async () => ({ subscribers: async () => ({ nodes: subscribed ? [{ id: "viewer" }] : [] }) }),
+      issue: async () => ({ subscribers: async () => ({ nodes: subscribed ? [{ id: "viewer" }] : [], pageInfo: { hasNextPage: false } }) }),
       updateIssue,
     } as unknown as LinearClient;
     expect(await (subscribed ? core.subscribeToIssue : core.unsubscribeFromIssue)(client, "I1")).toBe(true);

@@ -1,4 +1,5 @@
 import type { LinearClient } from "@linear/sdk";
+import { exhaustConnection } from "./pagination";
 
 export type SubscriptionTarget =
   | { type: "project"; projectId: string }
@@ -162,6 +163,10 @@ export async function findUserSubscription(
   return null;
 }
 
+// subscriberIds replaces the list: exhaust reads before deciding or writing.
+// this prevents page omission, not concurrent changes during/between reads and writes.
+// subscribers are membership, not multiplicity: overlapping pages must not duplicate ids.
+// Set retains their first-seen order in both replacement payloads.
 export async function subscribeToIssue(
   client: LinearClient,
   issueId: string
@@ -169,7 +174,8 @@ export async function subscribeToIssue(
   const viewer = await client.viewer;
   const issue = await client.issue(issueId);
   const subscribers = await issue.subscribers();
-  const currentIds = subscribers.nodes.map((u) => u.id);
+  await exhaustConnection(subscribers, "subscriber pagination did not advance");
+  const currentIds = [...new Set(subscribers.nodes.map((u) => u.id))];
   
   if (currentIds.includes(viewer.id)) {
     return true; // already subscribed
@@ -188,7 +194,8 @@ export async function unsubscribeFromIssue(
   const viewer = await client.viewer;
   const issue = await client.issue(issueId);
   const subscribers = await issue.subscribers();
-  const currentIds = subscribers.nodes.map((u) => u.id);
+  await exhaustConnection(subscribers, "subscriber pagination did not advance");
+  const currentIds = [...new Set(subscribers.nodes.map((u) => u.id))];
   
   if (!currentIds.includes(viewer.id)) {
     return true; // already not subscribed
