@@ -25,27 +25,24 @@ export async function getInitiative(
   client: LinearClient,
   id: string
 ): Promise<Initiative | null> {
-  try {
-    const i = await client.initiative(id);
-    return {
-      id: i.id,
-      name: i.name,
-      slugId: i.slugId,
-      description: i.description ?? null,
-      status: i.status,
-      health: i.health ?? null,
-      color: i.color ?? null,
-      icon: i.icon ?? null,
-      targetDate: i.targetDate ?? null,
-      startedAt: i.startedAt ?? null,
-      completedAt: i.completedAt ?? null,
-      createdAt: i.createdAt,
-      updatedAt: i.updatedAt,
-      url: i.url,
-    };
-  } catch {
-    return null;
-  }
+  const i = await client.initiative(id);
+  if (!i) return null;
+  return {
+    id: i.id,
+    name: i.name,
+    slugId: i.slugId,
+    description: i.description ?? null,
+    status: i.status,
+    health: i.health ?? null,
+    color: i.color ?? null,
+    icon: i.icon ?? null,
+    targetDate: i.targetDate ?? null,
+    startedAt: i.startedAt ?? null,
+    completedAt: i.completedAt ?? null,
+    createdAt: i.createdAt,
+    updatedAt: i.updatedAt,
+    url: i.url,
+  };
 }
 
 export async function findInitiativeByName(

@@ -26,24 +26,21 @@ export async function getRoadmap(
   client: LinearClient,
   id: string
 ): Promise<Roadmap | null> {
-  try {
-    const r = await client.roadmap(id);
-    const owner = await r.owner;
-    return {
-      id: r.id,
-      name: r.name,
-      slugId: r.slugId,
-      description: r.description ?? null,
-      color: r.color ?? null,
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
-      url: r.url,
-      ownerId: owner?.id ?? null,
-      ownerName: owner?.name ?? null,
-    };
-  } catch {
-    return null;
-  }
+  const r = await client.roadmap(id);
+  if (!r) return null;
+  const owner = await r.owner;
+  return {
+    id: r.id,
+    name: r.name,
+    slugId: r.slugId,
+    description: r.description ?? null,
+    color: r.color ?? null,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    url: r.url,
+    ownerId: owner?.id ?? null,
+    ownerName: owner?.name ?? null,
+  };
 }
 
 export async function findRoadmapByName(

@@ -4,6 +4,7 @@ import {
   getClient,
   listRoadmaps,
   getRoadmap,
+  isRootIdentifierRejection,
   findRoadmapByName,
   getRoadmapProjects,
   type Roadmap,
@@ -27,7 +28,7 @@ export const listRoadmapsInput = type({
 });
 
 export const roadmapInput = type({
-  nameOrId: type("string").configure({ positional: true }).describe("roadmap name, slugId, or id"),
+  nameOrId: type("string").configure({ positional: true }).describe("roadmap name, slugId, or id (direct identifier lookup takes precedence over name lookup)"),
   "json?": type("boolean").describe("output as json"),
   "quiet?": type("boolean").describe("output id only"),
   "verbose?": type("boolean").describe("show all columns"),
@@ -97,8 +98,12 @@ export const roadmapsRouter = router({
     .query(async ({ input }) => {
       try {
         const client = getClient();
-        let roadmap = await getRoadmap(client, input.nameOrId);
-
+        let roadmap: Roadmap | null = null;
+        try {
+          roadmap = await getRoadmap(client, input.nameOrId);
+        } catch (error) {
+          if (!isRootIdentifierRejection(error, "roadmap")) throw error;
+        }
         if (!roadmap) {
           roadmap = await findRoadmapByName(client, input.nameOrId);
         }
