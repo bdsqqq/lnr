@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   inspect-exact-project:
-    if: github.head_ref == 'chore/read-only-project-recovery' && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.head_ref == 'chore/read-only-run51-inspection' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     concurrency:
       group: lnr-e2e-bdsqqq-sandbox
@@ -20,9 +20,9 @@ jobs:
       - uses: oven-sh/setup-bun@v1
 
       - run: bun install --frozen-lockfile
-      - run: bun test scripts/readonly-missing-lookup.test.ts
-      - name: Probe only the authorized missing initiative and roadmap lookups
-        run: bun scripts/readonly-missing-lookup.ts
+      - run: bun test scripts/inspect-run51-fixtures.test.ts
+      - name: Inspect only the pinned run51 project name and view id
+        run: bun scripts/inspect-run51-fixtures.ts
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           LNR_RECOVERY_CONFIRM_ORG: bdsqqq-sandbox
